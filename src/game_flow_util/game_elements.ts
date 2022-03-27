@@ -4,7 +4,7 @@ const BOARD_SIZE = 8;
 
 const NUM_OF_PLAYERS = 32;
 
-enum PieceType {
+export enum PieceType {
   pawn,
   knight,
   bishop,
@@ -13,80 +13,97 @@ enum PieceType {
   king,
 }
 
-const typeToString = new Map<PieceType, string>([
-    [PieceType.pawn, "pawn"], 
-    [PieceType.knight, "knight"],
-    [PieceType.bishop, "bishop"],
-    [PieceType.rook, "rook"],
-    [PieceType.queen, "queen"],
-    [PieceType.king, "king"],
+export const typeToString = new Map<PieceType, string>([
+  [PieceType.pawn, "pawn"],
+  [PieceType.knight, "knight"],
+  [PieceType.bishop, "bishop"],
+  [PieceType.rook, "rook"],
+  [PieceType.queen, "queen"],
+  [PieceType.king, "king"],
 ]);
 
-enum PieceColor {
-    white,
-    black,
+export enum PieceColor {
+  white,
+  black,
 }
 
-const colorToString = new Map<PieceColor, string>([
-    [PieceColor.white, "white"], 
-    [PieceColor.black, "black"],
+export const colorToString = new Map<PieceColor, string>([
+  [PieceColor.white, "white"],
+  [PieceColor.black, "black"],
 ]);
-  
-const reverseColor = (color: PieceColor) => <PieceColor>(color == PieceColor.white ? PieceColor.black : PieceColor.white);
+
+export const reverseColor = (color: PieceColor) =>
+  <PieceColor>(color == PieceColor.white ? PieceColor.black : PieceColor.white);
 
 class MoveOffset {
   constructor(public rowOffset: number, public columnOffset: number) {}
 }
 
-class Square {
-    constructor(readonly row:number, readonly column: number) {}
+export class Square {
+  constructor(readonly row: number, readonly column: number) {}
 
-    isOnTheBoard = () => <boolean>(0 <= this.row && this.row < BOARD_SIZE && 0 <= this.column && this.column < BOARD_SIZE);
+  isOnTheBoard = () =>
+    <boolean>(
+      (0 <= this.row &&
+        this.row < BOARD_SIZE &&
+        0 <= this.column &&
+        this.column < BOARD_SIZE)
+    );
 
-    applyMove = (moveOffset: MoveOffset) => new Square(this.row + moveOffset.rowOffset, this.column + moveOffset.columnOffset);
+  applyMove = (moveOffset: MoveOffset) =>
+    new Square(
+      this.row + moveOffset.rowOffset,
+      this.column + moveOffset.columnOffset
+    );
 }
 
-enum CastleSide {
+export enum CastleSide {
   kingSide,
   queenSide,
 }
 
 interface OptionalMoveParams {
-    isPromotion?: boolean,
-    promotionType?: PieceType,
-    isCapture?: boolean,
-    isEnPassant?: boolean,
-    isCastle?: boolean,
-    castleSide?: CastleSide,
+  isPromotion?: boolean;
+  promotionType?: PieceType;
+  isCapture?: boolean;
+  isEnPassant?: boolean;
+  isCastle?: boolean;
+  castleSide?: CastleSide;
 }
 
-class Move {
-    isPromotion: boolean = false;
-    promotionType: PieceType = null as any;
-    isCapture: boolean  = false;
-    isEnPassant: boolean  = false;
-    isCastle: boolean  = false;
-    castleSide: CastleSide = null as any;
+export class Move {
+  isPromotion: boolean = false;
+  promotionType: PieceType = null as any;
+  isCapture: boolean = false;
+  isEnPassant: boolean = false;
+  isCastle: boolean = false;
+  castleSide: CastleSide = null as any;
 
-    constructor(public row: number, public column: number, params?: OptionalMoveParams) {
-        if (params != null) {
-            this.isPromotion = Boolean(params.isPromotion);
-            this.promotionType = (Boolean(params.promotionType) ? params.promotionType : null) as PieceType;
-            this.isCapture = Boolean(params.isCapture);
-            this.isEnPassant = Boolean(params.isEnPassant);
-            this.isCastle = Boolean(params.isCastle);
-            this.castleSide = (Boolean(params.castleSide) ? params.castleSide : null) as CastleSide;
-        }
+  constructor(
+    public row: number,
+    public column: number,
+    params?: OptionalMoveParams
+  ) {
+    if (params != null) {
+      this.isPromotion = Boolean(params.isPromotion);
+      this.promotionType = (Boolean(params.promotionType)
+        ? params.promotionType
+        : null) as PieceType;
+      this.isCapture = Boolean(params.isCapture);
+      this.isEnPassant = Boolean(params.isEnPassant);
+      this.isCastle = Boolean(params.isCastle);
+      this.castleSide = (Boolean(params.castleSide)
+        ? params.castleSide
+        : null) as CastleSide;
     }
+  }
 }
 
-
-
-abstract class Piece {
+export abstract class Piece {
   constructor(public color: PieceColor) {}
 
-  static generate(type: PieceType, color:PieceColor) {
-    switch(type) {
+  static generate(type: PieceType, color: PieceColor) {
+    switch (type) {
       case PieceType.pawn: {
         return new Pawn(color);
       }
@@ -112,15 +129,20 @@ abstract class Piece {
 
   get name(): string {
     return <string>typeToString.get(this.type);
-  }     
+  }
 
-    get imageFilePath(): string  {
-        return `images/pieces/${colorToString.get(this.color)}_${name}.png`;
-    }
+  get imageFilePath(): string {
+    return `images/pieces/${colorToString.get(this.color)}_${name}.png`;
+  }
 
-  abstract findLegalMoves(position: Position, currentSquare:Square): Move[];
+  abstract findLegalMoves(position: Position, currentSquare: Square): Move[];
 
-  getMove(position: Position, currentSquare:Square, row: number, column: number): Move | null {
+  getMove(
+    position: Position,
+    currentSquare: Square,
+    row: number,
+    column: number
+  ): Move | null {
     for (let move of this.findLegalMoves(position, currentSquare)) {
       if (move.row == row && move.column == column) {
         return move;
@@ -138,11 +160,16 @@ abstract class UnblockablePiece extends Piece {
     for (let moveOffset of this.moveOffsets) {
       let destSquare: Square = currentSquare.applyMove(moveOffset);
       if (destSquare.isOnTheBoard()) {
-        let destSquareOccupier: Piece = position.pieceAt(destSquare.row, destSquare.column);
+        let destSquareOccupier: Piece = position.pieceAt(
+          destSquare.row,
+          destSquare.column
+        );
         if (destSquareOccupier == null) {
           legalMoves.push(new Move(destSquare.row, destSquare.column));
         } else if (this.color != destSquareOccupier.color) {
-          legalMoves.push(new Move(destSquare.row, destSquare.column, {isCapture: true}));
+          legalMoves.push(
+            new Move(destSquare.row, destSquare.column, { isCapture: true })
+          );
         }
       }
     }
@@ -158,23 +185,28 @@ abstract class BlockablePiece extends Piece {
     for (let moveOffset of this.moveOffsets) {
       let destSquare: Square = currentSquare.applyMove(moveOffset);
       while (destSquare.isOnTheBoard()) {
-          let destSquareOccupier: Piece = position.pieceAt(destSquare.row, destSquare.column);
-          if (destSquareOccupier == null) {
-            legalMoves.push(new Move(destSquare.row, destSquare.column));
-            destSquare = destSquare.applyMove(moveOffset);
-          } else {
-            if (this.color != destSquareOccupier.color) {
-                legalMoves.push(new Move(destSquare.row, destSquare.column, {isCapture: true}));
-            }
-            break;
+        let destSquareOccupier: Piece = position.pieceAt(
+          destSquare.row,
+          destSquare.column
+        );
+        if (destSquareOccupier == null) {
+          legalMoves.push(new Move(destSquare.row, destSquare.column));
+          destSquare = destSquare.applyMove(moveOffset);
+        } else {
+          if (this.color != destSquareOccupier.color) {
+            legalMoves.push(
+              new Move(destSquare.row, destSquare.column, { isCapture: true })
+            );
           }
+          break;
         }
       }
+    }
     return legalMoves;
   }
 }
 
-class Pawn extends Piece {
+export class Pawn extends Piece {
   private _startRow: number;
   private _promotionRow: number;
   private _enPassantRow: number;
@@ -183,26 +215,34 @@ class Pawn extends Piece {
   private _captureMoveOffsets: MoveOffset[];
 
   constructor(color: PieceColor) {
-      super(color);
-    switch(color) {
-      case PieceColor.white: {
-        this._startRow = 1;
-        this._promotionRow = BOARD_SIZE - 1;
-        this._enPassantRow = 4;
-        this._enPassantableRow = 3;
-        this._moveOffsets = [new MoveOffset(1, 0), new MoveOffset(2, 0)];
-        this._captureMoveOffsets = [new MoveOffset(1, -1), new MoveOffset(1, 1)];
-      }
-      break;
-      case PieceColor.black: {
-        this._startRow = BOARD_SIZE - 2;
-        this._promotionRow = 0;
-        this._enPassantRow = 3;
-        this._enPassantableRow = 4;
-        this._moveOffsets = [new MoveOffset(-1, 0), new MoveOffset(-2, 0)];
-        this._captureMoveOffsets = [new MoveOffset(-1, -1), new MoveOffset(-1, 1)];
-      }
-      break;
+    super(color);
+    switch (color) {
+      case PieceColor.white:
+        {
+          this._startRow = 1;
+          this._promotionRow = BOARD_SIZE - 1;
+          this._enPassantRow = 4;
+          this._enPassantableRow = 3;
+          this._moveOffsets = [new MoveOffset(1, 0), new MoveOffset(2, 0)];
+          this._captureMoveOffsets = [
+            new MoveOffset(1, -1),
+            new MoveOffset(1, 1),
+          ];
+        }
+        break;
+      case PieceColor.black:
+        {
+          this._startRow = BOARD_SIZE - 2;
+          this._promotionRow = 0;
+          this._enPassantRow = 3;
+          this._enPassantableRow = 4;
+          this._moveOffsets = [new MoveOffset(-1, 0), new MoveOffset(-2, 0)];
+          this._captureMoveOffsets = [
+            new MoveOffset(-1, -1),
+            new MoveOffset(-1, 1),
+          ];
+        }
+        break;
     }
   }
 
@@ -215,24 +255,34 @@ class Pawn extends Piece {
   }
 
   get enPassantableRow(): number {
-    return this._enPassantableRow; 
+    return this._enPassantableRow;
   }
 
   get type(): PieceType {
     return PieceType.pawn;
-  } 
+  }
 
   findLegalMoves(position: Position, currentSquare: Square) {
     let legalMoves: Move[] = [];
     let destSquare: Square = currentSquare.applyMove(this._moveOffsets[0]);
     if (destSquare.isOnTheBoard()) {
-      let destSquareOccupier: Piece = position.pieceAt(destSquare.row, destSquare.column);
+      let destSquareOccupier: Piece = position.pieceAt(
+        destSquare.row,
+        destSquare.column
+      );
       if (destSquareOccupier == null) {
-        legalMoves.push(new Move(destSquare.row, destSquare.column, {isPromotion: destSquare.row == this._promotionRow}));
+        legalMoves.push(
+          new Move(destSquare.row, destSquare.column, {
+            isPromotion: destSquare.row == this._promotionRow,
+          })
+        );
         if (currentSquare.row == this._startRow) {
           destSquare = currentSquare.applyMove(this._moveOffsets[1]);
           if (destSquare.isOnTheBoard()) {
-            destSquareOccupier = position.pieceAt(destSquare.row, destSquare.column);
+            destSquareOccupier = position.pieceAt(
+              destSquare.row,
+              destSquare.column
+            );
             if (destSquareOccupier == null) {
               legalMoves.push(new Move(destSquare.row, destSquare.column));
             }
@@ -241,15 +291,28 @@ class Pawn extends Piece {
       }
     }
     for (let i = 0; i < this._captureMoveOffsets.length; i++) {
-      let destSquare: Square = currentSquare.applyMove(this._captureMoveOffsets[i]);
+      let destSquare: Square = currentSquare.applyMove(
+        this._captureMoveOffsets[i]
+      );
       if (destSquare.isOnTheBoard()) {
-        let destSquareOccupier: Piece = position.pieceAt(destSquare.row, destSquare.column);
-        let isCaptureAvailable: boolean = destSquareOccupier != null && this.color != destSquareOccupier.color;
-        let isEnPassantAvailable: boolean = position.isEnPassantAvailable(this.color, currentSquare.column, i) && 
-                                    (destSquareOccupier == null || this.color != destSquareOccupier.color);
+        let destSquareOccupier: Piece = position.pieceAt(
+          destSquare.row,
+          destSquare.column
+        );
+        let isCaptureAvailable: boolean =
+          destSquareOccupier != null && this.color != destSquareOccupier.color;
+        let isEnPassantAvailable: boolean =
+          position.isEnPassantAvailable(this.color, currentSquare.column, i) &&
+          (destSquareOccupier == null ||
+            this.color != destSquareOccupier.color);
         if (isCaptureAvailable || isEnPassantAvailable) {
-          legalMoves.push(new Move(destSquare.row, destSquare.column, {isCapture: isCaptureAvailable, 
-                              isEnPassant: isEnPassantAvailable, isPromotion: destSquare.row == this._promotionRow}));
+          legalMoves.push(
+            new Move(destSquare.row, destSquare.column, {
+              isCapture: isCaptureAvailable,
+              isEnPassant: isEnPassantAvailable,
+              isPromotion: destSquare.row == this._promotionRow,
+            })
+          );
         }
       }
     }
@@ -258,106 +321,170 @@ class Pawn extends Piece {
   }
 }
 
-class Knight extends UnblockablePiece {
+export class Knight extends UnblockablePiece {
   get type(): PieceType {
     return PieceType.knight;
-  } 
+  }
 
   protected get moveOffsets(): MoveOffset[] {
-    return [new MoveOffset(1, 2), new MoveOffset(2, 1), new MoveOffset(1, -2), new MoveOffset(-2, 1),
-            new MoveOffset(-1, 2), new MoveOffset(2, -1), new MoveOffset(-1, -2), new MoveOffset(-2, -1)];
+    return [
+      new MoveOffset(1, 2),
+      new MoveOffset(2, 1),
+      new MoveOffset(1, -2),
+      new MoveOffset(-2, 1),
+      new MoveOffset(-1, 2),
+      new MoveOffset(2, -1),
+      new MoveOffset(-1, -2),
+      new MoveOffset(-2, -1),
+    ];
   }
 }
 
-class Bishop extends BlockablePiece {
+export class Bishop extends BlockablePiece {
   get type(): PieceType {
     return PieceType.bishop;
-  } 
+  }
 
   protected get moveOffsets(): MoveOffset[] {
-    return [new MoveOffset(1, 1), new MoveOffset(1, -1), new MoveOffset(-1, 1), new MoveOffset(-1, -1)];
+    return [
+      new MoveOffset(1, 1),
+      new MoveOffset(1, -1),
+      new MoveOffset(-1, 1),
+      new MoveOffset(-1, -1),
+    ];
   }
 }
 
-class Rook extends BlockablePiece {
+export class Rook extends BlockablePiece {
   get type(): PieceType {
     return PieceType.rook;
-  } 
+  }
 
   protected get moveOffsets(): MoveOffset[] {
-    return [new MoveOffset(1, 0), new MoveOffset(-1, 0), new MoveOffset(0, 1), new MoveOffset(0, -1)];
+    return [
+      new MoveOffset(1, 0),
+      new MoveOffset(-1, 0),
+      new MoveOffset(0, 1),
+      new MoveOffset(0, -1),
+    ];
   }
 }
 
-class Queen extends BlockablePiece {
+export class Queen extends BlockablePiece {
   get type(): PieceType {
     return PieceType.queen;
-  } 
+  }
 
   protected get moveOffsets(): MoveOffset[] {
-    return [new MoveOffset(1, 0), new MoveOffset(-1, 0), new MoveOffset(0, 1), new MoveOffset(0, -1),
-            new MoveOffset(1, 1), new MoveOffset(1, -1), new MoveOffset(-1, 1), new MoveOffset(-1, -1)];
+    return [
+      new MoveOffset(1, 0),
+      new MoveOffset(-1, 0),
+      new MoveOffset(0, 1),
+      new MoveOffset(0, -1),
+      new MoveOffset(1, 1),
+      new MoveOffset(1, -1),
+      new MoveOffset(-1, 1),
+      new MoveOffset(-1, -1),
+    ];
   }
 }
 
-class King extends UnblockablePiece {
+export class King extends UnblockablePiece {
   private _startRow: number;
   private _startColumn = 4;
 
   constructor(color: PieceColor) {
     super(color);
-    switch(color) {
-      case PieceColor.white: {
-        this._startRow = 0;
-      }
-      break;
-      case PieceColor.black: {
-        this._startRow = BOARD_SIZE - 1;
-      }
-      break;
+    switch (color) {
+      case PieceColor.white:
+        {
+          this._startRow = 0;
+        }
+        break;
+      case PieceColor.black:
+        {
+          this._startRow = BOARD_SIZE - 1;
+        }
+        break;
     }
   }
 
   get type(): PieceType {
     return PieceType.king;
-  } 
+  }
 
   protected get moveOffsets(): MoveOffset[] {
-    return [new MoveOffset(1, 1), new MoveOffset(1, 0), new MoveOffset(1, -1), 
-            new MoveOffset(0, 1),                        new MoveOffset(0, -1), 
-            new MoveOffset(-1, 1), new MoveOffset(-1, 0), new MoveOffset(-1, -1)];
+    return [
+      new MoveOffset(1, 1),
+      new MoveOffset(1, 0),
+      new MoveOffset(1, -1),
+      new MoveOffset(0, 1),
+      new MoveOffset(0, -1),
+      new MoveOffset(-1, 1),
+      new MoveOffset(-1, 0),
+      new MoveOffset(-1, -1),
+    ];
   }
 
   findLegalMoves(position: Position, currentSquare: Square): Move[] {
     let legalMoves: Move[] = super.findLegalMoves(position, currentSquare);
     // castle check
-    if (currentSquare.row == this._startRow && currentSquare.column == this._startColumn) {
+    if (
+      currentSquare.row == this._startRow &&
+      currentSquare.column == this._startColumn
+    ) {
       let canCastle: boolean = true;
       let castleCandidate: Piece = position.pieceAt(currentSquare.row, 0);
-      if (castleCandidate != null && castleCandidate.type == PieceType.rook && this.color == castleCandidate.color 
-          && position.isCastleAvailable(this.color, CastleSide.queenSide)) {
-        for (let checkedColumn: number = 1; checkedColumn < currentSquare.column; checkedColumn++) {
+      if (
+        castleCandidate != null &&
+        castleCandidate.type == PieceType.rook &&
+        this.color == castleCandidate.color &&
+        position.isCastleAvailable(this.color, CastleSide.queenSide)
+      ) {
+        for (
+          let checkedColumn: number = 1;
+          checkedColumn < currentSquare.column;
+          checkedColumn++
+        ) {
           if (position.pieceAt(currentSquare.row, checkedColumn) != null) {
             canCastle = false;
             break;
           }
         }
         if (canCastle) {
-          legalMoves.push(new Move(currentSquare.row, currentSquare.column - 2, {isCastle: true, castleSide: CastleSide.queenSide}));
+          legalMoves.push(
+            new Move(currentSquare.row, currentSquare.column - 2, {
+              isCastle: true,
+              castleSide: CastleSide.queenSide,
+            })
+          );
         }
       }
       canCastle = true;
       castleCandidate = position.pieceAt(currentSquare.row, BOARD_SIZE - 1);
-      if (castleCandidate != null && castleCandidate.type == PieceType.rook && this.color == castleCandidate.color 
-        && position.isCastleAvailable(this.color, CastleSide.kingSide)) {
-        for (let checkedColumn: number = currentSquare.column + 1; checkedColumn < BOARD_SIZE - 1; checkedColumn++) {
+      if (
+        castleCandidate != null &&
+        castleCandidate.type == PieceType.rook &&
+        this.color == castleCandidate.color &&
+        position.isCastleAvailable(this.color, CastleSide.kingSide)
+      ) {
+        for (
+          let checkedColumn: number = currentSquare.column + 1;
+          checkedColumn < BOARD_SIZE - 1;
+          checkedColumn++
+        ) {
           if (position.pieceAt(currentSquare.row, checkedColumn) != null) {
             canCastle = false;
             break;
           }
         }
         if (canCastle) {
-          legalMoves.push(new Move(currentSquare.row, currentSquare.column + 2, {isCastle: true, castleSide: CastleSide.kingSide}));
+          legalMoves.push(
+            new Move(currentSquare.row, currentSquare.column + 2, {
+              isCastle: true,
+              castleSide: CastleSide.kingSide,
+            })
+          );
         }
       }
     }
@@ -365,66 +492,101 @@ class King extends UnblockablePiece {
   }
 }
 
-
-
-class Position {
+export class Position {
   // null means dead
   private _playerLocations: Square[] = [];
   // null means empty
-  private _boardArrangement: Piece[][] = [...Array(BOARD_SIZE)].map((_, i) => Array(BOARD_SIZE).fill(null));
-  private _playerArrangement: number[][] = [...Array(BOARD_SIZE)].map((_, i) => Array(BOARD_SIZE).fill(null));
-  private _castleRights: Map<PieceColor, Map<CastleSide, boolean>> = new Map<PieceColor, Map<CastleSide, boolean>>([
-    [PieceColor.white, new Map<CastleSide, boolean>([
-      [CastleSide.kingSide, false],
-      [CastleSide.queenSide, false],
-    ])],
-    [PieceColor.black, new Map<CastleSide, boolean>([
-      [CastleSide.kingSide, false],
-      [CastleSide.queenSide, false],
-    ])],
+  private _boardArrangement: Piece[][] = [...Array(BOARD_SIZE)].map((_, i) =>
+    Array(BOARD_SIZE).fill(null)
+  );
+  private _playerArrangement: number[][] = [...Array(BOARD_SIZE)].map((_, i) =>
+    Array(BOARD_SIZE).fill(null)
+  );
+  private _castleRights: Map<PieceColor, Map<CastleSide, boolean>> = new Map<
+    PieceColor,
+    Map<CastleSide, boolean>
+  >([
+    [
+      PieceColor.white,
+      new Map<CastleSide, boolean>([
+        [CastleSide.kingSide, false],
+        [CastleSide.queenSide, false],
+      ]),
+    ],
+    [
+      PieceColor.black,
+      new Map<CastleSide, boolean>([
+        [CastleSide.kingSide, false],
+        [CastleSide.queenSide, false],
+      ]),
+    ],
   ]);
   /*
     _enPassantRights[color][column][direction] is whether or not a pawn of color 'color' on column 'column' can 
     en passant the pawn to its left / right
   */
-  private _enPassantRights: Map<PieceColor, boolean[][]> = new Map<PieceColor, boolean[][]>([
+  private _enPassantRights: Map<PieceColor, boolean[][]> = new Map<
+    PieceColor,
+    boolean[][]
+  >([
     [PieceColor.white, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
     [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
   ]);
 
   get playerLocations(): Square[] {
     return [...this._playerLocations];
-  } 
+  }
 
   setToStartingPosition() {
-    this._playerLocations = [...Array(BOARD_SIZE)].map((_, j) => new Square(0, j))
-    .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(1, j)))
-    .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(6, j)))
-    .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(7, j)));
+    this._playerLocations = [...Array(BOARD_SIZE)]
+      .map((_, j) => new Square(0, j))
+      .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(1, j)))
+      .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(6, j)))
+      .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(7, j)));
     this._boardArrangement = [...Array(BOARD_SIZE)].map((_, i) => {
-      switch(i) {
+      switch (i) {
         case 0: {
-          return [new Rook(PieceColor.white), new Knight(PieceColor.white), new Bishop(PieceColor.white), new Queen(PieceColor.white),
-                  new King(PieceColor.white), new Bishop(PieceColor.white), new Knight(PieceColor.white), new Rook(PieceColor.white)];
+          return [
+            new Rook(PieceColor.white),
+            new Knight(PieceColor.white),
+            new Bishop(PieceColor.white),
+            new Queen(PieceColor.white),
+            new King(PieceColor.white),
+            new Bishop(PieceColor.white),
+            new Knight(PieceColor.white),
+            new Rook(PieceColor.white),
+          ];
         }
         case 1: {
-          return [...Array(BOARD_SIZE)].map((_, j) => new Pawn(PieceColor.white));
+          return [...Array(BOARD_SIZE)].map(
+            (_, j) => new Pawn(PieceColor.white)
+          );
         }
         case 6: {
-          return [...Array(BOARD_SIZE)].map((_, j) => new Pawn(PieceColor.black));
+          return [...Array(BOARD_SIZE)].map(
+            (_, j) => new Pawn(PieceColor.black)
+          );
         }
         case 7: {
-          return [new Rook(PieceColor.black), new Knight(PieceColor.black), new Bishop(PieceColor.black), new Queen(PieceColor.black),
-                  new King(PieceColor.black), new Bishop(PieceColor.black), new Knight(PieceColor.black), new Rook(PieceColor.black)];
+          return [
+            new Rook(PieceColor.black),
+            new Knight(PieceColor.black),
+            new Bishop(PieceColor.black),
+            new Queen(PieceColor.black),
+            new King(PieceColor.black),
+            new Bishop(PieceColor.black),
+            new Knight(PieceColor.black),
+            new Rook(PieceColor.black),
+          ];
         }
         default: {
-          return Array(BOARD_SIZE).fill(null as any)
+          return Array(BOARD_SIZE).fill(null as any);
         }
       }
     });
-      
+
     this._playerArrangement = [...Array(BOARD_SIZE)].map((_, i) => {
-      switch(i) {
+      switch (i) {
         case 0: {
           return [...Array(BOARD_SIZE)].map((_, j) => j);
         }
@@ -438,27 +600,32 @@ class Position {
           return [...Array(BOARD_SIZE)].map((_, j) => j + 3 * BOARD_SIZE);
         }
         default: {
-          return Array(BOARD_SIZE).fill(null)
+          return Array(BOARD_SIZE).fill(null);
         }
       }
     });
-      
+
     this._castleRights = new Map<PieceColor, Map<CastleSide, boolean>>([
-      [PieceColor.white, new Map<CastleSide, boolean>([
-        [CastleSide.kingSide, true],
-        [CastleSide.queenSide, true],
-      ])],
-      [PieceColor.black, new Map<CastleSide, boolean>([
-        [CastleSide.kingSide, true],
-        [CastleSide.queenSide, true],
-      ])],
+      [
+        PieceColor.white,
+        new Map<CastleSide, boolean>([
+          [CastleSide.kingSide, true],
+          [CastleSide.queenSide, true],
+        ]),
+      ],
+      [
+        PieceColor.black,
+        new Map<CastleSide, boolean>([
+          [CastleSide.kingSide, true],
+          [CastleSide.queenSide, true],
+        ]),
+      ],
     ]);
     this._enPassantRights = new Map<PieceColor, boolean[][]>([
       [PieceColor.white, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
       [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
     ]);
   }
-
 
   getPieceByPlayer(playerIndex: number): Piece {
     let playerSquare: Square = this._playerLocations[playerIndex];
@@ -470,11 +637,11 @@ class Position {
 
   pieceAt(row: number, column: number): Piece {
     return this._boardArrangement[row][column];
-  } 
+  }
 
   playerAt(row: number, column: number): number {
     return this._playerArrangement[row][column];
-  } 
+  }
 
   getPlayerLocation(playerIndex: number): Square {
     return this._playerLocations[playerIndex];
@@ -482,49 +649,76 @@ class Position {
 
   isCastleAvailable(color: PieceColor, castleSide: CastleSide): boolean {
     return this._castleRights.get(color)?.get(castleSide) as boolean;
-  } 
+  }
 
-  isEnPassantAvailable(color: PieceColor, column: number, direction: number): boolean {
+  isEnPassantAvailable(
+    color: PieceColor,
+    column: number,
+    direction: number
+  ): boolean {
     return this._enPassantRights.get(color)![column][direction];
-  } 
+  }
 
   _updateCastleRights(changeRow: number, changeColumn: number) {
     if (changeRow == 0) {
-        if (changeColumn == 0) {
-          this._castleRights.get(PieceColor.white)?.set(CastleSide.queenSide, false);
-        } else if (changeColumn == 4) {
-          this._castleRights.get(PieceColor.white)?.set(CastleSide.queenSide, false);
-          this._castleRights.get(PieceColor.white)?.set(CastleSide.kingSide, false);
-        } else if (changeColumn == 7) {
-          this._castleRights.get(PieceColor.white)?.set(CastleSide.kingSide, false);
-        } 
-      } else if (changeRow == 7) {
-        if (changeColumn == 0) {
-          this._castleRights.get(PieceColor.black)?.set(CastleSide.queenSide, false);
-        } else if (changeColumn == 4) {
-          this._castleRights.get(PieceColor.black)?.set(CastleSide.queenSide, false);
-          this._castleRights.get(PieceColor.black)?.set(CastleSide.kingSide, false);
-        } else if (changeColumn == 7) {
-          this._castleRights.get(PieceColor.black)?.set(CastleSide.kingSide, false);
-        } 
+      if (changeColumn == 0) {
+        this._castleRights
+          .get(PieceColor.white)
+          ?.set(CastleSide.queenSide, false);
+      } else if (changeColumn == 4) {
+        this._castleRights
+          .get(PieceColor.white)
+          ?.set(CastleSide.queenSide, false);
+        this._castleRights
+          .get(PieceColor.white)
+          ?.set(CastleSide.kingSide, false);
+      } else if (changeColumn == 7) {
+        this._castleRights
+          .get(PieceColor.white)
+          ?.set(CastleSide.kingSide, false);
       }
+    } else if (changeRow == 7) {
+      if (changeColumn == 0) {
+        this._castleRights
+          .get(PieceColor.black)
+          ?.set(CastleSide.queenSide, false);
+      } else if (changeColumn == 4) {
+        this._castleRights
+          .get(PieceColor.black)
+          ?.set(CastleSide.queenSide, false);
+        this._castleRights
+          .get(PieceColor.black)
+          ?.set(CastleSide.kingSide, false);
+      } else if (changeColumn == 7) {
+        this._castleRights
+          .get(PieceColor.black)
+          ?.set(CastleSide.kingSide, false);
+      }
+    }
   }
 
-  _setEnPassantRightsForColorAgainstColumn(color: PieceColor, column: number, state: boolean) {
+  _setEnPassantRightsForColorAgainstColumn(
+    color: PieceColor,
+    column: number,
+    state: boolean
+  ) {
     switch (column) {
-      case 0: {
-        this._enPassantRights.get(color)![1][0] = state;
-      }
-      break;
-      case BOARD_SIZE - 1: {
-        this._enPassantRights.get(color)![BOARD_SIZE - 2][1] = state;
-      }
-      break;
-      default: {
-        this._enPassantRights.get(color)![column + 1][0] = state;
-        this._enPassantRights.get(color)![column - 1][1] = state;
-      }
-      break;
+      case 0:
+        {
+          this._enPassantRights.get(color)![1][0] = state;
+        }
+        break;
+      case BOARD_SIZE - 1:
+        {
+          this._enPassantRights.get(color)![BOARD_SIZE - 2][1] = state;
+        }
+        break;
+      default:
+        {
+          this._enPassantRights.get(color)![column + 1][0] = state;
+          this._enPassantRights.get(color)![column - 1][1] = state;
+        }
+        break;
     }
   }
 
@@ -533,27 +727,50 @@ class Position {
     if (startSquare != null) {
       let startRow: number = startSquare.row;
       let startColumn: number = startSquare.column;
-      this._boardArrangement[row][column] = this._boardArrangement[startRow][startColumn];
+      this._boardArrangement[row][column] = this._boardArrangement[startRow][
+        startColumn
+      ];
       this._boardArrangement[startRow][startColumn] = null as any;
-      this._playerArrangement[row][column] = this._playerArrangement[startRow][startColumn];
+      this._playerArrangement[row][column] = this._playerArrangement[startRow][
+        startColumn
+      ];
       this._playerArrangement[startRow][startColumn] = null as any;
       this._playerLocations[playerIndex] = new Square(row, column);
       this._updateCastleRights(startRow, startColumn);
       // update en passant rights
       let movingPiece: Piece = this._boardArrangement[row][column] as Piece;
       if (movingPiece.type == PieceType.pawn) {
-        if (startRow == (movingPiece as Pawn).startRow && row == (movingPiece as Pawn).enPassantableRow) {
-          this._setEnPassantRightsForColorAgainstColumn(reverseColor(movingPiece.color), column, true);
+        if (
+          startRow == (movingPiece as Pawn).startRow &&
+          row == (movingPiece as Pawn).enPassantableRow
+        ) {
+          this._setEnPassantRightsForColorAgainstColumn(
+            reverseColor(movingPiece.color),
+            column,
+            true
+          );
         } else if (startRow == (movingPiece as Pawn).enPassantableRow) {
-          this._setEnPassantRightsForColorAgainstColumn(reverseColor(movingPiece.color), column, false);
+          this._setEnPassantRightsForColorAgainstColumn(
+            reverseColor(movingPiece.color),
+            column,
+            false
+          );
         } else if (row == (movingPiece as Pawn).enPassantRow) {
-          this._enPassantRights.get(movingPiece.color)![column] = [false, false];
+          this._enPassantRights.get(movingPiece.color)![column] = [
+            false,
+            false,
+          ];
         }
       }
     }
   }
 
-  moveFrom(startRow: number, startColumn: number, destRow: number, destColumn: number) {
+  moveFrom(
+    startRow: number,
+    startColumn: number,
+    destRow: number,
+    destColumn: number
+  ) {
     let playerIndex: number = this._playerArrangement[startRow][startColumn];
     if (playerIndex != null) {
       this.move(playerIndex, destRow, destColumn);
@@ -570,8 +787,16 @@ class Position {
   killPlayerAt(row: number, column: number) {
     // update en passant rights
     let dyingPiece: Piece = this._boardArrangement[row][column];
-    if (dyingPiece != null && dyingPiece.type == PieceType.pawn && row == (dyingPiece as Pawn).enPassantableRow) {
-      this._setEnPassantRightsForColorAgainstColumn(reverseColor(dyingPiece.color), column, false);
+    if (
+      dyingPiece != null &&
+      dyingPiece.type == PieceType.pawn &&
+      row == (dyingPiece as Pawn).enPassantableRow
+    ) {
+      this._setEnPassantRightsForColorAgainstColumn(
+        reverseColor(dyingPiece.color),
+        column,
+        false
+      );
     }
     this._boardArrangement[row][column] = null as any;
     this._playerArrangement[row][column] = null as any;
@@ -583,10 +808,12 @@ class Position {
   }
 
   promotePieceAt(row: number, column: number, promotionType: PieceType) {
-    this._boardArrangement[row][column] = Piece.generate(promotionType, this._boardArrangement[row][column]!.color);
+    this._boardArrangement[row][column] = Piece.generate(
+      promotionType,
+      this._boardArrangement[row][column]!.color
+    );
   }
 }
-
 
 /*
 // interface
