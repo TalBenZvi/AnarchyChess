@@ -1,3 +1,5 @@
+import { JSDocNullableType } from "typescript";
+
 const BOARD_SIZE = 8;
 
 const NUM_OF_PLAYERS = 32;
@@ -329,7 +331,7 @@ class King extends UnblockablePiece {
   findLegalMoves(position: Position, currentSquare: Square): Move[] {
     let legalMoves: Move[] = super.findLegalMoves(position, currentSquare);
     // castle check
-    if (currentSquare.row == this._startRow && currentSquare.column == this.startColumn) {
+    if (currentSquare.row == this._startRow && currentSquare.column == this._startColumn) {
       let canCastle: boolean = true;
       let castleCandidate: Piece = position.pieceAt(currentSquare.row, 0);
       if (castleCandidate != null && castleCandidate.type == PieceType.rook && this.color == castleCandidate.color 
@@ -399,178 +401,201 @@ class Position {
     .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(1, j)))
     .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(6, j)))
     .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(7, j)));
-    _boardArrangement = List.generate(BOARD_SIZE, (i) {
+    this._boardArrangement = [...Array(BOARD_SIZE)].map((_, i) => {
       switch(i) {
         case 0: {
-          return [Rook(PieceColor.white), Knight(PieceColor.white), Bishop(PieceColor.white), Queen(PieceColor.white),
-                  King(PieceColor.white), Bishop(PieceColor.white), Knight(PieceColor.white), Rook(PieceColor.white)];
+          return [new Rook(PieceColor.white), new Knight(PieceColor.white), new Bishop(PieceColor.white), new Queen(PieceColor.white),
+                  new King(PieceColor.white), new Bishop(PieceColor.white), new Knight(PieceColor.white), new Rook(PieceColor.white)];
         }
         case 1: {
-          return List.generate(BOARD_SIZE, (j) => Pawn(PieceColor.white));
+          return [...Array(BOARD_SIZE)].map((_, j) => new Pawn(PieceColor.white));
         }
         case 6: {
-          return List.generate(BOARD_SIZE, (j) => Pawn(PieceColor.black));
+          return [...Array(BOARD_SIZE)].map((_, j) => new Pawn(PieceColor.black));
         }
         case 7: {
-          return [Rook(PieceColor.black), Knight(PieceColor.black), Bishop(PieceColor.black), Queen(PieceColor.black),
-                  King(PieceColor.black), Bishop(PieceColor.black), Knight(PieceColor.black), Rook(PieceColor.black)];
+          return [new Rook(PieceColor.black), new Knight(PieceColor.black), new Bishop(PieceColor.black), new Queen(PieceColor.black),
+                  new King(PieceColor.black), new Bishop(PieceColor.black), new Knight(PieceColor.black), new Rook(PieceColor.black)];
         }
         default: {
-          return List.filled(BOARD_SIZE, null);
+          return Array(BOARD_SIZE).fill(null as any)
         }
       }
     });
-    _playerArrangement = List.generate(BOARD_SIZE, (i) {
+      
+    this._playerArrangement = [...Array(BOARD_SIZE)].map((_, i) => {
       switch(i) {
         case 0: {
-          return List.generate(BOARD_SIZE, (j) => j);
+          return [...Array(BOARD_SIZE)].map((_, j) => j);
         }
         case 1: {
-          return List.generate(BOARD_SIZE, (j) => j + BOARD_SIZE);
+          return [...Array(BOARD_SIZE)].map((_, j) => j + BOARD_SIZE);
         }
         case 6: {
-          return List.generate(BOARD_SIZE, (j) => j + 2 * BOARD_SIZE);
+          return [...Array(BOARD_SIZE)].map((_, j) => j + 2 * BOARD_SIZE);
         }
         case 7: {
-          return List.generate(BOARD_SIZE, (j) => j + 3 * BOARD_SIZE);
+          return [...Array(BOARD_SIZE)].map((_, j) => j + 3 * BOARD_SIZE);
         }
         default: {
-          return List.filled(BOARD_SIZE, null);
+          return Array(BOARD_SIZE).fill(null)
         }
       }
     });
-    _castleRights = {PieceColor.white: {CastleSide.kingSide: true, CastleSide.queenSide: true},
-                     PieceColor.black: {CastleSide.kingSide: true, CastleSide.queenSide: true}};
-    _enPassantRights = {PieceColor.white: List.generate(BOARD_SIZE, (i) => [false, false]),
-                                                        PieceColor.black: List.generate(BOARD_SIZE, (i) => [false, false])};
+      
+    this._castleRights = new Map<PieceColor, Map<CastleSide, boolean>>([
+      [PieceColor.white, new Map<CastleSide, boolean>([
+        [CastleSide.kingSide, true],
+        [CastleSide.queenSide, true],
+      ])],
+      [PieceColor.black, new Map<CastleSide, boolean>([
+        [CastleSide.kingSide, true],
+        [CastleSide.queenSide, true],
+      ])],
+    ]);
+    this._enPassantRights = new Map<PieceColor, boolean[][]>([
+      [PieceColor.white, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
+      [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
+    ]);
   }
 
 
-  Piece? getPieceByPlayer(int playerIndex) {
-    Square? playerSquare = _playerLocations[playerIndex];
+  getPieceByPlayer(playerIndex: number): Piece {
+    let playerSquare: Square = this._playerLocations[playerIndex];
     if (playerSquare == null) {
-      return null;
+      return null as any;
     }
-    return _boardArrangement[playerSquare.row][playerSquare.column];
+    return this._boardArrangement[playerSquare.row][playerSquare.column];
   }
 
-  Piece? pieceAt(int row, int column) => _boardArrangement[row][column];
+  pieceAt(row: number, column: number): Piece {
+    return this._boardArrangement[row][column];
+  } 
 
-  int? playerAt(int row, int column) => _playerArrangement[row][column];
+  playerAt(row: number, column: number): number {
+    return this._playerArrangement[row][column];
+  } 
 
-  Square? getPlayerLocation(int playerIndex) => _playerLocations[playerIndex];
+  getPlayerLocation(playerIndex: number): Square {
+    return this._playerLocations[playerIndex];
+  }
 
-  bool isCastleAvailable(PieceColor color, CastleSide castleSide) => _castleRights[color]![castleSide] as bool;
+  isCastleAvailable(color: PieceColor, castleSide: CastleSide): boolean {
+    return this._castleRights.get(color)?.get(castleSide) as boolean;
+  } 
 
-  bool isEnPassantAvailable(PieceColor color, int column, int direction) => _enPassantRights[color]![column][direction];
+  isEnPassantAvailable(color: PieceColor, column: number, direction: number): boolean {
+    return this._enPassantRights.get(color)![column][direction];
+  } 
 
-  void _updateCastleRights(changeRow, changeColumn) {
+  _updateCastleRights(changeRow: number, changeColumn: number) {
     if (changeRow == 0) {
         if (changeColumn == 0) {
-          _castleRights[PieceColor.white]![CastleSide.queenSide] = false;
+          this._castleRights.get(PieceColor.white)?.set(CastleSide.queenSide, false);
         } else if (changeColumn == 4) {
-          _castleRights[PieceColor.white]![CastleSide.queenSide] = false;
-          _castleRights[PieceColor.white]![CastleSide.kingSide] = false;
+          this._castleRights.get(PieceColor.white)?.set(CastleSide.queenSide, false);
+          this._castleRights.get(PieceColor.white)?.set(CastleSide.kingSide, false);
         } else if (changeColumn == 7) {
-          _castleRights[PieceColor.white]![CastleSide.kingSide] = false;
+          this._castleRights.get(PieceColor.white)?.set(CastleSide.kingSide, false);
         } 
       } else if (changeRow == 7) {
         if (changeColumn == 0) {
-          _castleRights[PieceColor.black]![CastleSide.queenSide] = false;
+          this._castleRights.get(PieceColor.black)?.set(CastleSide.queenSide, false);
         } else if (changeColumn == 4) {
-          _castleRights[PieceColor.black]![CastleSide.queenSide] = false;
-          _castleRights[PieceColor.black]![CastleSide.kingSide] = false;
+          this._castleRights.get(PieceColor.black)?.set(CastleSide.queenSide, false);
+          this._castleRights.get(PieceColor.black)?.set(CastleSide.kingSide, false);
         } else if (changeColumn == 7) {
-          _castleRights[PieceColor.black]![CastleSide.kingSide] = false;
+          this._castleRights.get(PieceColor.black)?.set(CastleSide.kingSide, false);
         } 
       }
   }
 
-  void _setEnPassantRightsForColorAgainstColumn(PieceColor color, int column, bool state) {
+  _setEnPassantRightsForColorAgainstColumn(color: PieceColor, column: number, state: boolean) {
     switch (column) {
       case 0: {
-        _enPassantRights[color]![1][0] = state;
+        this._enPassantRights.get(color)![1][0] = state;
       }
       break;
       case BOARD_SIZE - 1: {
-        _enPassantRights[color]![BOARD_SIZE - 2][1] = state;
+        this._enPassantRights.get(color)![BOARD_SIZE - 2][1] = state;
       }
       break;
       default: {
-        _enPassantRights[color]![column + 1][0] = state;
-        _enPassantRights[color]![column - 1][1] = state;
+        this._enPassantRights.get(color)![column + 1][0] = state;
+        this._enPassantRights.get(color)![column - 1][1] = state;
       }
       break;
     }
   }
 
-  void move(int playerIndex, int row, int column) {
-    Square? startSquare = _playerLocations[playerIndex];
+  move(playerIndex: number, row: number, column: number) {
+    let startSquare: Square = this._playerLocations[playerIndex];
     if (startSquare != null) {
-      int startRow = startSquare.row;
-      int startColumn = startSquare.column;
-      _boardArrangement[row][column] = _boardArrangement[startRow][startColumn];
-      _boardArrangement[startRow][startColumn] = null;
-      _playerArrangement[row][column] = _playerArrangement[startRow][startColumn];
-      _playerArrangement[startRow][startColumn] = null;
-      _playerLocations[playerIndex] = Square(row, column);
-      _updateCastleRights(startRow, startColumn);
+      let startRow: number = startSquare.row;
+      let startColumn: number = startSquare.column;
+      this._boardArrangement[row][column] = this._boardArrangement[startRow][startColumn];
+      this._boardArrangement[startRow][startColumn] = null as any;
+      this._playerArrangement[row][column] = this._playerArrangement[startRow][startColumn];
+      this._playerArrangement[startRow][startColumn] = null as any;
+      this._playerLocations[playerIndex] = new Square(row, column);
+      this._updateCastleRights(startRow, startColumn);
       // update en passant rights
-      Piece movingPiece = _boardArrangement[row][column] as Piece;
+      let movingPiece: Piece = this._boardArrangement[row][column] as Piece;
       if (movingPiece.type == PieceType.pawn) {
-        if (startRow == (movingPiece as Pawn).startRow && row == movingPiece.enPassantableRow) {
-          _setEnPassantRightsForColorAgainstColumn(reverseColor(movingPiece.color), column, true);
-        } else if (startRow == movingPiece.enPassantableRow) {
-          _setEnPassantRightsForColorAgainstColumn(reverseColor(movingPiece.color), column, false);
-        } else if (row == movingPiece.enPassantRow) {
-          _enPassantRights[movingPiece.color]![column] = [false, false];
+        if (startRow == (movingPiece as Pawn).startRow && row == (movingPiece as Pawn).enPassantableRow) {
+          this._setEnPassantRightsForColorAgainstColumn(reverseColor(movingPiece.color), column, true);
+        } else if (startRow == (movingPiece as Pawn).enPassantableRow) {
+          this._setEnPassantRightsForColorAgainstColumn(reverseColor(movingPiece.color), column, false);
+        } else if (row == (movingPiece as Pawn).enPassantRow) {
+          this._enPassantRights.get(movingPiece.color)![column] = [false, false];
         }
       }
     }
   }
 
-  void moveFrom(int startRow, int startColumn, int destRow, int destColumn) {
-    int? playerIndex = _playerArrangement[startRow][startColumn];
+  moveFrom(startRow: number, startColumn: number, destRow: number, destColumn: number) {
+    let playerIndex: number = this._playerArrangement[startRow][startColumn];
     if (playerIndex != null) {
-      move(playerIndex, destRow, destColumn);
+      this.move(playerIndex, destRow, destColumn);
     }
   }
 
-  void killPlayer(int playerIndex) {
-    Square? playerSquare = _playerLocations[playerIndex];
+  killPlayer(playerIndex: number) {
+    let playerSquare: Square = this._playerLocations[playerIndex];
     if (playerSquare != null) {
-      killPlayerAt(playerSquare.row, playerSquare.column);
+      this.killPlayerAt(playerSquare.row, playerSquare.column);
     }
   }
 
-  void killPlayerAt(int row, int column) {
+  killPlayerAt(row: number, column: number) {
     // update en passant rights
-    Piece? dyingPiece = _boardArrangement[row][column];
+    let dyingPiece: Piece = this._boardArrangement[row][column];
     if (dyingPiece != null && dyingPiece.type == PieceType.pawn && row == (dyingPiece as Pawn).enPassantableRow) {
-      _setEnPassantRightsForColorAgainstColumn(reverseColor(dyingPiece.color), column, false);
+      this._setEnPassantRightsForColorAgainstColumn(reverseColor(dyingPiece.color), column, false);
     }
-    _boardArrangement[row][column] = null;
-    _playerArrangement[row][column] = null;
-    int? playerIndex = _playerArrangement[row][column];
+    this._boardArrangement[row][column] = null as any;
+    this._playerArrangement[row][column] = null as any;
+    let playerIndex: number = this._playerArrangement[row][column];
     if (playerIndex != null) {
-      _playerLocations[playerIndex] = null;
+      this._playerLocations[playerIndex] = null as any;
     }
-    _updateCastleRights(row, column);
+    this._updateCastleRights(row, column);
   }
 
-  void promotePieceAt(int row, int column, PieceType promotionType) {
-    _boardArrangement[row][column] = Piece.generate(promotionType, _boardArrangement[row][column]!.color);
+  promotePieceAt(row: number, column: number, promotionType: PieceType) {
+    this._boardArrangement[row][column] = Piece.generate(promotionType, this._boardArrangement[row][column]!.color);
   }
 }
 
 
+/*
 // interface
-class Board {
-  void initializeGame(PieceColor povColor) {}
+interface Board {
+  initializeGame(povColor: PieceColor): void;
 
-  void update() {}
+  update(): void;
 
-  set playerIndex(int playerIndex) {}
+  set playerIndex(playerIndex: number): void;
 }
 
 // interface
@@ -588,3 +613,4 @@ class MoveList {
 
   void clear() {}
 }
+*/
