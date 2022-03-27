@@ -118,7 +118,7 @@ abstract class Piece {
 
   abstract findLegalMoves(position: Position, currentSquare:Square): Move[];
 
-  getMove = (position: Position, currentSquare:Square, row: number, column: number) => {
+  getMove(position: Position, currentSquare:Square, row: number, column: number): Move | null {
     for (let move of this.findLegalMoves(position, currentSquare)) {
       if (move.row == row && move.column == column) {
         return move;
@@ -129,9 +129,9 @@ abstract class Piece {
 }
 
 abstract class UnblockablePiece extends Piece {
-  private abstract get moveOffsets(): MoveOffset[];
+  protected abstract get moveOffsets(): MoveOffset[];
 
-  findLegalMoves = (position: Position, currentSquare: Square) {
+  findLegalMoves(position: Position, currentSquare: Square): Move[] {
     let legalMoves: Move[] = [];
     for (let moveOffset of this.moveOffsets) {
       let destSquare: Square = currentSquare.applyMove(moveOffset);
@@ -149,101 +149,105 @@ abstract class UnblockablePiece extends Piece {
 }
 
 abstract class BlockablePiece extends Piece {
-  BlockablePiece(PieceColor color/*, int row, int column*/) : super(color/*, row, column*/);
+  protected abstract get moveOffsets(): MoveOffset[];
 
-  List<MoveOffset> get _moveOffsets;
-
-  @override
-  List<Move> findLegalMoves(Position position, Square currentSquare) {
-    List<Move> legalMoves = [];
-    for (MoveOffset moveOffset in _moveOffsets) {
-      Square destSquare = currentSquare.applyMove(moveOffset);
+  findLegalMoves(position: Position, currentSquare: Square): Move[] {
+    let legalMoves: Move[] = [];
+    for (let moveOffset of this.moveOffsets) {
+      let destSquare: Square = currentSquare.applyMove(moveOffset);
       while (destSquare.isOnTheBoard()) {
-        Piece? destSquareOccupier = position.pieceAt(destSquare.row, destSquare.column);
-        if (destSquareOccupier == null) {
-          legalMoves.push(Move(destSquare.row, destSquare.column));
-          destSquare = destSquare.applyMove(moveOffset);
-        } else {
-          if (color != destSquareOccupier.color) {
-            legalMoves.push(Move(destSquare.row, destSquare.column, isCapture: true));
+          let destSquareOccupier: Piece = position.pieceAt(destSquare.row, destSquare.column);
+          if (destSquareOccupier == null) {
+            legalMoves.push(new Move(destSquare.row, destSquare.column));
+            destSquare = destSquare.applyMove(moveOffset);
+          } else {
+            if (this.color != destSquareOccupier.color) {
+                legalMoves.push(new Move(destSquare.row, destSquare.column, {isCapture: true}));
+            }
+            break;
           }
-          break;
         }
       }
-    }
     return legalMoves;
   }
 }
 
 class Pawn extends Piece {
-  late int _startRow;
-  late int _promotionRow;
-  late int _enPassantRow;
-  late int _enPassantableRow;
-  late List<MoveOffset> _moveOffsets;
-  late List<MoveOffset> _captureMoveOffsets;
+  private _startRow: number;
+  private _promotionRow: number;
+  private _enPassantRow: number;
+  private _enPassantableRow: number;
+  private _moveOffsets: MoveOffset[];
+  private _captureMoveOffsets: MoveOffset[];
 
-  Pawn(PieceColor color/*, int row, int column*/) : super(color/*, row, column*/) {
+  constructor(color: PieceColor) {
+      super(color);
     switch(color) {
       case PieceColor.white: {
-        _startRow = 1;
-        _promotionRow = BOARD_SIZE - 1;
-        _enPassantRow = 4;
-        _enPassantableRow = 3;
-        _moveOffsets = [MoveOffset(1, 0), MoveOffset(2, 0)];
-        _captureMoveOffsets = [MoveOffset(1, -1), MoveOffset(1, 1)];
+        this._startRow = 1;
+        this._promotionRow = BOARD_SIZE - 1;
+        this._enPassantRow = 4;
+        this._enPassantableRow = 3;
+        this._moveOffsets = [new MoveOffset(1, 0), new MoveOffset(2, 0)];
+        this._captureMoveOffsets = [new MoveOffset(1, -1), new MoveOffset(1, 1)];
       }
       break;
       case PieceColor.black: {
-        _startRow = BOARD_SIZE - 2;
-        _promotionRow = 0;
-        _enPassantRow = 3;
-        _enPassantableRow = 4;
-        _moveOffsets = [MoveOffset(-1, 0), MoveOffset(-2, 0)];
-        _captureMoveOffsets = [MoveOffset(-1, -1), MoveOffset(-1, 1)];
+        this._startRow = BOARD_SIZE - 2;
+        this._promotionRow = 0;
+        this._enPassantRow = 3;
+        this._enPassantableRow = 4;
+        this._moveOffsets = [new MoveOffset(-1, 0), new MoveOffset(-2, 0)];
+        this._captureMoveOffsets = [new MoveOffset(-1, -1), new MoveOffset(-1, 1)];
       }
       break;
     }
   }
 
-  int get startRow => _startRow;
+  get startRow(): number {
+    return this._startRow;
+  }
 
-  int get enPassantRow => _enPassantRow;
+  get enPassantRow(): number {
+    return this._enPassantRow;
+  }
 
-  int get enPassantableRow => _enPassantableRow;
+  get enPassantableRow(): number {
+    return this._enPassantableRow; 
+  }
 
-  @override
-  PieceType get type => PieceType.pawn;
+  get type(): PieceType {
+    return PieceType.pawn;
+  } 
 
-  @override
-  List<Move> findLegalMoves(Position position, Square currentSquare) {
-    List<Move> legalMoves = [];
-    Square destSquare = currentSquare.applyMove(_moveOffsets[0]);
+  findLegalMoves(position: Position, currentSquare: Square) {
+    let legalMoves: Move[] = [];
+    let destSquare: Square = currentSquare.applyMove(this._moveOffsets[0]);
     if (destSquare.isOnTheBoard()) {
-      Piece? destSquareOccupier = position.pieceAt(destSquare.row, destSquare.column);
+      let destSquareOccupier: Piece = position.pieceAt(destSquare.row, destSquare.column);
       if (destSquareOccupier == null) {
-        legalMoves.push(Move(destSquare.row, destSquare.column, isPromotion: destSquare.row == _promotionRow));
-        if (currentSquare.row == _startRow) {
-          destSquare = currentSquare.applyMove(_moveOffsets[1]);
+        legalMoves.push(new Move(destSquare.row, destSquare.column, {isPromotion: destSquare.row == this._promotionRow}));
+        if (currentSquare.row == this._startRow) {
+          destSquare = currentSquare.applyMove(this._moveOffsets[1]);
           if (destSquare.isOnTheBoard()) {
             destSquareOccupier = position.pieceAt(destSquare.row, destSquare.column);
             if (destSquareOccupier == null) {
-              legalMoves.push(Move(destSquare.row, destSquare.column));
+              legalMoves.push(new Move(destSquare.row, destSquare.column));
             }
           }
         }
       }
     }
-    for (int i = 0; i < _captureMoveOffsets.length; i++) {
-      Square destSquare = currentSquare.applyMove(_captureMoveOffsets[i]);
+    for (let i = 0; i < this._captureMoveOffsets.length; i++) {
+      let destSquare: Square = currentSquare.applyMove(this._captureMoveOffsets[i]);
       if (destSquare.isOnTheBoard()) {
-        Piece? destSquareOccupier = position.pieceAt(destSquare.row, destSquare.column);
-        bool isCaptureAvailable = destSquareOccupier != null && color != destSquareOccupier.color;
-        bool isEnPassantAvailable = position.isEnPassantAvailable(color, currentSquare.column, i) && 
-                                    (destSquareOccupier == null || color != destSquareOccupier.color);
+        let destSquareOccupier: Piece = position.pieceAt(destSquare.row, destSquare.column);
+        let isCaptureAvailable: boolean = destSquareOccupier != null && this.color != destSquareOccupier.color;
+        let isEnPassantAvailable: boolean = position.isEnPassantAvailable(this.color, currentSquare.column, i) && 
+                                    (destSquareOccupier == null || this.color != destSquareOccupier.color);
         if (isCaptureAvailable || isEnPassantAvailable) {
-          legalMoves.push(Move(destSquare.row, destSquare.column, isCapture: isCaptureAvailable, 
-                              isEnPassant: isEnPassantAvailable, isPromotion: destSquare.row == _promotionRow));
+          legalMoves.push(new Move(destSquare.row, destSquare.column, {isCapture: isCaptureAvailable, 
+                              isEnPassant: isEnPassantAvailable, isPromotion: destSquare.row == this._promotionRow}));
         }
       }
     }
@@ -253,101 +257,105 @@ class Pawn extends Piece {
 }
 
 class Knight extends UnblockablePiece {
-  Knight(PieceColor color/*, int row, int column*/) : super(color/*, row, column*/);
+  get type(): PieceType {
+    return PieceType.knight;
+  } 
 
-  @override
-  PieceType get type => PieceType.knight;
-
-  @override
-  List<MoveOffset> get _moveOffsets => [MoveOffset(1, 2), MoveOffset(2, 1), MoveOffset(1, -2), MoveOffset(-2, 1),
-                                        MoveOffset(-1, 2), MoveOffset(2, -1), MoveOffset(-1, -2), MoveOffset(-2, -1)];
+  protected get moveOffsets(): MoveOffset[] {
+    return [new MoveOffset(1, 2), new MoveOffset(2, 1), new MoveOffset(1, -2), new MoveOffset(-2, 1),
+            new MoveOffset(-1, 2), new MoveOffset(2, -1), new MoveOffset(-1, -2), new MoveOffset(-2, -1)];
+  }
 }
 
 class Bishop extends BlockablePiece {
-  Bishop(PieceColor color/*, int row, int column*/) : super(color/*, row, column*/);
+  get type(): PieceType {
+    return PieceType.bishop;
+  } 
 
-  @override
-  PieceType get type => PieceType.bishop;
-
-  @override
-  List<MoveOffset> get _moveOffsets => [MoveOffset(1, 1), MoveOffset(1, -1), MoveOffset(-1, 1), MoveOffset(-1, -1)];
+  protected get moveOffsets(): MoveOffset[] {
+    return [new MoveOffset(1, 1), new MoveOffset(1, -1), new MoveOffset(-1, 1), new MoveOffset(-1, -1)];
+  }
 }
 
 class Rook extends BlockablePiece {
-  Rook(PieceColor color/*, int row, int column*/) : super(color/*, row, column*/);
+  get type(): PieceType {
+    return PieceType.rook;
+  } 
 
-  @override
-  PieceType get type => PieceType.rook;
-
-  @override
-  List<MoveOffset> get _moveOffsets => [MoveOffset(1, 0), MoveOffset(-1, 0), MoveOffset(0, 1), MoveOffset(0, -1)];
+  protected get moveOffsets(): MoveOffset[] {
+    return [new MoveOffset(1, 0), new MoveOffset(-1, 0), new MoveOffset(0, 1), new MoveOffset(0, -1)];
+  }
 }
 
 class Queen extends BlockablePiece {
-  Queen(PieceColor color/*, int row, int column*/) : super(color/*, row, column*/);
+  get type(): PieceType {
+    return PieceType.queen;
+  } 
 
-  @override
-  PieceType get type => PieceType.queen;
-
-  @override
-  List<MoveOffset> get _moveOffsets => [MoveOffset(1, 0), MoveOffset(-1, 0), MoveOffset(0, 1), MoveOffset(0, -1),
-                                        MoveOffset(1, 1), MoveOffset(1, -1), MoveOffset(-1, 1), MoveOffset(-1, -1)];
+  protected get moveOffsets(): MoveOffset[] {
+    return [new MoveOffset(1, 0), new MoveOffset(-1, 0), new MoveOffset(0, 1), new MoveOffset(0, -1),
+            new MoveOffset(1, 1), new MoveOffset(1, -1), new MoveOffset(-1, 1), new MoveOffset(-1, -1)];
+  }
 }
 
 class King extends UnblockablePiece {
-  late int _startRow;
-  int startColumn = 4;
+  private _startRow: number;
+  private _startColumn = 4;
 
-  King(PieceColor color/*, int row, int column*/) : super(color/*, row, column*/) {
+  constructor(color: PieceColor) {
+    super(color);
     switch(color) {
       case PieceColor.white: {
-        _startRow = 0;
+        this._startRow = 0;
       }
       break;
       case PieceColor.black: {
-        _startRow = BOARD_SIZE - 1;
+        this._startRow = BOARD_SIZE - 1;
       }
       break;
     }
   }
 
-  @override
-  List<MoveOffset> get _moveOffsets => [MoveOffset(1, 1), MoveOffset(1, 0), MoveOffset(1, -1), 
-                                        MoveOffset(0, 1),                    MoveOffset(0, -1), 
-                                        MoveOffset(-1, 1), MoveOffset(-1, 0), MoveOffset(-1, -1)];
+  get type(): PieceType {
+    return PieceType.king;
+  } 
 
-  @override
-  PieceType get type => PieceType.king;
+  protected get moveOffsets(): MoveOffset[] {
+    return [new MoveOffset(1, 1), new MoveOffset(1, 0), new MoveOffset(1, -1), 
+            new MoveOffset(0, 1),                        new MoveOffset(0, -1), 
+            new MoveOffset(-1, 1), new MoveOffset(-1, 0), new MoveOffset(-1, -1)];
+  }
 
-  @override
-  List<Move> findLegalMoves(Position position, Square currentSquare) {
-    List<Move> legalMoves = super.findLegalMoves(position, currentSquare);
+  findLegalMoves(position: Position, currentSquare: Square): Move[] {
+    let legalMoves: Move[] = super.findLegalMoves(position, currentSquare);
     // castle check
-    if (currentSquare.row == _startRow && currentSquare.column == startColumn) {
-      bool canCastle = true;
-      Piece? castleCandidate = position.pieceAt(currentSquare.row, 0);
-      if (castleCandidate != null && castleCandidate.type == PieceType.rook && color == castleCandidate.color && position.isCastleAvailable(color, CastleSide.queenSide)) {
-        for (int checkedColumn = 1; checkedColumn < currentSquare.column; checkedColumn++) {
+    if (currentSquare.row == this._startRow && currentSquare.column == this.startColumn) {
+      let canCastle: boolean = true;
+      let castleCandidate: Piece = position.pieceAt(currentSquare.row, 0);
+      if (castleCandidate != null && castleCandidate.type == PieceType.rook && this.color == castleCandidate.color 
+          && position.isCastleAvailable(this.color, CastleSide.queenSide)) {
+        for (let checkedColumn: number = 1; checkedColumn < currentSquare.column; checkedColumn++) {
           if (position.pieceAt(currentSquare.row, checkedColumn) != null) {
             canCastle = false;
             break;
           }
         }
         if (canCastle) {
-          legalMoves.push(Move(currentSquare.row, currentSquare.column - 2, isCastle: true, castleSide: CastleSide.queenSide));
+          legalMoves.push(new Move(currentSquare.row, currentSquare.column - 2, {isCastle: true, castleSide: CastleSide.queenSide}));
         }
       }
       canCastle = true;
       castleCandidate = position.pieceAt(currentSquare.row, BOARD_SIZE - 1);
-      if (castleCandidate != null && castleCandidate.type == PieceType.rook && color == castleCandidate.color && position.isCastleAvailable(color, CastleSide.kingSide)) {
-        for (int checkedColumn = currentSquare.column + 1; checkedColumn < BOARD_SIZE - 1; checkedColumn++) {
+      if (castleCandidate != null && castleCandidate.type == PieceType.rook && this.color == castleCandidate.color 
+        && position.isCastleAvailable(this.color, CastleSide.kingSide)) {
+        for (let checkedColumn: number = currentSquare.column + 1; checkedColumn < BOARD_SIZE - 1; checkedColumn++) {
           if (position.pieceAt(currentSquare.row, checkedColumn) != null) {
             canCastle = false;
             break;
           }
         }
         if (canCastle) {
-          legalMoves.push(Move(currentSquare.row, currentSquare.column + 2, isCastle: true, castleSide: CastleSide.kingSide));
+          legalMoves.push(new Move(currentSquare.row, currentSquare.column + 2, {isCastle: true, castleSide: CastleSide.kingSide}));
         }
       }
     }
@@ -359,26 +367,38 @@ class King extends UnblockablePiece {
 
 class Position {
   // null means dead
-  List<Square?> _playerLocations = [];
+  private _playerLocations: Square[] = [];
   // null means empty
-  List<List<Piece?>> _boardArrangement = List.generate(BOARD_SIZE, (i) => List.filled(BOARD_SIZE, null));
-  List<List<int?>> _playerArrangement = List.generate(BOARD_SIZE, (i) => List.filled(BOARD_SIZE, null));
-  Map<PieceColor, Map<CastleSide, bool>> _castleRights = {PieceColor.white: {CastleSide.kingSide: false, CastleSide.queenSide: false},
-                                                          PieceColor.black: {CastleSide.kingSide: false, CastleSide.queenSide: false}};
+  private _boardArrangement: Piece[][] = [...Array(BOARD_SIZE)].map((_, i) => Array(BOARD_SIZE).fill(null));
+  private _playerArrangement: number[][] = [...Array(BOARD_SIZE)].map((_, i) => Array(BOARD_SIZE).fill(null));
+  private _castleRights: Map<PieceColor, Map<CastleSide, boolean>> = new Map<PieceColor, Map<CastleSide, boolean>>([
+    [PieceColor.white, new Map<CastleSide, boolean>([
+      [CastleSide.kingSide, false],
+      [CastleSide.queenSide, false],
+    ])],
+    [PieceColor.black, new Map<CastleSide, boolean>([
+      [CastleSide.kingSide, false],
+      [CastleSide.queenSide, false],
+    ])],
+  ]);
   /*
     _enPassantRights[color][column][direction] is whether or not a pawn of color 'color' on column 'column' can 
     en passant the pawn to its left / right
   */
-  Map<PieceColor, List<List<bool>>> _enPassantRights = {PieceColor.white: List.generate(BOARD_SIZE, (i) => [false, false]),
-                                                        PieceColor.black: List.generate(BOARD_SIZE, (i) => [false, false])};
+  private _enPassantRights: Map<PieceColor, boolean[][]> = new Map<PieceColor, boolean[][]>([
+    [PieceColor.white, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
+    [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
+  ]);
 
-  List<Square?> get playerLocations => [..._playerLocations];
+  get playerLocations(): Square[] {
+    return [...this._playerLocations];
+  } 
 
-  void setToStartingPosition() {
-    _playerLocations = List.generate(BOARD_SIZE, (j) => Square(0, j)).toList() + 
-                       List.generate(BOARD_SIZE, (j) => Square(1, j)).toList() + 
-                       List.generate(BOARD_SIZE, (j) => Square(6, j)).toList() + 
-                       List.generate(BOARD_SIZE, (j) => Square(7, j)).toList();
+  setToStartingPosition() {
+    this._playerLocations = [...Array(BOARD_SIZE)].map((_, j) => new Square(0, j))
+    .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(1, j)))
+    .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(6, j)))
+    .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(7, j)));
     _boardArrangement = List.generate(BOARD_SIZE, (i) {
       switch(i) {
         case 0: {
