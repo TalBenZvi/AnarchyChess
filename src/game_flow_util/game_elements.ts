@@ -1,8 +1,8 @@
 import { JSDocNullableType } from "typescript";
 
-const BOARD_SIZE = 8;
+export const BOARD_SIZE = 8;
 
-const NUM_OF_PLAYERS = 32;
+export const NUM_OF_PLAYERS = 32;
 
 export enum PieceType {
   pawn,
