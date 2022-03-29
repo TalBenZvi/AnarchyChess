@@ -19,3 +19,30 @@ ul.no-bullets {
 }
 
 /* chess board component */
+
+/* The animation code */
+
+:root {
+  --prev: 0px;
+  --current:50px
+}
+
+.animated-div {
+  position: fixed;
+  width: 100px;
+  height: 100px;
+  background-color: red;
+  animation-name: example;
+  animation-duration: 0.2s;
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
+}
+
+@keyframes example {
+  from {
+    left: var(--prev);
+  }
+  to {
+    left: var(--current);
+  }
+}
