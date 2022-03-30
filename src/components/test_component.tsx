@@ -16,12 +16,14 @@ class TestComponent extends React.Component<
     let root = document.documentElement;
     return (
       <div>
-        
         <button
           onClick={() => {
+            root.style.setProperty("--prev", this.state.x.toString() + "px");
+            root.style.setProperty(
+              "--current",
+              (this.state.x + 50).toString() + "px"
+            );
             this.setState((state, props) => {
-              root.style.setProperty('--prev', state.x.toString() + "px");
-              root.style.setProperty('--current', (state.x + 50).toString() + "px");
               return { x: state.x + 50 };
             });
           }}
@@ -29,6 +31,7 @@ class TestComponent extends React.Component<
           button
         </button>
         <div key={this.state.x} className="animated-div"></div>
+        
       </div>
     );
   }

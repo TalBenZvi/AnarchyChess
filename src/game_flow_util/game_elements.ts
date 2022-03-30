@@ -1,5 +1,3 @@
-import { JSDocNullableType } from "typescript";
-
 export const BOARD_SIZE = 8;
 
 export const NUM_OF_PLAYERS = 32;
@@ -32,8 +30,8 @@ export const colorToString = new Map<PieceColor, string>([
   [PieceColor.black, "black"],
 ]);
 
-export const reverseColor = (color: PieceColor) =>
-  <PieceColor>(color == PieceColor.white ? PieceColor.black : PieceColor.white);
+export const reverseColor = (color: PieceColor): PieceColor =>
+  (color === PieceColor.white ? PieceColor.black : PieceColor.white);
 
 class MoveOffset {
   constructor(public rowOffset: number, public columnOffset: number) {}
@@ -42,8 +40,7 @@ class MoveOffset {
 export class Square {
   constructor(readonly row: number, readonly column: number) {}
 
-  isOnTheBoard = () =>
-    <boolean>(
+  isOnTheBoard = (): boolean =>(
       (0 <= this.row &&
         this.row < BOARD_SIZE &&
         0 <= this.column &&
@@ -128,11 +125,11 @@ export abstract class Piece {
   abstract get type(): PieceType;
 
   get name(): string {
-    return <string>typeToString.get(this.type);
+    return typeToString.get(this.type) as string;
   }
 
   get imageFilePath(): string {
-    return `images/pieces/${colorToString.get(this.color)}_${name}.png`;
+    return `images/piece/${colorToString.get(this.color)}_${this.name}.png`;
   }
 
   abstract findLegalMoves(position: Position, currentSquare: Square): Move[];
@@ -144,7 +141,7 @@ export abstract class Piece {
     column: number
   ): Move | null {
     for (let move of this.findLegalMoves(position, currentSquare)) {
-      if (move.row == row && move.column == column) {
+      if (move.row === row && move.column === column) {
         return move;
       }
     }
@@ -164,9 +161,9 @@ abstract class UnblockablePiece extends Piece {
           destSquare.row,
           destSquare.column
         );
-        if (destSquareOccupier == null) {
+        if (destSquareOccupier === null) {
           legalMoves.push(new Move(destSquare.row, destSquare.column));
-        } else if (this.color != destSquareOccupier.color) {
+        } else if (this.color !== destSquareOccupier.color) {
           legalMoves.push(
             new Move(destSquare.row, destSquare.column, { isCapture: true })
           );
@@ -189,11 +186,11 @@ abstract class BlockablePiece extends Piece {
           destSquare.row,
           destSquare.column
         );
-        if (destSquareOccupier == null) {
+        if (destSquareOccupier === null) {
           legalMoves.push(new Move(destSquare.row, destSquare.column));
           destSquare = destSquare.applyMove(moveOffset);
         } else {
-          if (this.color != destSquareOccupier.color) {
+          if (this.color !== destSquareOccupier.color) {
             legalMoves.push(
               new Move(destSquare.row, destSquare.column, { isCapture: true })
             );
@@ -218,7 +215,6 @@ export class Pawn extends Piece {
     super(color);
     switch (color) {
       case PieceColor.white:
-        {
           this._startRow = 1;
           this._promotionRow = BOARD_SIZE - 1;
           this._enPassantRow = 4;
@@ -228,10 +224,8 @@ export class Pawn extends Piece {
             new MoveOffset(1, -1),
             new MoveOffset(1, 1),
           ];
-        }
         break;
       case PieceColor.black:
-        {
           this._startRow = BOARD_SIZE - 2;
           this._promotionRow = 0;
           this._enPassantRow = 3;
@@ -241,7 +235,6 @@ export class Pawn extends Piece {
             new MoveOffset(-1, -1),
             new MoveOffset(-1, 1),
           ];
-        }
         break;
     }
   }
@@ -270,20 +263,20 @@ export class Pawn extends Piece {
         destSquare.row,
         destSquare.column
       );
-      if (destSquareOccupier == null) {
+      if (destSquareOccupier === null) {
         legalMoves.push(
           new Move(destSquare.row, destSquare.column, {
-            isPromotion: destSquare.row == this._promotionRow,
+            isPromotion: destSquare.row === this._promotionRow,
           })
         );
-        if (currentSquare.row == this._startRow) {
+        if (currentSquare.row === this._startRow) {
           destSquare = currentSquare.applyMove(this._moveOffsets[1]);
           if (destSquare.isOnTheBoard()) {
             destSquareOccupier = position.pieceAt(
               destSquare.row,
               destSquare.column
             );
-            if (destSquareOccupier == null) {
+            if (destSquareOccupier === null) {
               legalMoves.push(new Move(destSquare.row, destSquare.column));
             }
           }
@@ -300,17 +293,17 @@ export class Pawn extends Piece {
           destSquare.column
         );
         let isCaptureAvailable: boolean =
-          destSquareOccupier != null && this.color != destSquareOccupier.color;
+          destSquareOccupier !== null && this.color !== destSquareOccupier.color;
         let isEnPassantAvailable: boolean =
           position.isEnPassantAvailable(this.color, currentSquare.column, i) &&
-          (destSquareOccupier == null ||
-            this.color != destSquareOccupier.color);
+          (destSquareOccupier === null ||
+            this.color !== destSquareOccupier.color);
         if (isCaptureAvailable || isEnPassantAvailable) {
           legalMoves.push(
             new Move(destSquare.row, destSquare.column, {
               isCapture: isCaptureAvailable,
               isEnPassant: isEnPassantAvailable,
-              isPromotion: destSquare.row == this._promotionRow,
+              isPromotion: destSquare.row === this._promotionRow,
             })
           );
         }
@@ -397,14 +390,10 @@ export class King extends UnblockablePiece {
     super(color);
     switch (color) {
       case PieceColor.white:
-        {
           this._startRow = 0;
-        }
         break;
       case PieceColor.black:
-        {
           this._startRow = BOARD_SIZE - 1;
-        }
         break;
     }
   }
@@ -430,15 +419,15 @@ export class King extends UnblockablePiece {
     let legalMoves: Move[] = super.findLegalMoves(position, currentSquare);
     // castle check
     if (
-      currentSquare.row == this._startRow &&
-      currentSquare.column == this._startColumn
+      currentSquare.row === this._startRow &&
+      currentSquare.column === this._startColumn
     ) {
       let canCastle: boolean = true;
       let castleCandidate: Piece = position.pieceAt(currentSquare.row, 0);
       if (
         castleCandidate != null &&
-        castleCandidate.type == PieceType.rook &&
-        this.color == castleCandidate.color &&
+        castleCandidate.type === PieceType.rook &&
+        this.color === castleCandidate.color &&
         position.isCastleAvailable(this.color, CastleSide.queenSide)
       ) {
         for (
@@ -464,8 +453,8 @@ export class King extends UnblockablePiece {
       castleCandidate = position.pieceAt(currentSquare.row, BOARD_SIZE - 1);
       if (
         castleCandidate != null &&
-        castleCandidate.type == PieceType.rook &&
-        this.color == castleCandidate.color &&
+        castleCandidate.type === PieceType.rook &&
+        this.color === castleCandidate.color &&
         position.isCastleAvailable(this.color, CastleSide.kingSide)
       ) {
         for (
@@ -490,6 +479,12 @@ export class King extends UnblockablePiece {
     }
     return legalMoves;
   }
+}
+
+export interface PlayingPiece {
+  piece: Piece;
+  row: number;
+  column: number;
 }
 
 export class Position {
@@ -535,6 +530,22 @@ export class Position {
 
   get playerLocations(): Square[] {
     return [...this._playerLocations];
+  }
+
+  get playingPieces(): PlayingPiece[] {
+    return this.playerLocations.map(
+      (square: Square): PlayingPiece => {
+        if (square == null){
+          return {piece: null as any, row: null as any, column: null as any}
+        }
+        return {
+          piece: this.pieceAt(square.row, square.column),
+          row: square.row,
+          column: square.column,
+        };
+      }
+        
+    );
   }
 
   setToStartingPosition() {
@@ -629,7 +640,7 @@ export class Position {
 
   getPieceByPlayer(playerIndex: number): Piece {
     let playerSquare: Square = this._playerLocations[playerIndex];
-    if (playerSquare == null) {
+    if (playerSquare === null) {
       return null as any;
     }
     return this._boardArrangement[playerSquare.row][playerSquare.column];
@@ -660,36 +671,36 @@ export class Position {
   }
 
   _updateCastleRights(changeRow: number, changeColumn: number) {
-    if (changeRow == 0) {
-      if (changeColumn == 0) {
+    if (changeRow === 0) {
+      if (changeColumn === 0) {
         this._castleRights
           .get(PieceColor.white)
           ?.set(CastleSide.queenSide, false);
-      } else if (changeColumn == 4) {
+      } else if (changeColumn === 4) {
         this._castleRights
           .get(PieceColor.white)
           ?.set(CastleSide.queenSide, false);
         this._castleRights
           .get(PieceColor.white)
           ?.set(CastleSide.kingSide, false);
-      } else if (changeColumn == 7) {
+      } else if (changeColumn === 7) {
         this._castleRights
           .get(PieceColor.white)
           ?.set(CastleSide.kingSide, false);
       }
-    } else if (changeRow == 7) {
-      if (changeColumn == 0) {
+    } else if (changeRow === 7) {
+      if (changeColumn === 0) {
         this._castleRights
           .get(PieceColor.black)
           ?.set(CastleSide.queenSide, false);
-      } else if (changeColumn == 4) {
+      } else if (changeColumn === 4) {
         this._castleRights
           .get(PieceColor.black)
           ?.set(CastleSide.queenSide, false);
         this._castleRights
           .get(PieceColor.black)
           ?.set(CastleSide.kingSide, false);
-      } else if (changeColumn == 7) {
+      } else if (changeColumn === 7) {
         this._castleRights
           .get(PieceColor.black)
           ?.set(CastleSide.kingSide, false);
@@ -704,20 +715,14 @@ export class Position {
   ) {
     switch (column) {
       case 0:
-        {
           this._enPassantRights.get(color)![1][0] = state;
-        }
         break;
       case BOARD_SIZE - 1:
-        {
           this._enPassantRights.get(color)![BOARD_SIZE - 2][1] = state;
-        }
         break;
       default:
-        {
           this._enPassantRights.get(color)![column + 1][0] = state;
           this._enPassantRights.get(color)![column - 1][1] = state;
-        }
         break;
     }
   }
@@ -727,6 +732,10 @@ export class Position {
     if (startSquare != null) {
       let startRow: number = startSquare.row;
       let startColumn: number = startSquare.column;
+      if (row === startRow && column === startColumn) {
+        return;
+      }
+      this.killPlayerAt(row, column);
       this._boardArrangement[row][column] = this._boardArrangement[startRow][
         startColumn
       ];
@@ -739,23 +748,23 @@ export class Position {
       this._updateCastleRights(startRow, startColumn);
       // update en passant rights
       let movingPiece: Piece = this._boardArrangement[row][column] as Piece;
-      if (movingPiece.type == PieceType.pawn) {
+      if (movingPiece.type === PieceType.pawn) {
         if (
-          startRow == (movingPiece as Pawn).startRow &&
-          row == (movingPiece as Pawn).enPassantableRow
+          startRow === (movingPiece as Pawn).startRow &&
+          row === (movingPiece as Pawn).enPassantableRow
         ) {
           this._setEnPassantRightsForColorAgainstColumn(
             reverseColor(movingPiece.color),
             column,
             true
           );
-        } else if (startRow == (movingPiece as Pawn).enPassantableRow) {
+        } else if (startRow === (movingPiece as Pawn).enPassantableRow) {
           this._setEnPassantRightsForColorAgainstColumn(
             reverseColor(movingPiece.color),
             column,
             false
           );
-        } else if (row == (movingPiece as Pawn).enPassantRow) {
+        } else if (row === (movingPiece as Pawn).enPassantRow) {
           this._enPassantRights.get(movingPiece.color)![column] = [
             false,
             false,
@@ -789,8 +798,8 @@ export class Position {
     let dyingPiece: Piece = this._boardArrangement[row][column];
     if (
       dyingPiece != null &&
-      dyingPiece.type == PieceType.pawn &&
-      row == (dyingPiece as Pawn).enPassantableRow
+      dyingPiece.type === PieceType.pawn &&
+      row === (dyingPiece as Pawn).enPassantableRow
     ) {
       this._setEnPassantRightsForColorAgainstColumn(
         reverseColor(dyingPiece.color),
@@ -799,11 +808,11 @@ export class Position {
       );
     }
     this._boardArrangement[row][column] = null as any;
-    this._playerArrangement[row][column] = null as any;
     let playerIndex: number = this._playerArrangement[row][column];
     if (playerIndex != null) {
       this._playerLocations[playerIndex] = null as any;
     }
+    this._playerArrangement[row][column] = null as any;
     this._updateCastleRights(row, column);
   }
 
@@ -815,16 +824,11 @@ export class Position {
   }
 }
 
-/*
-// interface
-interface Board {
-  initializeGame(povColor: PieceColor): void;
-
-  update(): void;
-
-  set playerIndex(playerIndex: number): void;
+export interface Board {
+  setPieces(playingPieces: PlayingPiece[], movingPieceIndex?: number): void;
 }
 
+/*
 // interface
 class GraveYard {
   void addPiece(Piece piece, double respawnTimer) {}

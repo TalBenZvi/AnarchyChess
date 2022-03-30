@@ -11,6 +11,13 @@ ul.no-bullets {
   padding: 0;
 }
 
+ul.row {
+  flex-direction: row;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
 .centered {
   position: fixed;
   top: 50%;
@@ -22,27 +29,30 @@ ul.no-bullets {
 
 /* The animation code */
 
+
 :root {
-  --prev: 0px;
-  --current:50px
+  --prev-row: 0px;
+  --prev-column:0px;
+  --current-row: 0px;
+  --current-column:0px;
 }
 
-.animated-div {
+
+.moving-piece {
   position: fixed;
-  width: 100px;
-  height: 100px;
-  background-color: red;
-  animation-name: example;
+  animation-name: piece-motion;
   animation-duration: 0.2s;
   animation-fill-mode: forwards;
   animation-timing-function: linear;
 }
 
-@keyframes example {
+@keyframes piece-motion {
   from {
-    left: var(--prev);
+    top: var(--prev-row);
+    left: var(--prev-column);
   }
   to {
-    left: var(--current);
+    top: var(--current-row);
+    left: var(--current-column);
   }
 }
