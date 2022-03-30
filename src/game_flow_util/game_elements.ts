@@ -670,6 +670,14 @@ export class Position {
     return this._enPassantRights.get(color)![column][direction];
   }
 
+  findAvaillableMovesForPlayer(playerIndex: number): Move[] {
+    let square: Square = this.getPlayerLocation(playerIndex);
+    if (square != null) {
+      return this.pieceAt(square.row, square.column).findLegalMoves(this, square);
+    }
+    return [];
+  }
+
   _updateCastleRights(changeRow: number, changeColumn: number) {
     if (changeRow === 0) {
       if (changeColumn === 0) {
@@ -825,7 +833,7 @@ export class Position {
 }
 
 export interface Board {
-  setPieces(playingPieces: PlayingPiece[], movingPieceIndex?: number): void;
+  setPieces(playingPieces: PlayingPiece[], availableMoves: Move[], movingPieceIndex?: number): void;
 }
 
 /*

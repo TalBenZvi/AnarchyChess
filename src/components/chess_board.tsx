@@ -1,5 +1,7 @@
 import * as React from "react";
+import "./chess_board.css";
 import Box from "@mui/material/Box";
+import { Dialog } from "@headlessui/react";
 import {
   Board,
   BOARD_SIZE,
@@ -8,8 +10,13 @@ import {
   PieceColor,
   colorToString,
   typeToString,
+  Move,
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
+
+import { useState } from "react";
+
+import captureIcon from "../assets/action_icons/capture_icon.png";
 
 function importAll(r: any) {
   let images: Map<string, any> = new Map<string, any>();
@@ -34,7 +41,9 @@ interface BoardComponentProps {
 interface BoardComponentState {
   povColor: PieceColor;
   playingPieces: PlayingPiece[];
+  availableMoves: Move[];
   movingPieceIndex: number;
+  isPromotionDialogOpen: boolean;
 }
 
 class BoardComponent
@@ -45,7 +54,9 @@ class BoardComponent
     playingPieces: [...Array(NUM_OF_PLAYERS)].map((_, i) => {
       return { piece: null as any, row: null as any, column: null as any };
     }),
+    availableMoves: [],
     movingPieceIndex: null as any,
+    isPromotionDialogOpen: true,
   };
 
   constructor(props: BoardComponentProps) {
@@ -53,7 +64,11 @@ class BoardComponent
     props.clientFlowEngine.board = this;
   }
 
-  setPieces = (playingPieces: PlayingPiece[], movingPieceIndex?: number) => {
+  setPieces = (
+    playingPieces: PlayingPiece[],
+    availableMoves: Move[],
+    movingPieceIndex?: number
+  ) => {
     let root = document.documentElement;
     let squareSize: number = this.props.size / BOARD_SIZE;
     if (
@@ -94,6 +109,7 @@ class BoardComponent
     this.setState((state: BoardComponentState, props: BoardComponentProps) => {
       return {
         playingPieces: playingPieces,
+        availableMoves: availableMoves,
         movingPieceIndex: movingPieceIndex as any,
       };
     });
@@ -111,11 +127,20 @@ class BoardComponent
       : BOARD_SIZE - 1 - columnIndex;
   }
 
+  private setIsPromotionDialogOpen(isPromotionDialogOpen: boolean) {
+    this.setState(
+      (state: BoardComponentState, props: BoardComponentProps) => {
+        return { isPromotionDialogOpen: isPromotionDialogOpen };
+      }
+    )
+  }
+
   render() {
     let { size, lightColor, darkColor } = this.props;
     let { povColor } = this.state;
     let squareSize: number = size / BOARD_SIZE;
-    let coordinateIndexFontSize: number = size / 30;
+    let coordinateIndexFontSize: number = size * 0.03;
+    let moveIndicatorSize: number = squareSize * 0.5;
     let movingPieceIndex: number = this.state.movingPieceIndex;
     this.state.movingPieceIndex = null;
     return (
@@ -125,6 +150,26 @@ class BoardComponent
           height: size,
         }}
       >
+        <Dialog
+          open={this.state.isPromotionDialogOpen}
+          onClose={() => this.setIsPromotionDialogOpen(false)}
+        >
+          <Dialog.Overlay />
+
+          <Dialog.Title>Deactivate account</Dialog.Title>
+          <Dialog.Description>
+            This will permanently deactivate your account
+          </Dialog.Description>
+
+          <p>
+            Are you sure you want to deactivate your account? All of your data
+            will be permanently removed. This action cannot be undone.
+          </p>
+
+          <button onClick={() => this.setIsPromotionDialogOpen(false)}>Deactivate</button>
+          <button onClick={() => this.setIsPromotionDialogOpen(false)}>Cancel</button>
+        </Dialog>
+        {/* squares */}
         <ul className="no-bullets">
           {[...Array(BOARD_SIZE)].map((_, i) => (
             <li key={Math.random()}>
@@ -141,6 +186,7 @@ class BoardComponent
                             backgroundColor: isLight ? lightColor : darkColor,
                           }}
                         >
+                          {/* coordinate indicators */}
                           <div style={{ position: "relative" }}>
                             {j === 0 ? (
                               <div
@@ -189,6 +235,7 @@ class BoardComponent
             </li>
           ))}
         </ul>
+        {/* pieces */}
         <ul className="no-bullets">
           {[...Array(NUM_OF_PLAYERS)].map((_, i) => {
             let playingPiece: PlayingPiece = this.state.playingPieces[i];
@@ -230,6 +277,53 @@ class BoardComponent
               </li>
             );
           })}
+        </ul>
+        {/* moves */}
+        <ul className="no-bullets">
+          {this.state.availableMoves.map((move) => (
+            <li key={Math.random()}>
+              <div
+                style={{
+                  position: "absolute",
+                  left:
+                    this.fitColumnIndexToPOV((move as Move).column) *
+                    squareSize,
+                  top: this.fitRowIndexToPOV((move as Move).row) * squareSize,
+                }}
+              >
+                <button
+                  onClick={() => {
+                    this.props.clientFlowEngine.sendMove(move);
+                  }}
+                  style={{
+                    width: squareSize,
+                    height: squareSize,
+                  }}
+                >
+                  {(move as Move).isCapture ? (
+                    <div>
+                      <img
+                        src={captureIcon}
+                        height={squareSize}
+                        width={squareSize}
+                        style={{ opacity: 0.3 }}
+                        alt=""
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="move-indicator"
+                      style={{
+                        width: moveIndicatorSize,
+                        height: moveIndicatorSize,
+                        margin: 0.5 * (squareSize - moveIndicatorSize),
+                      }}
+                    />
+                  )}
+                </button>
+              </div>
+            </li>
+          ))}
         </ul>
       </Box>
     );

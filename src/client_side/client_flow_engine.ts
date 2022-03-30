@@ -4,6 +4,7 @@ import {
   PlayingPiece,
   NUM_OF_PLAYERS,
   BOARD_SIZE,
+  Move,
 } from "../game_flow_util/game_elements";
 
 export class ClientFlowEngine {
@@ -14,18 +15,24 @@ export class ClientFlowEngine {
     this._board = board;
   }
 
+  sendMove(move: Move): void {
+    this._position.move(9, move.row, move.column);
+    if (this._board != null) {
+      this._board.setPieces(
+        this._position.playingPieces,
+        this._position.findAvaillableMovesForPlayer(9),
+        9
+      );
+    }
+  }
+
   async test(): Promise<void> {
     if (this._board != null) {
       this._position.setToStartingPosition();
-      this._board.setPieces(this._position.playingPieces);
-      while (true) {
-        let movingPieceIndex: number = 0
-        let destRow: number = Math.floor(Math.random() * BOARD_SIZE);
-        let destColumn: number = Math.floor(Math.random() * BOARD_SIZE);
-        await new Promise((f) => setTimeout(f, 1000));
-        this._position.move(movingPieceIndex, destRow, destColumn);
-        this._board.setPieces(this._position.playingPieces, movingPieceIndex);
-      }
+      this._board.setPieces(
+        this._position.playingPieces,
+        this._position.findAvaillableMovesForPlayer(9)
+      );
     }
   }
 }

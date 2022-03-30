@@ -25,34 +25,5 @@ ul.row {
   transform: translate(-50%, -50%);
 }
 
-/* chess board component */
-
-/* The animation code */
 
 
-:root {
-  --prev-row: 0px;
-  --prev-column:0px;
-  --current-row: 0px;
-  --current-column:0px;
-}
-
-
-.moving-piece {
-  position: fixed;
-  animation-name: piece-motion;
-  animation-duration: 0.2s;
-  animation-fill-mode: forwards;
-  animation-timing-function: linear;
-}
-
-@keyframes piece-motion {
-  from {
-    top: var(--prev-row);
-    left: var(--prev-column);
-  }
-  to {
-    top: var(--current-row);
-    left: var(--current-column);
-  }
-}
