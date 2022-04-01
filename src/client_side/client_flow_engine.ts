@@ -15,15 +15,29 @@ export class ClientFlowEngine {
     this._board = board;
   }
 
-  sendMove(move: Move): void {
-    this._position.move(9, move.row, move.column);
+  async sendMove(move: Move) {
+    let playerIndex: number = 9;
+
+    this._position.move(playerIndex, move.row, move.column);
     if (this._board != null) {
       this._board.setPieces(
         this._position.playingPieces,
-        this._position.findAvaillableMovesForPlayer(9),
-        9
+        this._position.findAvaillableMovesForPlayer(playerIndex),
+        playerIndex
       );
     }
+    if (move.isPromotion) {
+      this._position.promotePieceAt(move.row, move.column, move.promotionType);
+      if (this._board != null) {
+        await new Promise(f => setTimeout(f, 200));
+        this._board.setPieces(
+          this._position.playingPieces,
+          this._position.findAvaillableMovesForPlayer(playerIndex),
+          null as any,
+        );
+      }
+    }
+    
   }
 
   async test(): Promise<void> {

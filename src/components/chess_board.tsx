@@ -11,10 +11,17 @@ import {
   colorToString,
   typeToString,
   Move,
+  PieceType,
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
-
-import { useState } from "react";
+import {
+  Button,
+  Dimmer,
+  Header,
+  Icon,
+  Image,
+  Segment,
+} from "semantic-ui-react";
 
 import captureIcon from "../assets/action_icons/capture_icon.png";
 
@@ -30,6 +37,13 @@ const images = importAll(
   require.context("../assets/piece_icons", false, /\.(png|jpe?g|svg)$/)
 );
 
+const PROMOTION_TYPES: PieceType[] = [
+  PieceType.knight,
+  PieceType.bishop,
+  PieceType.rook,
+  PieceType.queen,
+];
+
 interface BoardComponentProps {
   size: number;
   lightColor: string;
@@ -42,22 +56,23 @@ interface BoardComponentState {
   povColor: PieceColor;
   playingPieces: PlayingPiece[];
   availableMoves: Move[];
-  movingPieceIndex: number;
   isPromotionDialogOpen: boolean;
 }
 
 class BoardComponent
   extends React.Component<BoardComponentProps, BoardComponentState>
-  implements Board {
+  implements Board
+{
   state = {
     povColor: this.props.povColor,
     playingPieces: [...Array(NUM_OF_PLAYERS)].map((_, i) => {
       return { piece: null as any, row: null as any, column: null as any };
     }),
     availableMoves: [],
-    movingPieceIndex: null as any,
-    isPromotionDialogOpen: true,
+    isPromotionDialogOpen: false,
   };
+  movingPieceIndex: number = null as any;
+  promotionMoveToSend: Move = null as any;
 
   constructor(props: BoardComponentProps) {
     super(props);
@@ -106,11 +121,11 @@ class BoardComponent
         ).toString() + "px"
       );
     }
+    this.movingPieceIndex = movingPieceIndex as any;
     this.setState((state: BoardComponentState, props: BoardComponentProps) => {
       return {
         playingPieces: playingPieces,
         availableMoves: availableMoves,
-        movingPieceIndex: movingPieceIndex as any,
       };
     });
   };
@@ -127,22 +142,33 @@ class BoardComponent
       : BOARD_SIZE - 1 - columnIndex;
   }
 
-  private setIsPromotionDialogOpen(isPromotionDialogOpen: boolean) {
-    this.setState(
-      (state: BoardComponentState, props: BoardComponentProps) => {
-        return { isPromotionDialogOpen: isPromotionDialogOpen };
-      }
-    )
+  private sendMove(move: Move): void {
+    this.props.clientFlowEngine.sendMove(move);
   }
+
+  private openPromotionDialog(move: Move) {
+    this.promotionMoveToSend = move;
+    this.setState((state: BoardComponentState, props: BoardComponentProps) => {
+      return { isPromotionDialogOpen: true };
+    });
+  }
+
+  private closePromotionDialog(): void {
+    this.promotionMoveToSend = null as any;
+    this.setState((state: BoardComponentState, props: BoardComponentProps) => {
+      return { isPromotionDialogOpen: false };
+    });
+  }
+
 
   render() {
     let { size, lightColor, darkColor } = this.props;
-    let { povColor } = this.state;
+    let { povColor, playingPieces, availableMoves, isPromotionDialogOpen } =
+      this.state;
     let squareSize: number = size / BOARD_SIZE;
     let coordinateIndexFontSize: number = size * 0.03;
     let moveIndicatorSize: number = squareSize * 0.5;
-    let movingPieceIndex: number = this.state.movingPieceIndex;
-    this.state.movingPieceIndex = null;
+    let promotionDialogButtonSize: number = squareSize * 1.5;
     return (
       <Box
         sx={{
@@ -150,25 +176,6 @@ class BoardComponent
           height: size,
         }}
       >
-        <Dialog
-          open={this.state.isPromotionDialogOpen}
-          onClose={() => this.setIsPromotionDialogOpen(false)}
-        >
-          <Dialog.Overlay />
-
-          <Dialog.Title>Deactivate account</Dialog.Title>
-          <Dialog.Description>
-            This will permanently deactivate your account
-          </Dialog.Description>
-
-          <p>
-            Are you sure you want to deactivate your account? All of your data
-            will be permanently removed. This action cannot be undone.
-          </p>
-
-          <button onClick={() => this.setIsPromotionDialogOpen(false)}>Deactivate</button>
-          <button onClick={() => this.setIsPromotionDialogOpen(false)}>Cancel</button>
-        </Dialog>
         {/* squares */}
         <ul className="no-bullets">
           {[...Array(BOARD_SIZE)].map((_, i) => (
@@ -238,7 +245,7 @@ class BoardComponent
         {/* pieces */}
         <ul className="no-bullets">
           {[...Array(NUM_OF_PLAYERS)].map((_, i) => {
-            let playingPiece: PlayingPiece = this.state.playingPieces[i];
+            let playingPiece: PlayingPiece = playingPieces[i];
             if (playingPiece.piece == null) {
               return <li key={Math.random()}></li>;
             }
@@ -254,7 +261,8 @@ class BoardComponent
                 alt=""
               />
             );
-            if (i === movingPieceIndex) {
+            if (i === this.movingPieceIndex) {
+              this.movingPieceIndex = null as any;
               return (
                 <li key={Math.random()}>
                   <div className="moving-piece">{pieceImage}</div>
@@ -280,7 +288,7 @@ class BoardComponent
         </ul>
         {/* moves */}
         <ul className="no-bullets">
-          {this.state.availableMoves.map((move) => (
+          {availableMoves.map((move) => (
             <li key={Math.random()}>
               <div
                 style={{
@@ -293,7 +301,11 @@ class BoardComponent
               >
                 <button
                   onClick={() => {
-                    this.props.clientFlowEngine.sendMove(move);
+                    if ((move as Move).isPromotion) {
+                      this.openPromotionDialog(move);
+                    } else {
+                      this.sendMove(move);
+                    } 
                   }}
                   style={{
                     width: squareSize,
@@ -325,6 +337,63 @@ class BoardComponent
             </li>
           ))}
         </ul>
+        {/* promotion dialog */}
+        <Dialog
+          open={isPromotionDialogOpen}
+          onClose={() => {
+            this.closePromotionDialog();
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              boxShadow: "0 0 0 100vmax rgba(0, 0, 0, 0.7)",
+              pointerEvents: "none",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              background: "white",
+              width: promotionDialogButtonSize,
+              height:
+                promotionDialogButtonSize * (PROMOTION_TYPES.length + 0.1),
+              borderRadius: promotionDialogButtonSize * 0.1,
+            }}
+          ></div>
+          <div className="centered">
+            <ul className="no-bullets">
+              {PROMOTION_TYPES.map((type) => {
+                return (
+                  <li key={Math.random()}>
+                    <div>
+                      <button
+                        onClick={() => {
+                          this.promotionMoveToSend.promotionType = type;
+                          this.sendMove(this.promotionMoveToSend);
+                          this.closePromotionDialog();
+                        }}
+                        style={{
+                          height: promotionDialogButtonSize,
+                          width: promotionDialogButtonSize,
+                        }}
+                      >
+                        <img
+                          src={images.get(
+                            `${colorToString.get(povColor)}_${typeToString.get(
+                              type
+                            )}.png`
+                          )}
+                          height={promotionDialogButtonSize}
+                          width={promotionDialogButtonSize}
+                          alt=""
+                        />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </Dialog>
       </Box>
     );
   }

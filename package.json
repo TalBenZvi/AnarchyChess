@@ -7,7 +7,7 @@
     "@emotion/styled": "^11.8.1",
     "@headlessui/react": "^1.5.0",
     "@material-ui/core": "^4.12.3",
-    "@mui/material": "^5.5.2",
+    "@mui/material": "^5.5.3",
     "@testing-library/jest-dom": "^5.16.3",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
@@ -24,6 +24,8 @@
     "react-dom": "^17.0.2",
     "react-scripts": "5.0.0",
     "rxjs": "^7.5.5",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^2.1.2",
     "sizedbox": "^1.0.3",
     "typescript": "^4.6.3",
     "web-vitals": "^2.1.4"
@@ -57,6 +59,7 @@
     "@babel/preset-react": "^7.16.7",
     "@types/jquery": "^2.0.47",
     "@types/webpack-env": "^1.16.3",
-    "webpack": "^5.70.0"
+    "webpack": "^5.70.0",
+    "webpack-env": "^0.8.0"
   }
 }

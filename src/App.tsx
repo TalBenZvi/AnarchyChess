@@ -8,14 +8,16 @@ import { ClientFlowEngine } from "./client_side/client_flow_engine";
 function App() {
   let clientFlowEngine: ClientFlowEngine = new ClientFlowEngine();
   return (
+    
     <div className="centered">
-      <BoardComponent size={850} lightColor="#9999bb" darkColor="#333333" povColor={PieceColor.white} clientFlowEngine={clientFlowEngine} />
+      <BoardComponent size={850} lightColor="#9999bb" darkColor="#454545" povColor={PieceColor.white} clientFlowEngine={clientFlowEngine} />
       <button onClick={()=>{
         clientFlowEngine.test();
       }}>
         start
       </button>
     </div>
+    
     
   );
 }
