@@ -94,6 +94,15 @@ export class Move {
         : null) as CastleSide;
     }
   }
+
+  toJson(): string {
+    return JSON.stringify(this, (key, value) => {
+      if (["isPromotion", "isCapture", "isEnPassant", "isCastle", "castleSide"].indexOf(key) > -1) {
+        return undefined;
+      }
+      return value;
+    });
+  }
 }
 
 export abstract class Piece {
@@ -134,18 +143,17 @@ export abstract class Piece {
 
   abstract findLegalMoves(position: Position, currentSquare: Square): Move[];
 
-  getMove(
+  locateMove(
     position: Position,
     currentSquare: Square,
-    row: number,
-    column: number
-  ): Move | null {
-    for (let move of this.findLegalMoves(position, currentSquare)) {
-      if (move.row === row && move.column === column) {
+    move: Move
+  ): Move  {
+    for (let legalMove of this.findLegalMoves(position, currentSquare)) {
+      if (legalMove.row === move.row && legalMove.column === move.column) {
         return move;
       }
     }
-    return null;
+    return null as any;
   }
 }
 
@@ -676,6 +684,14 @@ export class Position {
       return this.pieceAt(square.row, square.column).findLegalMoves(this, square);
     }
     return [];
+  }
+
+  locateMoveForPlayer(playerIndex: number, move: Move): Move {
+    let square: Square = this.getPlayerLocation(playerIndex);
+    if (square != null) {
+      return this.pieceAt(square.row, square.column).locateMove(this, square, move);
+    }
+    return null as any;
   }
 
   _updateCastleRights(changeRow: number, changeColumn: number) {

@@ -14,14 +14,6 @@ import {
   PieceType,
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
-import {
-  Button,
-  Dimmer,
-  Header,
-  Icon,
-  Image,
-  Segment,
-} from "semantic-ui-react";
 
 import captureIcon from "../assets/action_icons/capture_icon.png";
 
@@ -61,8 +53,7 @@ interface BoardComponentState {
 
 class BoardComponent
   extends React.Component<BoardComponentProps, BoardComponentState>
-  implements Board
-{
+  implements Board {
   state = {
     povColor: this.props.povColor,
     playingPieces: [...Array(NUM_OF_PLAYERS)].map((_, i) => {
@@ -160,15 +151,19 @@ class BoardComponent
     });
   }
 
-
   render() {
     let { size, lightColor, darkColor } = this.props;
-    let { povColor, playingPieces, availableMoves, isPromotionDialogOpen } =
-      this.state;
+    let {
+      povColor,
+      playingPieces,
+      availableMoves,
+      isPromotionDialogOpen,
+    } = this.state;
     let squareSize: number = size / BOARD_SIZE;
     let coordinateIndexFontSize: number = size * 0.03;
     let moveIndicatorSize: number = squareSize * 0.5;
     let promotionDialogButtonSize: number = squareSize * 1.5;
+    return <h1>hello</h1>;
     return (
       <Box
         sx={{
@@ -305,7 +300,7 @@ class BoardComponent
                       this.openPromotionDialog(move);
                     } else {
                       this.sendMove(move);
-                    } 
+                    }
                   }}
                   style={{
                     width: squareSize,
