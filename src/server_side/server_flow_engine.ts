@@ -14,7 +14,7 @@ import {
   PieceType,
   CastleSide,
 } from "../game_flow_util/game_elements";
-import { Event, EventType, EventInfo } from "../game_flow_util/events";
+import { Event, EventType, EventInfo, replacer } from "../game_flow_util/communication";
 
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
@@ -25,22 +25,14 @@ export class ServerFlowEngine implements ServerObserver {
     this.gameServer = new GameServer(this);
   }
 
-  acceptConnections(port: number, ip: string): void {
-    this.gameServer.acceptConnections(port, ip);
+  acceptConnections(gameID: string): void {
+    this.gameServer.acceptConnections(gameID);
   }
 
   private startGame(): void {
     this.position.setToStartingPosition();
     this.isGameRunning = true;
-    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-      this.gameServer.sendEvents(i, [
-        {
-          playerIndex: i,
-          type: EventType.gameStarted,
-          info: new Map<EventInfo, any>(),
-        },
-      ]);
-    }
+    this.gameServer.startGame();
   }
 
   private registerMove(playerIndex: number, moveRequest: Move) {
@@ -59,9 +51,11 @@ export class ServerFlowEngine implements ServerObserver {
           this.position.promotePieceAt(move.row, move.column, promotionType);
         }
         events.push({
-          playerIndex,
           type: EventType.move,
-          info: new Map<EventInfo, any>([EventInfo.move, move as any]),
+          info: new Map<EventInfo, string>([
+            [EventInfo.playerIndex, playerIndex.toString()],
+            [EventInfo.move, JSON.stringify(move, replacer)],
+          ]),
         });
         if (move.isCastle) {
           let movingPiece: Piece = this.position.getPieceByPlayer(playerIndex);
@@ -77,12 +71,14 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
-  notify(
+  async notify(
     notification: ServerNotificationType,
     notificationInfo: Map<ServerNotificationInfo, any>
-  ): void {
+  ) {
     switch (notification) {
       case ServerNotificationType.filledServer: {
+        console.log("server full");
+        await new Promise((f) => setTimeout(f, 10000));
         this.startGame();
         break;
       }

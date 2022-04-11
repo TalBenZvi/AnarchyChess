@@ -163,7 +163,6 @@ class BoardComponent
     let coordinateIndexFontSize: number = size * 0.03;
     let moveIndicatorSize: number = squareSize * 0.5;
     let promotionDialogButtonSize: number = squareSize * 1.5;
-    return <h1>hello</h1>;
     return (
       <Box
         sx={{
