@@ -8,11 +8,11 @@ const MAX_CONNECTION_TRIES: number = 10;
 
 export enum ClientNotificationType {
   disconnectedFromServer,
-  receivedEvents,
+  receivedEvent,
 }
 
 export enum ClientNotificationInfo {
-  events,
+  event,
 }
 
 export interface ClientObserver {
@@ -53,7 +53,6 @@ export class GameClient {
         .map()
         .once((request: any) => {
           let connectedIDs: string[] = JSON.parse(request.data);
-          //console.log(`connectedIDs: ${connectedIDs.toString()}`);
           if (connectedIDs.indexOf(this.playerID) > -1) {
             didConnect = true;
           }
@@ -65,11 +64,11 @@ export class GameClient {
             .get(`${this.gameID}_events`)
             .map()
             .once((request: any) => {
-              let events: Event[] = JSON.parse(request.data, reviver);
+              let event: Event = JSON.parse(request.data, reviver);
               this.observer.notify(
-                ClientNotificationType.receivedEvents,
+                ClientNotificationType.receivedEvent,
                 new Map<ClientNotificationInfo, any>([
-                  [ClientNotificationInfo.events, events],
+                  [ClientNotificationInfo.event, event],
                 ])
               );
             });

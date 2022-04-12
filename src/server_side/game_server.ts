@@ -23,9 +23,8 @@ export interface ServerObserver {
 
 export class GameServer {
   private gun: any = null;
-  private eventlog: Event[] = [];
   private gameID: string = null as any;
-  private playerIDs: string[] = [];
+  private playerIDs: string[] = [...Array(NUM_OF_PLAYERS - 1)].map((_, i) => `id${i + 1}`);
   private gameStatus: GameStatus = GameStatus.inactive;
 
   constructor(private observer: ServerObserver) {}
@@ -42,7 +41,6 @@ export class GameServer {
         .map()
         .once((request: any) => {
           let playerID: string = request.data;
-          //console.log(`request: ${playerID}`);
           if (
             this.playerIDs.indexOf(playerID) === -1 &&
             this.playerIDs.length < NUM_OF_PLAYERS
@@ -51,9 +49,7 @@ export class GameServer {
             this.gun
               .get(`${this.gameID}_conenctedPlayers`)
               .set({ data: JSON.stringify(this.playerIDs) });
-            //console.log(`conenctedPlayers: ${this.playerIDs.toString()}`);
             if (this.playerIDs.length >= NUM_OF_PLAYERS) {
-              //console.log(this.playerIDs);
               this.observer.notify(
                 ServerNotificationType.filledServer,
                 new Map<ServerNotificationInfo, any>()
@@ -95,22 +91,21 @@ export class GameServer {
         playerIndices.set(otherPlayerID, playerIndices.get("id0") as number);
         playerIndices.set("id0", 9);
 
-        this.broadcastEvents([
+        this.broadcastEvent(
           {
             type: EventType.gameStarted,
             info: new Map<EventInfo, string>([
               [EventInfo.connectedPlayerIndices, JSON.stringify(playerIndices, replacer)],
             ]),
           },
-        ]);
+        );
       }
     }
   }
 
-  broadcastEvents(events: Event[]): void {
-    this.eventlog = this.eventlog.concat(events);
+  broadcastEvent(event: Event): void {
     this.gun
       .get(`${this.gameID}_events`)
-      .set({ data: JSON.stringify(this.eventlog, replacer) });
+      .set({ data: JSON.stringify(event, replacer) });
   }
 }

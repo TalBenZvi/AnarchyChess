@@ -36,7 +36,6 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   private registerMove(playerIndex: number, moveRequest: Move) {
-    let events: Event[] = [];
     let playerLocation: Square = this.position.getPlayerLocation(playerIndex);
     if (playerLocation != null) {
       let move: Move = this.position.locateMoveForPlayer(
@@ -50,13 +49,6 @@ export class ServerFlowEngine implements ServerObserver {
           move.promotionType = promotionType;
           this.position.promotePieceAt(move.row, move.column, promotionType);
         }
-        events.push({
-          type: EventType.move,
-          info: new Map<EventInfo, string>([
-            [EventInfo.playerIndex, playerIndex.toString()],
-            [EventInfo.move, JSON.stringify(move, replacer)],
-          ]),
-        });
         if (move.isCastle) {
           let movingPiece: Piece = this.position.getPieceByPlayer(playerIndex);
           let startRow: number = movingPiece.color === PieceColor.white ? 0 : 7;
@@ -67,7 +59,13 @@ export class ServerFlowEngine implements ServerObserver {
           this.position.moveFrom(startRow, startColumn, startRow, destColumn);
         }
       }
-      this.gameServer.broadcastEvents(events);
+      this.gameServer.broadcastEvent({
+        type: EventType.move,
+        info: new Map<EventInfo, string>([
+          [EventInfo.playerIndex, playerIndex.toString()],
+          [EventInfo.move, JSON.stringify(move, replacer)],
+        ]),
+      });
     }
   }
 
@@ -78,7 +76,7 @@ export class ServerFlowEngine implements ServerObserver {
     switch (notification) {
       case ServerNotificationType.filledServer: {
         console.log("server full");
-        await new Promise((f) => setTimeout(f, 10000));
+        await new Promise((f) => setTimeout(f, 3000));
         this.startGame();
         break;
       }

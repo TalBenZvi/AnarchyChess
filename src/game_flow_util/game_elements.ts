@@ -31,7 +31,7 @@ export const colorToString = new Map<PieceColor, string>([
 ]);
 
 export const reverseColor = (color: PieceColor): PieceColor =>
-  (color === PieceColor.white ? PieceColor.black : PieceColor.white);
+  color === PieceColor.white ? PieceColor.black : PieceColor.white;
 
 class MoveOffset {
   constructor(public rowOffset: number, public columnOffset: number) {}
@@ -40,12 +40,11 @@ class MoveOffset {
 export class Square {
   constructor(readonly row: number, readonly column: number) {}
 
-  isOnTheBoard = (): boolean =>(
-      (0 <= this.row &&
-        this.row < BOARD_SIZE &&
-        0 <= this.column &&
-        this.column < BOARD_SIZE)
-    );
+  isOnTheBoard = (): boolean =>
+    0 <= this.row &&
+    this.row < BOARD_SIZE &&
+    0 <= this.column &&
+    this.column < BOARD_SIZE;
 
   applyMove = (moveOffset: MoveOffset) =>
     new Square(
@@ -83,21 +82,29 @@ export class Move {
   ) {
     if (params != null) {
       this.isPromotion = Boolean(params.isPromotion);
-      this.promotionType = (Boolean(params.promotionType)
-        ? params.promotionType
-        : null) as PieceType;
+      this.promotionType = (
+        Boolean(params.promotionType) ? params.promotionType : null
+      ) as PieceType;
       this.isCapture = Boolean(params.isCapture);
       this.isEnPassant = Boolean(params.isEnPassant);
       this.isCastle = Boolean(params.isCastle);
-      this.castleSide = (Boolean(params.castleSide)
-        ? params.castleSide
-        : null) as CastleSide;
+      this.castleSide = (
+        Boolean(params.castleSide) ? params.castleSide : null
+      ) as CastleSide;
     }
   }
 
   toJson(): string {
     return JSON.stringify(this, (key, value) => {
-      if (["isPromotion", "isCapture", "isEnPassant", "isCastle", "castleSide"].indexOf(key) > -1) {
+      if (
+        [
+          "isPromotion",
+          "isCapture",
+          "isEnPassant",
+          "isCastle",
+          "castleSide",
+        ].indexOf(key) > -1
+      ) {
         return undefined;
       }
       return value;
@@ -143,14 +150,10 @@ export abstract class Piece {
 
   abstract findLegalMoves(position: Position, currentSquare: Square): Move[];
 
-  locateMove(
-    position: Position,
-    currentSquare: Square,
-    move: Move
-  ): Move  {
+  locateMove(position: Position, currentSquare: Square, move: Move): Move {
     for (let legalMove of this.findLegalMoves(position, currentSquare)) {
       if (legalMove.row === move.row && legalMove.column === move.column) {
-        return move;
+        return legalMove;
       }
     }
     return null as any;
@@ -223,26 +226,26 @@ export class Pawn extends Piece {
     super(color);
     switch (color) {
       case PieceColor.white:
-          this._startRow = 1;
-          this._promotionRow = BOARD_SIZE - 1;
-          this._enPassantRow = 4;
-          this._enPassantableRow = 3;
-          this._moveOffsets = [new MoveOffset(1, 0), new MoveOffset(2, 0)];
-          this._captureMoveOffsets = [
-            new MoveOffset(1, -1),
-            new MoveOffset(1, 1),
-          ];
+        this._startRow = 1;
+        this._promotionRow = BOARD_SIZE - 1;
+        this._enPassantRow = 4;
+        this._enPassantableRow = 3;
+        this._moveOffsets = [new MoveOffset(1, 0), new MoveOffset(2, 0)];
+        this._captureMoveOffsets = [
+          new MoveOffset(1, -1),
+          new MoveOffset(1, 1),
+        ];
         break;
       case PieceColor.black:
-          this._startRow = BOARD_SIZE - 2;
-          this._promotionRow = 0;
-          this._enPassantRow = 3;
-          this._enPassantableRow = 4;
-          this._moveOffsets = [new MoveOffset(-1, 0), new MoveOffset(-2, 0)];
-          this._captureMoveOffsets = [
-            new MoveOffset(-1, -1),
-            new MoveOffset(-1, 1),
-          ];
+        this._startRow = BOARD_SIZE - 2;
+        this._promotionRow = 0;
+        this._enPassantRow = 3;
+        this._enPassantableRow = 4;
+        this._moveOffsets = [new MoveOffset(-1, 0), new MoveOffset(-2, 0)];
+        this._captureMoveOffsets = [
+          new MoveOffset(-1, -1),
+          new MoveOffset(-1, 1),
+        ];
         break;
     }
   }
@@ -301,7 +304,8 @@ export class Pawn extends Piece {
           destSquare.column
         );
         let isCaptureAvailable: boolean =
-          destSquareOccupier !== null && this.color !== destSquareOccupier.color;
+          destSquareOccupier !== null &&
+          this.color !== destSquareOccupier.color;
         let isEnPassantAvailable: boolean =
           position.isEnPassantAvailable(this.color, currentSquare.column, i) &&
           (destSquareOccupier === null ||
@@ -398,10 +402,10 @@ export class King extends UnblockablePiece {
     super(color);
     switch (color) {
       case PieceColor.white:
-          this._startRow = 0;
+        this._startRow = 0;
         break;
       case PieceColor.black:
-          this._startRow = BOARD_SIZE - 1;
+        this._startRow = BOARD_SIZE - 1;
         break;
     }
   }
@@ -541,19 +545,16 @@ export class Position {
   }
 
   get playingPieces(): PlayingPiece[] {
-    return this.playerLocations.map(
-      (square: Square): PlayingPiece => {
-        if (square == null){
-          return {piece: null as any, row: null as any, column: null as any}
-        }
-        return {
-          piece: this.pieceAt(square.row, square.column),
-          row: square.row,
-          column: square.column,
-        };
+    return this.playerLocations.map((square: Square): PlayingPiece => {
+      if (square == null) {
+        return { piece: null as any, row: null as any, column: null as any };
       }
-        
-    );
+      return {
+        piece: this.pieceAt(square.row, square.column),
+        row: square.row,
+        column: square.column,
+      };
+    });
   }
 
   setToStartingPosition() {
@@ -681,7 +682,10 @@ export class Position {
   findAvaillableMovesForPlayer(playerIndex: number): Move[] {
     let square: Square = this.getPlayerLocation(playerIndex);
     if (square != null) {
-      return this.pieceAt(square.row, square.column).findLegalMoves(this, square);
+      return this.pieceAt(square.row, square.column).findLegalMoves(
+        this,
+        square
+      );
     }
     return [];
   }
@@ -689,7 +693,11 @@ export class Position {
   locateMoveForPlayer(playerIndex: number, move: Move): Move {
     let square: Square = this.getPlayerLocation(playerIndex);
     if (square != null) {
-      return this.pieceAt(square.row, square.column).locateMove(this, square, move);
+      return this.pieceAt(square.row, square.column).locateMove(
+        this,
+        square,
+        move
+      );
     }
     return null as any;
   }
@@ -739,14 +747,14 @@ export class Position {
   ) {
     switch (column) {
       case 0:
-          this._enPassantRights.get(color)![1][0] = state;
+        this._enPassantRights.get(color)![1][0] = state;
         break;
       case BOARD_SIZE - 1:
-          this._enPassantRights.get(color)![BOARD_SIZE - 2][1] = state;
+        this._enPassantRights.get(color)![BOARD_SIZE - 2][1] = state;
         break;
       default:
-          this._enPassantRights.get(color)![column + 1][0] = state;
-          this._enPassantRights.get(color)![column - 1][1] = state;
+        this._enPassantRights.get(color)![column + 1][0] = state;
+        this._enPassantRights.get(color)![column - 1][1] = state;
         break;
     }
   }
@@ -760,13 +768,11 @@ export class Position {
         return;
       }
       this.killPlayerAt(row, column);
-      this._boardArrangement[row][column] = this._boardArrangement[startRow][
-        startColumn
-      ];
+      this._boardArrangement[row][column] =
+        this._boardArrangement[startRow][startColumn];
       this._boardArrangement[startRow][startColumn] = null as any;
-      this._playerArrangement[row][column] = this._playerArrangement[startRow][
-        startColumn
-      ];
+      this._playerArrangement[row][column] =
+        this._playerArrangement[startRow][startColumn];
       this._playerArrangement[startRow][startColumn] = null as any;
       this._playerLocations[playerIndex] = new Square(row, column);
       this._updateCastleRights(startRow, startColumn);
@@ -849,7 +855,11 @@ export class Position {
 }
 
 export interface Board {
-  setPieces(playingPieces: PlayingPiece[], availableMoves: Move[], movingPieceIndex?: number): void;
+  setPieces(
+    playingPieces: PlayingPiece[],
+    availableMoves: Move[],
+    movingPieceIndex?: number
+  ): void;
 }
 
 /*

@@ -14,6 +14,7 @@ import {
   PieceColor,
   CastleSide,
   PieceType,
+  BOARD_SIZE,
 } from "../game_flow_util/game_elements";
 import {
   Event,
@@ -59,9 +60,6 @@ export class ClientFlowEngine implements ClientObserver {
         this.position.findAvaillableMovesForPlayer(this.playerIndex),
         movingPlayerIndex
       );
-      if (this.playerID === "id0") {
-        console.log(`moving player index: ${movingPlayerIndex}`);
-      }
     }
   }
 
@@ -82,9 +80,6 @@ export class ClientFlowEngine implements ClientObserver {
         break;
       }
       case EventType.move: {
-        if (this.playerID === "id0") {
-          console.log("received move");
-        }
         let moveRequest: Move = JSON.parse(
           event.info.get(EventInfo.move) as string
         );
@@ -103,13 +98,14 @@ export class ClientFlowEngine implements ClientObserver {
             this.position.killPlayerAt(movingPlayerLocation.row, move.column);
           }
           this.updateBoard(movingPlayerIndex);
+
           if (move.isPromotion) {
             let promotionType: PieceType = moveRequest.promotionType;
             if (promotionType != null) {
               this.position.promotePieceAt(
                 move.row,
                 move.column,
-                move.promotionType
+                moveRequest.promotionType
               );
               this.updateBoard(null as any);
             }
@@ -141,14 +137,20 @@ export class ClientFlowEngine implements ClientObserver {
       case ClientNotificationType.disconnectedFromServer: {
         break;
       }
-      case ClientNotificationType.receivedEvents: {
-        for (let event of notificationInfo.get(
-          ClientNotificationInfo.events
-        ) as Event[]) {
-          this.registerEvent(event);
-        }
+      case ClientNotificationType.receivedEvent: {
+        this.registerEvent(notificationInfo.get(ClientNotificationInfo.event));
         break;
       }
+    }
+  }
+
+  async runTest() {
+    while (true) {
+      let row = Math.floor(Math.random() * BOARD_SIZE);
+      let column = Math.floor(Math.random() * BOARD_SIZE);
+      this.position.move(1, row, column);
+      this.updateBoard(1);
+      await new Promise((f) => setTimeout(f, 1000));
     }
   }
 }
