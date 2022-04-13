@@ -24,7 +24,7 @@ export interface ServerObserver {
 export class GameServer {
   private gun: any = null;
   private gameID: string = null as any;
-  private playerIDs: string[] = [...Array(NUM_OF_PLAYERS - 1)].map((_, i) => `id${i + 1}`);
+  private playerIDs: string[] = [...Array(NUM_OF_PLAYERS - 2)].map((_, i) => `id${i + 2}`);
   private gameStatus: GameStatus = GameStatus.inactive;
 
   constructor(private observer: ServerObserver) {}
@@ -90,6 +90,11 @@ export class GameServer {
         let otherPlayerID = this.playerIDs[9];
         playerIndices.set(otherPlayerID, playerIndices.get("id0") as number);
         playerIndices.set("id0", 9);
+
+        otherPlayerID = this.playerIDs[18];
+        playerIndices.set(otherPlayerID, playerIndices.get("id1") as number);
+        playerIndices.set("id1", 18);
+
 
         this.broadcastEvent(
           {

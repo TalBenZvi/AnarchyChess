@@ -18,7 +18,7 @@ import { Event, EventInfo, EventType } from "./game_flow_util/communication";
 
 function App() {
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
-  let clientFlowEngines: ClientFlowEngine[] = [...Array(1)].map(
+  let clientFlowEngines: ClientFlowEngine[] = [...Array(2)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
   return (
@@ -41,6 +41,14 @@ function App() {
         }}
       >
         start
+      </button>
+      <div></div>
+      <button
+        onClick={() => {
+          clientFlowEngines[1].sendMove(new Move(4, 2));
+        }}
+      >
+        test
       </button>
     </div>
   );

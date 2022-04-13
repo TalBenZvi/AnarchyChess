@@ -307,6 +307,7 @@ export class Pawn extends Piece {
           destSquareOccupier !== null &&
           this.color !== destSquareOccupier.color;
         let isEnPassantAvailable: boolean =
+          currentSquare.row === this._enPassantRow &&
           position.isEnPassantAvailable(this.color, currentSquare.column, i) &&
           (destSquareOccupier === null ||
             this.color !== destSquareOccupier.color);

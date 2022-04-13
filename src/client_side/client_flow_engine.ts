@@ -145,12 +145,5 @@ export class ClientFlowEngine implements ClientObserver {
   }
 
   async runTest() {
-    while (true) {
-      let row = Math.floor(Math.random() * BOARD_SIZE);
-      let column = Math.floor(Math.random() * BOARD_SIZE);
-      this.position.move(1, row, column);
-      this.updateBoard(1);
-      await new Promise((f) => setTimeout(f, 1000));
-    }
   }
 }
