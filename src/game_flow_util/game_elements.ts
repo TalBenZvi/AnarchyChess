@@ -1,3 +1,5 @@
+import { replacer } from "./communication";
+
 export const BOARD_SIZE = 8;
 
 export const NUM_OF_PLAYERS = 32;
@@ -73,7 +75,7 @@ export class Move {
   isCapture: boolean = false;
   isEnPassant: boolean = false;
   isCastle: boolean = false;
-  castleSide: CastleSide = null as any;
+  castleSide?: CastleSide = null as any;
 
   constructor(
     public row: number,
@@ -88,9 +90,7 @@ export class Move {
       this.isCapture = Boolean(params.isCapture);
       this.isEnPassant = Boolean(params.isEnPassant);
       this.isCastle = Boolean(params.isCastle);
-      this.castleSide = (
-        Boolean(params.castleSide) ? params.castleSide : null
-      ) as CastleSide;
+      this.castleSide = params.castleSide;
     }
   }
 
@@ -481,12 +481,14 @@ export class King extends UnblockablePiece {
           }
         }
         if (canCastle) {
+          let move: Move = new Move(currentSquare.row, currentSquare.column + 2, {
+            isCastle: true,
+            castleSide: CastleSide.kingSide,
+          });
           legalMoves.push(
-            new Move(currentSquare.row, currentSquare.column + 2, {
-              isCastle: true,
-              castleSide: CastleSide.kingSide,
-            })
+            move
           );
+          console.log(`(king) ${move.castleSide}`);
         }
       }
     }
@@ -795,7 +797,8 @@ export class Position {
             column,
             false
           );
-        } else if (row === (movingPiece as Pawn).enPassantRow) {
+        }
+        if (row === (movingPiece as Pawn).enPassantRow) {
           this._enPassantRights.get(movingPiece.color)![column] = [
             false,
             false,

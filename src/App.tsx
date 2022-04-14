@@ -3,22 +3,21 @@ import "./App.css";
 import BoardComponent from "./components/chess_board";
 import {
   PieceColor,
-  NUM_OF_PLAYERS,
   Move,
 } from "./game_flow_util/game_elements";
 import { ClientFlowEngine } from "./client_side/client_flow_engine";
 import { ServerFlowEngine } from "./server_side/server_flow_engine";
 
-import { GameClient } from "./client_side/game_client";
-import { GameServer } from "./server_side/game_server";
+//import { GameClient } from "./client_side/game_client";
+//import { GameServer } from "./server_side/game_server";
 
-import { Event, EventInfo, EventType } from "./game_flow_util/communication";
+//import { Event, EventInfo, EventType } from "./game_flow_util/communication";
 
 //import TestComponent from "./components/test_component"
 
 function App() {
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
-  let clientFlowEngines: ClientFlowEngine[] = [...Array(2)].map(
+  let clientFlowEngines: ClientFlowEngine[] = [...Array(6)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
   return (
@@ -44,8 +43,19 @@ function App() {
       </button>
       <div></div>
       <button
-        onClick={() => {
-          clientFlowEngines[1].sendMove(new Move(4, 2));
+        onClick={async () => {
+          clientFlowEngines[4].sendMove(new Move(3, 3));
+          await new Promise((f) => setTimeout(f, 1000));
+          clientFlowEngines[1].sendMove(new Move(2, 2));
+          clientFlowEngines[2].sendMove(new Move(3, 5));
+          clientFlowEngines[3].sendMove(new Move(2, 3));
+          /*
+          await new Promise((f) => setTimeout(f, 1000));
+          
+          clientFlowEngines[5].sendMove(new Move(0, 2));
+          await new Promise((f) => setTimeout(f, 500));
+          clientFlowEngines[5].sendMove(new Move(0, 0));
+          */
         }}
       >
         test

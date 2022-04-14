@@ -1,5 +1,11 @@
 import { NUM_OF_PLAYERS, Move } from "../game_flow_util/game_elements";
-import { Event, EventInfo, EventType, GameStatus, replacer } from "../game_flow_util/communication";
+import {
+  Event,
+  EventInfo,
+  EventType,
+  GameStatus,
+  replacer,
+} from "../game_flow_util/communication";
 import Gun from "gun";
 
 const GUN_SERVER_PORT = 3030;
@@ -24,12 +30,33 @@ export interface ServerObserver {
 export class GameServer {
   private gun: any = null;
   private gameID: string = null as any;
-  private playerIDs: string[] = [...Array(NUM_OF_PLAYERS - 2)].map((_, i) => `id${i + 2}`);
+  private playerIDs: string[] = [];
   private gameStatus: GameStatus = GameStatus.inactive;
 
   constructor(private observer: ServerObserver) {}
 
+  // debug
+  private fillWithDummies(numOfDummies: number) {
+    this.playerIDs = [...Array(numOfDummies)].map(
+      (_, i) => `id${i + NUM_OF_PLAYERS - numOfDummies}`
+    );
+  }
+
+  // debug
+  private assignCustomIndices(customIndices: number[]): Map<string, number> {
+    let leftoverIndices: number[] = Array.from(Array(NUM_OF_PLAYERS).keys()).filter(i => customIndices.indexOf(i) <= -1);
+    let playerIndices: Map<string, number> = new Map<string, number>();
+    for (let i = 0; i < customIndices.length; i++) {
+      playerIndices.set(`id${i}`, customIndices[i]);
+    }
+    for (let i = 0; i < leftoverIndices.length; i++) {
+      playerIndices.set(`id${i + customIndices.length}`, leftoverIndices[i]);
+    }
+    return playerIndices;
+  }
+
   acceptConnections(gameID: string): void {
+    this.fillWithDummies(NUM_OF_PLAYERS - 6);
     if (this.gameStatus === GameStatus.inactive) {
       this.gameStatus = GameStatus.waitingForPlayers;
       this.gameID = gameID;
@@ -81,29 +108,16 @@ export class GameServer {
               );
             });
         }
-        let playerIndices: Map<string, number> = new Map<string, number>();
-        for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-          playerIndices.set(this.playerIDs[i], i);
-        }
-
-        // temp
-        let otherPlayerID = this.playerIDs[9];
-        playerIndices.set(otherPlayerID, playerIndices.get("id0") as number);
-        playerIndices.set("id0", 9);
-
-        otherPlayerID = this.playerIDs[18];
-        playerIndices.set(otherPlayerID, playerIndices.get("id1") as number);
-        playerIndices.set("id1", 18);
-
-
-        this.broadcastEvent(
-          {
-            type: EventType.gameStarted,
-            info: new Map<EventInfo, string>([
-              [EventInfo.connectedPlayerIndices, JSON.stringify(playerIndices, replacer)],
-            ]),
-          },
-        );
+        let playerIndices: Map<string, number> = this.assignCustomIndices([4, 1, 2, 3, 11, 0]);
+        this.broadcastEvent({
+          type: EventType.gameStarted,
+          info: new Map<EventInfo, string>([
+            [
+              EventInfo.connectedPlayerIndices,
+              JSON.stringify(playerIndices, replacer),
+            ],
+          ]),
+        });
       }
     }
   }

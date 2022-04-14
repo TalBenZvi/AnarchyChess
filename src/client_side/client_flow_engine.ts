@@ -14,16 +14,15 @@ import {
   PieceColor,
   CastleSide,
   PieceType,
-  BOARD_SIZE,
 } from "../game_flow_util/game_elements";
 import {
   Event,
   EventInfo,
   EventType,
   GameStatus,
+  replacer,
   reviver,
 } from "../game_flow_util/communication";
-import Gun from "gun";
 
 export class ClientFlowEngine implements ClientObserver {
   private gameClient: GameClient;
@@ -110,7 +109,14 @@ export class ClientFlowEngine implements ClientObserver {
               this.updateBoard(null as any);
             }
           }
+          if (this.playerID === "id0") {
+            console.log("here1");
+            console.log(move.castleSide);
+          }    
           if (move.isCastle) {
+            if (this.playerID === "id0") {
+              console.log("here2");
+            }
             let movingPiece: Piece =
               this.position.getPieceByPlayer(movingPlayerIndex);
             let startRow: number =
@@ -120,6 +126,12 @@ export class ClientFlowEngine implements ClientObserver {
             let destColumn: number =
               move.castleSide === CastleSide.kingSide ? 5 : 3;
             let movingRookIndex = this.position.playerAt(startRow, startColumn);
+            if (this.playerID === "id0") {
+              console.log(movingRookIndex);
+              console.log(startRow);
+              console.log(startColumn);
+              console.log(destColumn);
+            }
             this.position.move(movingRookIndex, startRow, destColumn);
             this.updateBoard(movingRookIndex);
           }
