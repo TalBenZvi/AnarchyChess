@@ -1,7 +1,10 @@
+import TestComponent from "./test_component";
+
 import * as React from "react";
 import "./chess_board.css";
 import Box from "@mui/material/Box";
 import { Dialog } from "@headlessui/react";
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import {
   Board,
   BOARD_SIZE,
@@ -45,22 +48,28 @@ interface BoardComponentProps {
 }
 
 interface BoardComponentState {
+  playerIndex: number;
   povColor: PieceColor;
   playingPieces: PlayingPiece[];
   availableMoves: Move[];
   isPromotionDialogOpen: boolean;
+  cooldownTimer: number;
+  remainingCooldown: number;
 }
 
 class BoardComponent
   extends React.Component<BoardComponentProps, BoardComponentState>
   implements Board {
   state = {
+    playerIndex: null as any,
     povColor: this.props.povColor,
     playingPieces: [...Array(NUM_OF_PLAYERS)].map((_, i) => {
       return { piece: null as any, row: null as any, column: null as any };
     }),
     availableMoves: [],
     isPromotionDialogOpen: false,
+    cooldownTimer: null as any,
+    remainingCooldown: null as any,
   };
   movingPieceIndex: number = null as any;
   promotionMoveToSend: Move = null as any;
@@ -70,11 +79,19 @@ class BoardComponent
     props.clientFlowEngine.board = this;
   }
 
-  setPieces = (
+  setPlayerIndex(playerIndex: number): void {
+    this.setState(() => {
+      return { playerIndex: playerIndex };
+    });
+  }
+
+  setPieces(
     playingPieces: PlayingPiece[],
     availableMoves: Move[],
-    movingPieceIndex?: number
-  ) => {
+    movingPieceIndex: number,
+    cooldownTimer: number,
+    remainingCooldown: number
+  ): void {
     let root = document.documentElement;
     let squareSize: number = this.props.size / BOARD_SIZE;
     if (
@@ -117,9 +134,11 @@ class BoardComponent
       return {
         playingPieces: playingPieces,
         availableMoves: availableMoves,
+        cooldownTimer: cooldownTimer,
+        remainingCooldown: remainingCooldown,
       };
     });
-  };
+  }
 
   private fitRowIndexToPOV(rowIndex: number): number {
     return this.state.povColor === PieceColor.white
@@ -154,15 +173,19 @@ class BoardComponent
   render() {
     let { size, lightColor, darkColor } = this.props;
     let {
+      playerIndex,
       povColor,
       playingPieces,
       availableMoves,
       isPromotionDialogOpen,
+      cooldownTimer,
+      remainingCooldown,
     } = this.state;
     let squareSize: number = size / BOARD_SIZE;
     let coordinateIndexFontSize: number = size * 0.03;
     let moveIndicatorSize: number = squareSize * 0.5;
     let promotionDialogButtonSize: number = squareSize * 1.5;
+    let cooldownTimerSize: number = squareSize * 0.3;
     return (
       <Box
         sx={{
@@ -276,6 +299,31 @@ class BoardComponent
                 >
                   {pieceImage}
                 </div>
+                {cooldownTimer != null && i === playerIndex ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left:
+                        (this.fitColumnIndexToPOV(playingPiece.column) + 0.6) *
+                        squareSize,
+                      top: (this.fitRowIndexToPOV(playingPiece.row) + 0.05) * squareSize,
+                    }}
+                  >
+                    <CountdownCircleTimer
+                      isPlaying={true}
+                      duration={cooldownTimer}
+                      colors={
+                        povColor === PieceColor.white ? "#eeeeee" : "#333333"
+                      }
+                      strokeWidth={5}
+                      trailColor="#ffffff00"
+                      size={cooldownTimerSize}
+                      initialRemainingTime={remainingCooldown}
+                    />
+                  </div>
+                ) : (
+                  <div />
+                )}
               </li>
             );
           })}

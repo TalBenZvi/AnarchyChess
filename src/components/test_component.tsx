@@ -1,5 +1,29 @@
 import React, { Component } from "react";
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
+export default class TestComponent extends Component {
+
+
+  render() {
+    return (
+      <CountdownCircleTimer
+        isPlaying
+        duration={5}
+        colors={"#dddddd"}
+        strokeWidth={5}
+        trailColor="#ffffff00"
+        size={50}
+        onComplete={() => {
+          this.setState(() => {
+            return {};
+          });
+        }}
+      />
+    );
+  }
+}
+
+/*
 import Gun from "gun";
 
 export default class TestComponent extends Component {
@@ -61,3 +85,4 @@ export default class TestComponent extends Component {
     );
   }
 }
+*/

@@ -17,7 +17,7 @@ import { ServerFlowEngine } from "./server_side/server_flow_engine";
 
 function App() {
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
-  let clientFlowEngines: ClientFlowEngine[] = [...Array(6)].map(
+  let clientFlowEngines: ClientFlowEngine[] = [...Array(2)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
   return (
@@ -44,18 +44,12 @@ function App() {
       <div></div>
       <button
         onClick={async () => {
-          clientFlowEngines[4].sendMove(new Move(3, 3));
-          await new Promise((f) => setTimeout(f, 1000));
-          clientFlowEngines[1].sendMove(new Move(2, 2));
-          clientFlowEngines[2].sendMove(new Move(3, 5));
-          clientFlowEngines[3].sendMove(new Move(2, 3));
-          /*
-          await new Promise((f) => setTimeout(f, 1000));
-          
-          clientFlowEngines[5].sendMove(new Move(0, 2));
-          await new Promise((f) => setTimeout(f, 500));
-          clientFlowEngines[5].sendMove(new Move(0, 0));
-          */
+          while(true) {
+            clientFlowEngines[1].sendMove(new Move(5, 5));
+            await new Promise((f) => setTimeout(f, 2000));
+            clientFlowEngines[1].sendMove(new Move(7, 6));
+            await new Promise((f) => setTimeout(f, 2000));
+          }
         }}
       >
         test

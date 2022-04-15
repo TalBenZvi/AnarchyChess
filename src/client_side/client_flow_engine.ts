@@ -33,6 +33,11 @@ export class ClientFlowEngine implements ClientObserver {
   private playerIndex: number = null as any;
   private playerID: string;
 
+  // in seconds
+  private cooldownTimer: number = null as any;
+  // in millis
+  private cooldownCompletionTime: number = null as any;
+
   constructor(playerID: string) {
     this.playerID = playerID;
     this.gameClient = new GameClient(this, playerID);
@@ -43,8 +48,10 @@ export class ClientFlowEngine implements ClientObserver {
   }
 
   async attemptToConnect(ip: string, gameID: string) {
-    let connectionStatus: ConnectionStatus =
-      await this.gameClient.attemptToConnect(ip, gameID);
+    let connectionStatus: ConnectionStatus = await this.gameClient.attemptToConnect(
+      ip,
+      gameID
+    );
     console.log(`${this.playerID}: ${connectionStatus}`);
   }
 
@@ -53,32 +60,52 @@ export class ClientFlowEngine implements ClientObserver {
   }
 
   private updateBoard(movingPlayerIndex: number) {
+    let now: number = new Date().getTime();
+    let isOnCooldown: boolean =
+      this.cooldownCompletionTime != null && this.cooldownCompletionTime > now;
+    if (this.playerID === "id0") {
+      /*
+      console.log(`now: ${now}`);
+      console.log(`cooldownCompletionTime: ${this.cooldownCompletionTime}`);
+      console.log(`isOnCooldown: ${isOnCooldown}`);
+      */
+    }
+    if (!isOnCooldown) {
+      this.cooldownTimer = null as any;
+      this.cooldownCompletionTime = null as any;
+    }
     if (this._board != null) {
       this._board.setPieces(
         this.position.playingPieces,
         this.position.findAvaillableMovesForPlayer(this.playerIndex),
-        movingPlayerIndex
+        movingPlayerIndex,
+        isOnCooldown ? this.cooldownTimer : (null as any),
+        isOnCooldown
+          ? (this.cooldownCompletionTime - new Date().getTime()) / 1000
+          : (null as any)
       );
     }
   }
 
-  private registerEvent(event: Event) {
+  private async registerEvent(event: Event) {
     switch (event.type) {
       case EventType.gameStarted: {
-        let playerIndex: number = (
-          JSON.parse(
-            event.info.get(EventInfo.connectedPlayerIndices) as string,
-            reviver
-          ) as Map<string, number>
-        ).get(this.playerID) as number;
+        let playerIndex: number = (JSON.parse(
+          event.info.get(EventInfo.connectedPlayerIndices) as string,
+          reviver
+        ) as Map<string, number>).get(this.playerID) as number;
         this.playerIndex = playerIndex;
         this.gameClient.playerIndex = playerIndex;
         this.gameClient.gameStatus = GameStatus.running;
+        if (this._board != null) {
+          this._board.setPlayerIndex(playerIndex);
+        }
         this.position.setToStartingPosition();
         this.updateBoard(null as any);
         break;
       }
       case EventType.move: {
+        let moveUpdateTime = new Date().getTime();
         let moveRequest: Move = JSON.parse(
           event.info.get(EventInfo.move) as string
         );
@@ -89,15 +116,22 @@ export class ClientFlowEngine implements ClientObserver {
         let movingPlayerIndex: number = parseInt(
           event.info.get(EventInfo.playerIndex) as string
         );
-        let movingPlayerLocation: Square =
-          this.position.getPlayerLocation(movingPlayerIndex);
+        if (movingPlayerIndex === this.playerIndex) {
+          this.cooldownTimer = 3;
+          this.cooldownCompletionTime =
+            moveUpdateTime + this.cooldownTimer * 1000;
+        }
+        let movingPlayerLocation: Square = this.position.getPlayerLocation(
+          movingPlayerIndex
+        );
         if (move != null) {
           this.position.move(movingPlayerIndex, move.row, move.column);
           if (move.isEnPassant) {
             this.position.killPlayerAt(movingPlayerLocation.row, move.column);
           }
           this.updateBoard(movingPlayerIndex);
-
+          await new Promise((f) => setTimeout(f, 140));
+          this.updateBoard(null as any);
           if (move.isPromotion) {
             let promotionType: PieceType = moveRequest.promotionType;
             if (promotionType != null) {
@@ -109,16 +143,10 @@ export class ClientFlowEngine implements ClientObserver {
               this.updateBoard(null as any);
             }
           }
-          if (this.playerID === "id0") {
-            console.log("here1");
-            console.log(move.castleSide);
-          }    
           if (move.isCastle) {
-            if (this.playerID === "id0") {
-              console.log("here2");
-            }
-            let movingPiece: Piece =
-              this.position.getPieceByPlayer(movingPlayerIndex);
+            let movingPiece: Piece = this.position.getPieceByPlayer(
+              movingPlayerIndex
+            );
             let startRow: number =
               movingPiece.color === PieceColor.white ? 0 : 7;
             let startColumn: number =
@@ -126,12 +154,6 @@ export class ClientFlowEngine implements ClientObserver {
             let destColumn: number =
               move.castleSide === CastleSide.kingSide ? 5 : 3;
             let movingRookIndex = this.position.playerAt(startRow, startColumn);
-            if (this.playerID === "id0") {
-              console.log(movingRookIndex);
-              console.log(startRow);
-              console.log(startColumn);
-              console.log(destColumn);
-            }
             this.position.move(movingRookIndex, startRow, destColumn);
             this.updateBoard(movingRookIndex);
           }
@@ -157,5 +179,8 @@ export class ClientFlowEngine implements ClientObserver {
   }
 
   async runTest() {
+    this.playerIndex = 0;
+    this.position.setToStartingPosition();
+    this.updateBoard(null as any);
   }
 }

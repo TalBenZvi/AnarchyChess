@@ -859,10 +859,14 @@ export class Position {
 }
 
 export interface Board {
+  setPlayerIndex(playerIndex: number): void;
+
   setPieces(
     playingPieces: PlayingPiece[],
     availableMoves: Move[],
-    movingPieceIndex?: number
+    movingPieceIndex: number,
+    cooldownTimer: number,
+    remainingCooldown: number,
   ): void;
 }
 
