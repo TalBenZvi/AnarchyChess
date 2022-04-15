@@ -9,7 +9,7 @@ export enum EventInfo {
   connectedPlayerIndices,
   playerIndex,
   move,
-  moveTimer,
+  cooldown,
   respawnTimer,
   enPassantRespawnTimer,
 }

@@ -37,6 +37,7 @@ export class ClientFlowEngine implements ClientObserver {
   private cooldownTimer: number = null as any;
   // in millis
   private cooldownCompletionTime: number = null as any;
+  private selectedMove: Square = null as any
 
   constructor(playerID: string) {
     this.playerID = playerID;
@@ -57,19 +58,14 @@ export class ClientFlowEngine implements ClientObserver {
 
   sendMove(move: Move) {
     this.gameClient.sendMove(move);
+    this.selectedMove = move == null ? null as any : new Square(move.row, move.column);
+    this.updateBoard(null as any);
   }
 
   private updateBoard(movingPlayerIndex: number) {
     let now: number = new Date().getTime();
     let isOnCooldown: boolean =
       this.cooldownCompletionTime != null && this.cooldownCompletionTime > now;
-    if (this.playerID === "id0") {
-      /*
-      console.log(`now: ${now}`);
-      console.log(`cooldownCompletionTime: ${this.cooldownCompletionTime}`);
-      console.log(`isOnCooldown: ${isOnCooldown}`);
-      */
-    }
     if (!isOnCooldown) {
       this.cooldownTimer = null as any;
       this.cooldownCompletionTime = null as any;
@@ -82,7 +78,8 @@ export class ClientFlowEngine implements ClientObserver {
         isOnCooldown ? this.cooldownTimer : (null as any),
         isOnCooldown
           ? (this.cooldownCompletionTime - new Date().getTime()) / 1000
-          : (null as any)
+          : (null as any),
+        this.selectedMove
       );
     }
   }
@@ -117,7 +114,9 @@ export class ClientFlowEngine implements ClientObserver {
           event.info.get(EventInfo.playerIndex) as string
         );
         if (movingPlayerIndex === this.playerIndex) {
-          this.cooldownTimer = 3;
+          this.cooldownTimer = parseInt(
+            event.info.get(EventInfo.cooldown) as string
+          );
           this.cooldownCompletionTime =
             moveUpdateTime + this.cooldownTimer * 1000;
         }
@@ -128,6 +127,9 @@ export class ClientFlowEngine implements ClientObserver {
           this.position.move(movingPlayerIndex, move.row, move.column);
           if (move.isEnPassant) {
             this.position.killPlayerAt(movingPlayerLocation.row, move.column);
+          }
+          if (movingPlayerIndex === this.playerIndex) {
+            this.selectedMove = null as any;
           }
           this.updateBoard(movingPlayerIndex);
           await new Promise((f) => setTimeout(f, 140));

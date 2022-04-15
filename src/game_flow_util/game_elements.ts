@@ -35,6 +35,15 @@ export const colorToString = new Map<PieceColor, string>([
 export const reverseColor = (color: PieceColor): PieceColor =>
   color === PieceColor.white ? PieceColor.black : PieceColor.white;
 
+const pieceCooldowns: Map<PieceType, number> = new Map([
+  [PieceType.pawn, 1],
+  [PieceType.knight, 4],
+  [PieceType.bishop, 2],
+  [PieceType.rook, 3],
+  [PieceType.queen, 4],
+  [PieceType.king, 0.5],
+]);
+
 class MoveOffset {
   constructor(public rowOffset: number, public columnOffset: number) {}
 }
@@ -146,6 +155,10 @@ export abstract class Piece {
 
   get imageFilePath(): string {
     return `images/piece/${colorToString.get(this.color)}_${this.name}.png`;
+  }
+
+  get cooldown(): number {
+    return pieceCooldowns.get(this.type) as number;
   }
 
   abstract findLegalMoves(position: Position, currentSquare: Square): Move[];
@@ -867,6 +880,7 @@ export interface Board {
     movingPieceIndex: number,
     cooldownTimer: number,
     remainingCooldown: number,
+    selectedMove: Square,
   ): void;
 }
 

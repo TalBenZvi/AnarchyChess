@@ -15,6 +15,7 @@ import {
   typeToString,
   Move,
   PieceType,
+  Square,
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
@@ -55,6 +56,7 @@ interface BoardComponentState {
   isPromotionDialogOpen: boolean;
   cooldownTimer: number;
   remainingCooldown: number;
+  selectedMove: Square;
 }
 
 class BoardComponent
@@ -70,6 +72,7 @@ class BoardComponent
     isPromotionDialogOpen: false,
     cooldownTimer: null as any,
     remainingCooldown: null as any,
+    selectedMove: null as any,
   };
   movingPieceIndex: number = null as any;
   promotionMoveToSend: Move = null as any;
@@ -90,7 +93,8 @@ class BoardComponent
     availableMoves: Move[],
     movingPieceIndex: number,
     cooldownTimer: number,
-    remainingCooldown: number
+    remainingCooldown: number,
+    selectedMove: Square,
   ): void {
     let root = document.documentElement;
     let squareSize: number = this.props.size / BOARD_SIZE;
@@ -136,6 +140,7 @@ class BoardComponent
         availableMoves: availableMoves,
         cooldownTimer: cooldownTimer,
         remainingCooldown: remainingCooldown,
+        selectedMove: selectedMove,
       };
     });
   }
@@ -180,6 +185,7 @@ class BoardComponent
       isPromotionDialogOpen,
       cooldownTimer,
       remainingCooldown,
+      selectedMove,
     } = this.state;
     let squareSize: number = size / BOARD_SIZE;
     let coordinateIndexFontSize: number = size * 0.03;
@@ -266,6 +272,7 @@ class BoardComponent
             if (playingPiece.piece == null) {
               return <li key={Math.random()}></li>;
             }
+            // piece image
             let pieceImage = (
               <img
                 src={images.get(
@@ -278,6 +285,7 @@ class BoardComponent
                 alt=""
               />
             );
+            // moving piece
             if (i === this.movingPieceIndex) {
               this.movingPieceIndex = null as any;
               return (
@@ -288,6 +296,7 @@ class BoardComponent
             }
             return (
               <li key={Math.random()}>
+                {/* piece */}
                 <div
                   style={{
                     position: "absolute",
@@ -295,10 +304,30 @@ class BoardComponent
                       this.fitColumnIndexToPOV(playingPiece.column) *
                       squareSize,
                     top: this.fitRowIndexToPOV(playingPiece.row) * squareSize,
+                    zIndex: 1,
                   }}
                 >
                   {pieceImage}
                 </div>
+                {/* player highlight */}
+                {i === playerIndex ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left:
+                        this.fitColumnIndexToPOV(playingPiece.column) *
+                        squareSize,
+                      top: this.fitRowIndexToPOV(playingPiece.row) * squareSize,
+                      width: squareSize,
+                      height: squareSize,
+                      backgroundColor: "white",
+                      opacity: 0.3,
+                    }}
+                  />
+                ) : (
+                  <div />
+                )}
+                {/* cooldown timer*/}
                 {cooldownTimer != null && i === playerIndex ? (
                   <div
                     style={{
@@ -306,14 +335,19 @@ class BoardComponent
                       left:
                         (this.fitColumnIndexToPOV(playingPiece.column) + 0.6) *
                         squareSize,
-                      top: (this.fitRowIndexToPOV(playingPiece.row) + 0.05) * squareSize,
+                      top:
+                        (this.fitRowIndexToPOV(playingPiece.row) + 0.05) *
+                        squareSize,
+                      zIndex: 2,
                     }}
                   >
                     <CountdownCircleTimer
                       isPlaying={true}
                       duration={cooldownTimer}
                       colors={
-                        povColor === PieceColor.white ? "#eeeeee" : "#333333"
+                        playingPiece.piece.color === PieceColor.white
+                          ? "#eeeeee"
+                          : "#333333"
                       }
                       strokeWidth={5}
                       trailColor="#ffffff00"
@@ -329,56 +363,90 @@ class BoardComponent
           })}
         </ul>
         {/* moves */}
-        <ul className="no-bullets">
-          {availableMoves.map((move) => (
-            <li key={Math.random()}>
-              <div
-                style={{
-                  position: "absolute",
-                  left:
-                    this.fitColumnIndexToPOV((move as Move).column) *
-                    squareSize,
-                  top: this.fitRowIndexToPOV((move as Move).row) * squareSize,
-                }}
-              >
-                <button
-                  onClick={() => {
-                    if ((move as Move).isPromotion) {
-                      this.openPromotionDialog(move);
-                    } else {
-                      this.sendMove(move);
-                    }
-                  }}
+        {selectedMove == null ? (
+          <ul className="no-bullets">
+            {availableMoves.map((move) => (
+              <li key={Math.random()}>
+                <div
                   style={{
-                    width: squareSize,
-                    height: squareSize,
+                    position: "absolute",
+                    left:
+                      this.fitColumnIndexToPOV((move as Move).column) *
+                      squareSize,
+                    top: this.fitRowIndexToPOV((move as Move).row) * squareSize,
+                    zIndex: 3,
                   }}
                 >
-                  {(move as Move).isCapture ? (
-                    <div>
-                      <img
-                        src={captureIcon}
-                        height={squareSize}
-                        width={squareSize}
-                        style={{ opacity: 0.3 }}
-                        alt=""
+                  {/* standard moves*/}
+                  <button
+                    onClick={() => {
+                      if ((move as Move).isPromotion) {
+                        this.openPromotionDialog(move);
+                      } else {
+                        this.sendMove(move);
+                      }
+                    }}
+                    style={{
+                      width: squareSize,
+                      height: squareSize,
+                      zIndex: 3,
+                    }}
+                  >
+                    {/* capture moves*/}
+                    {(move as Move).isCapture ? (
+                      <div>
+                        <img
+                          src={captureIcon}
+                          height={squareSize}
+                          width={squareSize}
+                          style={{ opacity: 0.3, zIndex: 3 }}
+                          alt=""
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="move-indicator"
+                        style={{
+                          width: moveIndicatorSize,
+                          height: moveIndicatorSize,
+                          margin: 0.5 * (squareSize - moveIndicatorSize),
+                        }}
                       />
-                    </div>
-                  ) : (
-                    <div
-                      className="move-indicator"
-                      style={{
-                        width: moveIndicatorSize,
-                        height: moveIndicatorSize,
-                        margin: 0.5 * (squareSize - moveIndicatorSize),
-                      }}
-                    />
-                  )}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                    )}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div>
+            {/* premove indicator */}
+            <div
+              style={{
+                position: "absolute",
+                left:
+                  this.fitColumnIndexToPOV(selectedMove.column) * squareSize,
+                top: this.fitRowIndexToPOV(selectedMove.row) * squareSize,
+                width: squareSize,
+                height: squareSize,
+                backgroundColor: "black",
+                opacity: 0.4,
+              }}
+            />
+            <Dialog
+              open={true}
+              onClose={() => {
+                this.props.clientFlowEngine.sendMove(null as any);
+                this.setState(() => {
+                  return {selectedMove: null as any};
+                })
+              }}
+            >
+              <button></button>
+            </Dialog>
+          </div>
+        )}
+
         {/* promotion dialog */}
         <Dialog
           open={isPromotionDialogOpen}
