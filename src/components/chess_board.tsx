@@ -1,12 +1,10 @@
-import TestComponent from "./test_component";
-
 import * as React from "react";
 import "./chess_board.css";
 import Box from "@mui/material/Box";
 import { Dialog } from "@headlessui/react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import {
-  Board,
+  ChessBoardComponent,
   BOARD_SIZE,
   NUM_OF_PLAYERS,
   PlayingPiece,
@@ -16,6 +14,7 @@ import {
   Move,
   PieceType,
   Square,
+  Piece,
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
@@ -57,11 +56,13 @@ interface BoardComponentState {
   cooldownTimer: number;
   remainingCooldown: number;
   selectedMove: Square;
+  respawnSquare: Square;
+  respawnPiece: Piece;
 }
 
 class BoardComponent
   extends React.Component<BoardComponentProps, BoardComponentState>
-  implements Board {
+  implements ChessBoardComponent {
   state = {
     playerIndex: null as any,
     povColor: this.props.povColor,
@@ -73,6 +74,8 @@ class BoardComponent
     cooldownTimer: null as any,
     remainingCooldown: null as any,
     selectedMove: null as any,
+    respawnSquare: null as any,
+    respawnPiece: null as any,
   };
   movingPieceIndex: number = null as any;
   promotionMoveToSend: Move = null as any;
@@ -95,6 +98,8 @@ class BoardComponent
     cooldownTimer: number,
     remainingCooldown: number,
     selectedMove: Square,
+    respawnSquare: Square,
+    respawnPiece: Piece,
   ): void {
     let root = document.documentElement;
     let squareSize: number = this.props.size / BOARD_SIZE;
@@ -134,13 +139,15 @@ class BoardComponent
       );
     }
     this.movingPieceIndex = movingPieceIndex as any;
-    this.setState((state: BoardComponentState, props: BoardComponentProps) => {
+    this.setState(() => {
       return {
         playingPieces: playingPieces,
         availableMoves: availableMoves,
         cooldownTimer: cooldownTimer,
         remainingCooldown: remainingCooldown,
         selectedMove: selectedMove,
+        respawnSquare: respawnSquare,
+        respawnPiece: respawnPiece,
       };
     });
   }
@@ -186,6 +193,8 @@ class BoardComponent
       cooldownTimer,
       remainingCooldown,
       selectedMove,
+      respawnSquare,
+      respawnPiece,
     } = this.state;
     let squareSize: number = size / BOARD_SIZE;
     let coordinateIndexFontSize: number = size * 0.03;
@@ -438,15 +447,14 @@ class BoardComponent
               onClose={() => {
                 this.props.clientFlowEngine.sendMove(null as any);
                 this.setState(() => {
-                  return {selectedMove: null as any};
-                })
+                  return { selectedMove: null as any };
+                });
               }}
             >
               <button></button>
             </Dialog>
           </div>
         )}
-
         {/* promotion dialog */}
         <Dialog
           open={isPromotionDialogOpen}
@@ -504,6 +512,31 @@ class BoardComponent
             </ul>
           </div>
         </Dialog>
+        {/* respawn location  indicator*/}
+        {respawnSquare == null ? (
+          <div />
+        ) : (
+          <div
+            style={{
+              position: "absolute",
+              left: this.fitColumnIndexToPOV(respawnSquare.column) * squareSize,
+              top: this.fitRowIndexToPOV(respawnSquare.row) * squareSize,
+              opacity: 0.2,
+              zIndex: 1,
+            }}
+          >
+            <img
+                src={images.get(
+                  `${colorToString.get(
+                    respawnPiece.color
+                  )}_${typeToString.get(respawnPiece.type)}.png`
+                )}
+                height={squareSize}
+                width={squareSize}
+                alt=""
+              />
+          </div>
+        )}
       </Box>
     );
   }

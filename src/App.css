@@ -32,4 +32,10 @@ ul.row {
   opacity: 0.3;
 }
 
-
+.centered-title {
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  overflow: hidden;
+  white-space: nowrap;
+}

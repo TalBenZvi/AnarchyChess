@@ -1,10 +1,9 @@
 import React from "react";
 import "./App.css";
 import BoardComponent from "./components/chess_board";
-import {
-  PieceColor,
-  Move,
-} from "./game_flow_util/game_elements";
+import DeathScreen from "./components/death_screen"
+
+import { PieceColor, Move } from "./game_flow_util/game_elements";
 import { ClientFlowEngine } from "./client_side/client_flow_engine";
 import { ServerFlowEngine } from "./server_side/server_flow_engine";
 
@@ -17,7 +16,7 @@ import { ServerFlowEngine } from "./server_side/server_flow_engine";
 
 function App() {
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
-  let clientFlowEngines: ClientFlowEngine[] = [...Array(2)].map(
+  let clientFlowEngines: ClientFlowEngine[] = [...Array(3)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
   return (
@@ -44,16 +43,20 @@ function App() {
       <div></div>
       <button
         onClick={async () => {
-          while(true) {
-            clientFlowEngines[1].sendMove(new Move(5, 5));
-            await new Promise((f) => setTimeout(f, 2000));
-            clientFlowEngines[1].sendMove(new Move(7, 6));
-            await new Promise((f) => setTimeout(f, 2000));
+          clientFlowEngines[1].sendMove(new Move(5, 4));
+          await new Promise((f) => setTimeout(f, 1000));
+          while (true) {
+            clientFlowEngines[2].sendMove(new Move(2, 0));
+            await new Promise((f) => setTimeout(f, 1000));
+            clientFlowEngines[2].sendMove(new Move(7, 5));
+            await new Promise((f) => setTimeout(f, 1000));
           }
+          
         }}
       >
         test
       </button>
+      <DeathScreen clientFlowEngine={clientFlowEngines[0]}/>
     </div>
   );
 

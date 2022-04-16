@@ -6,7 +6,8 @@ import {
   ConnectionStatus,
 } from "./game_client";
 import {
-  Board,
+  ChessBoardComponent,
+  DeathScreenComponent,
   Position,
   Move,
   Square,
@@ -14,6 +15,7 @@ import {
   PieceColor,
   CastleSide,
   PieceType,
+  PlayingPiece,
 } from "../game_flow_util/game_elements";
 import {
   Event,
@@ -27,7 +29,8 @@ import {
 export class ClientFlowEngine implements ClientObserver {
   private gameClient: GameClient;
   private position: Position = new Position();
-  private _board: Board = null as any;
+  private _board: ChessBoardComponent = null as any;
+  private _deathScreen: DeathScreenComponent = null as any;
 
   private isGameRunning: boolean = false;
   private playerIndex: number = null as any;
@@ -37,6 +40,7 @@ export class ClientFlowEngine implements ClientObserver {
   private cooldownTimer: number = null as any;
   // in millis
   private cooldownCompletionTime: number = null as any;
+  // in millis
   private selectedMove: Square = null as any;
 
   constructor(playerID: string) {
@@ -44,8 +48,12 @@ export class ClientFlowEngine implements ClientObserver {
     this.gameClient = new GameClient(this, playerID);
   }
 
-  set board(board: Board) {
+  set board(board: ChessBoardComponent) {
     this._board = board;
+  }
+
+  set deathScreen(deathScreen: DeathScreenComponent) {
+    this._deathScreen = deathScreen;
   }
 
   async attemptToConnect(ip: string, gameID: string) {
@@ -71,16 +79,22 @@ export class ClientFlowEngine implements ClientObserver {
       this.cooldownTimer = null as any;
       this.cooldownCompletionTime = null as any;
     }
+    let playingPieces: PlayingPiece[] = this.position.playingPieces;
+    let isAlive: boolean = playingPieces[this.playerIndex].piece != null;
     if (this._board != null) {
       this._board.setPieces(
         this.position.playingPieces,
-        this.position.findAvaillableMovesForPlayer(this.playerIndex),
+        isAlive
+          ? this.position.findAvaillableMovesForPlayer(this.playerIndex)
+          : [],
         movingPlayerIndex,
         isOnCooldown ? this.cooldownTimer : (null as any),
         isOnCooldown
           ? (this.cooldownCompletionTime - new Date().getTime()) / 1000
           : (null as any),
-        this.selectedMove
+        this.selectedMove,
+        isAlive ? null as any : this.position.getRespawnSquareForPlayer(this.playerIndex),
+        isAlive ? null as any : Position.getStartPieceByPlayer(this.playerIndex),
       );
     }
   }
@@ -125,18 +139,40 @@ export class ClientFlowEngine implements ClientObserver {
           movingPlayerIndex
         );
         if (move != null) {
+          let respawnTimer: number = null as any;
           if (move.isCapture) {
-            this.position.killPlayerAt(move.row, move.column);
+            let dyingPlayerIndex = this.position.playerAt(
+              move.row,
+              move.column
+            );
+            this.position.killPlayer(dyingPlayerIndex);
+            if (dyingPlayerIndex === this.playerIndex) {
+              respawnTimer = parseInt(
+                event.info.get(EventInfo.respawnTimer) as string
+              );
+            }
           }
           if (move.isEnPassant) {
-            this.position.killPlayerAt(movingPlayerLocation.row, move.column);
+            let enPassantedPlayerIndex = this.position.playerAt(
+              movingPlayerLocation.row,
+              move.column
+            );
+            this.position.killPlayer(enPassantedPlayerIndex);
+            if (enPassantedPlayerIndex === this.playerIndex) {
+              respawnTimer = parseInt(
+                event.info.get(EventInfo.enPassantRespawnTimer) as string
+              );
+            }
           }
           this.position.move(movingPlayerIndex, move.row, move.column);
           if (movingPlayerIndex === this.playerIndex) {
             this.selectedMove = null as any;
           }
           this.updateBoard(movingPlayerIndex);
-          await new Promise((f) => setTimeout(f, 140));
+          if (respawnTimer != null && this._deathScreen != null) {
+            this._deathScreen.show(respawnTimer);
+          }
+          await new Promise((f) => setTimeout(f, 70));
           this.updateBoard(null as any);
           if (move.isPromotion) {
             let promotionType: PieceType = moveNotification.promotionType;
@@ -173,7 +209,13 @@ export class ClientFlowEngine implements ClientObserver {
         let respawnSquare: Square = JSON.parse(
           event.info.get(EventInfo.respawnSquare) as string
         );
-        this.position.respawnPlayerAt(respawningPlayerIndex, respawnSquare);
+        this.position.respawnPlayerAt(
+          respawningPlayerIndex,
+          new Square(respawnSquare.row, respawnSquare.column)
+        );
+        if (respawningPlayerIndex === this.playerIndex && this._deathScreen != null) {
+          this._deathScreen.hide();
+        }
         this.updateBoard(null as any);
       }
     }

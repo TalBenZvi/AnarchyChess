@@ -57,7 +57,9 @@ class MoveOffset {
 }
 
 export class Square {
-  constructor(readonly row: number, readonly column: number) {}
+  constructor(readonly row: number, readonly column: number) {
+    this.applyMove = this.applyMove.bind(this)
+  }
 
   isOnTheBoard = (): boolean =>
     0 <= this.row &&
@@ -726,7 +728,7 @@ export class Position {
     ]);
   }
 
-  private static getStartPieceByPlayer(playerIndex: number): Piece {
+  static getStartPieceByPlayer(playerIndex: number): Piece {
     let startSquare = Position.startPlayerLocations[playerIndex];
     return Position.startBoardArrangement[startSquare.row][startSquare.column];
   }
@@ -992,7 +994,7 @@ export class Position {
   }
 }
 
-export interface Board {
+export interface ChessBoardComponent {
   setPlayerIndex(playerIndex: number): void;
 
   setPieces(
@@ -1001,8 +1003,16 @@ export interface Board {
     movingPieceIndex: number,
     cooldownTimer: number,
     remainingCooldown: number,
-    selectedMove: Square
+    selectedMove: Square,
+    respawnSquare: Square,
+    respawnPiece: Piece
   ): void;
+}
+
+export interface DeathScreenComponent {
+  show(respawnTimer: number): void;
+
+  hide(): void;
 }
 
 /*

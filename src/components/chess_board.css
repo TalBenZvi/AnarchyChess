@@ -3,12 +3,13 @@
   --prev-column: 0px;
   --current-row: 0px;
   --current-column: 0px;
+
 }
 
 .moving-piece {
   position: fixed;
   animation-name: piece-motion;
-  animation-duration: 0.2s;
+  animation-duration: 0.1s;
   animation-fill-mode: forwards;
   animation-timing-function: linear;
 }

@@ -2,8 +2,6 @@ import React, { Component } from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
 export default class TestComponent extends Component {
-
-
   render() {
     return (
       <CountdownCircleTimer
