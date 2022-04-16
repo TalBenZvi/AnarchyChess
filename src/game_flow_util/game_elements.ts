@@ -37,11 +37,19 @@ export const reverseColor = (color: PieceColor): PieceColor =>
 
 const pieceCooldowns: Map<PieceType, number> = new Map([
   [PieceType.pawn, 1],
-  [PieceType.knight, 4],
+  [PieceType.knight, 2],
   [PieceType.bishop, 2],
   [PieceType.rook, 3],
   [PieceType.queen, 4],
   [PieceType.king, 0.5],
+]);
+
+const pieceRespawnTimers: Map<PieceType, number> = new Map([
+  [PieceType.pawn, 3],
+  [PieceType.knight, 4],
+  [PieceType.bishop, 4],
+  [PieceType.rook, 5],
+  [PieceType.queen, 7],
 ]);
 
 class MoveOffset {
@@ -63,6 +71,12 @@ export class Square {
       this.column + moveOffset.columnOffset
     );
 }
+
+// returns a list of the squares of the first 4 rows stating with 'startRow'
+const firstFourRows = (startRow: number): Square[] =>
+  [...Array(NUM_OF_PLAYERS)].map(
+    (_, i) => new Square(startRow + Math.floor(i / BOARD_SIZE), i % BOARD_SIZE)
+  );
 
 export enum CastleSide {
   kingSide,
@@ -93,9 +107,9 @@ export class Move {
   ) {
     if (params != null) {
       this.isPromotion = Boolean(params.isPromotion);
-      this.promotionType = (
-        Boolean(params.promotionType) ? params.promotionType : null
-      ) as PieceType;
+      this.promotionType = (Boolean(params.promotionType)
+        ? params.promotionType
+        : null) as PieceType;
       this.isCapture = Boolean(params.isCapture);
       this.isEnPassant = Boolean(params.isEnPassant);
       this.isCastle = Boolean(params.isCastle);
@@ -122,24 +136,63 @@ export class Move {
 }
 
 export abstract class Piece {
-  constructor(public color: PieceColor) {}
+  private _respawnSquares: Square[];
+
+  constructor(public color: PieceColor, startColumn: number) {
+    if (startColumn == null) {
+      this._respawnSquares = [];
+    } else {
+      switch (color) {
+        case PieceColor.white: {
+          let startRow = this.getType() === PieceType.pawn ? 1 : 0;
+          this._respawnSquares = firstFourRows(startRow).sort(
+            (square1, square2) => {
+              if (square1.row != square2.row) {
+                return square1.row - square2.row;
+              }
+              return (
+                Math.abs(square1.column - startColumn) -
+                Math.abs(square2.column - startColumn)
+              );
+            }
+          );
+          break;
+        }
+        case PieceColor.black: {
+          let startRow = this.getType() === PieceType.pawn ? 3 : 4;
+          this._respawnSquares = firstFourRows(startRow).sort(
+            (square1, square2) => {
+              if (square1.row != square2.row) {
+                return square2.row - square1.row;
+              }
+              return (
+                Math.abs(square1.column - startColumn) -
+                Math.abs(square2.column - startColumn)
+              );
+            }
+          );
+          break;
+        }
+      }
+    }
+  }
 
   static generate(type: PieceType, color: PieceColor) {
     switch (type) {
       case PieceType.pawn: {
-        return new Pawn(color);
+        return new Pawn(color, null as any);
       }
       case PieceType.knight: {
-        return new Knight(color);
+        return new Knight(color, null as any);
       }
       case PieceType.bishop: {
-        return new Bishop(color);
+        return new Bishop(color, null as any);
       }
       case PieceType.rook: {
-        return new Rook(color);
+        return new Rook(color, null as any);
       }
       case PieceType.queen: {
-        return new Queen(color);
+        return new Queen(color, null as any);
       }
       case PieceType.king: {
         return new King(color);
@@ -148,6 +201,10 @@ export abstract class Piece {
   }
 
   abstract get type(): PieceType;
+
+  private getType() {
+    return this.type;
+  }
 
   get name(): string {
     return typeToString.get(this.type) as string;
@@ -159,6 +216,14 @@ export abstract class Piece {
 
   get cooldown(): number {
     return pieceCooldowns.get(this.type) as number;
+  }
+
+  get respawnTimer(): number {
+    return pieceRespawnTimers.get(this.type) as number;
+  }
+
+  get respawnSquares(): Square[] {
+    return this._respawnSquares;
   }
 
   abstract findLegalMoves(position: Position, currentSquare: Square): Move[];
@@ -235,8 +300,8 @@ export class Pawn extends Piece {
   private _moveOffsets: MoveOffset[];
   private _captureMoveOffsets: MoveOffset[];
 
-  constructor(color: PieceColor) {
-    super(color);
+  constructor(color: PieceColor, startColumn: number) {
+    super(color, startColumn);
     switch (color) {
       case PieceColor.white:
         this._startRow = 1;
@@ -413,7 +478,7 @@ export class King extends UnblockablePiece {
   private _startColumn = 4;
 
   constructor(color: PieceColor) {
-    super(color);
+    super(color, null as any);
     switch (color) {
       case PieceColor.white:
         this._startRow = 0;
@@ -494,14 +559,15 @@ export class King extends UnblockablePiece {
           }
         }
         if (canCastle) {
-          let move: Move = new Move(currentSquare.row, currentSquare.column + 2, {
-            isCastle: true,
-            castleSide: CastleSide.kingSide,
-          });
-          legalMoves.push(
-            move
+          let move: Move = new Move(
+            currentSquare.row,
+            currentSquare.column + 2,
+            {
+              isCastle: true,
+              castleSide: CastleSide.kingSide,
+            }
           );
-          console.log(`(king) ${move.castleSide}`);
+          legalMoves.push(move);
         }
       }
     }
@@ -556,63 +622,50 @@ export class Position {
     [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
   ]);
 
-  get playerLocations(): Square[] {
-    return [...this._playerLocations];
-  }
 
-  get playingPieces(): PlayingPiece[] {
-    return this.playerLocations.map((square: Square): PlayingPiece => {
-      if (square == null) {
-        return { piece: null as any, row: null as any, column: null as any };
-      }
-      return {
-        piece: this.pieceAt(square.row, square.column),
-        row: square.row,
-        column: square.column,
-      };
-    });
-  }
-
-  setToStartingPosition() {
-    this._playerLocations = [...Array(BOARD_SIZE)]
+  private static get startPlayerLocations(): Square[] {
+    return [...Array(BOARD_SIZE)]
       .map((_, j) => new Square(0, j))
       .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(1, j)))
       .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(6, j)))
       .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(7, j)));
-    this._boardArrangement = [...Array(BOARD_SIZE)].map((_, i) => {
+  }
+
+  private static get startBoardArrangement(): Piece[][] {
+    return [...Array(BOARD_SIZE)].map((_, i) => {
       switch (i) {
         case 0: {
           return [
-            new Rook(PieceColor.white),
-            new Knight(PieceColor.white),
-            new Bishop(PieceColor.white),
-            new Queen(PieceColor.white),
+            new Rook(PieceColor.white, 0),
+            new Knight(PieceColor.white, 1),
+            new Bishop(PieceColor.white, 2),
+            new Queen(PieceColor.white, 3),
             new King(PieceColor.white),
-            new Bishop(PieceColor.white),
-            new Knight(PieceColor.white),
-            new Rook(PieceColor.white),
+            new Bishop(PieceColor.white, 5),
+            new Knight(PieceColor.white, 6),
+            new Rook(PieceColor.white, 7),
           ];
         }
         case 1: {
           return [...Array(BOARD_SIZE)].map(
-            (_, j) => new Pawn(PieceColor.white)
+            (_, j) => new Pawn(PieceColor.white, j)
           );
         }
         case 6: {
           return [...Array(BOARD_SIZE)].map(
-            (_, j) => new Pawn(PieceColor.black)
+            (_, j) => new Pawn(PieceColor.black, j)
           );
         }
         case 7: {
           return [
-            new Rook(PieceColor.black),
-            new Knight(PieceColor.black),
-            new Bishop(PieceColor.black),
-            new Queen(PieceColor.black),
+            new Rook(PieceColor.black, 0),
+            new Knight(PieceColor.black, 1),
+            new Bishop(PieceColor.black, 2),
+            new Queen(PieceColor.black, 3),
             new King(PieceColor.black),
-            new Bishop(PieceColor.black),
-            new Knight(PieceColor.black),
-            new Rook(PieceColor.black),
+            new Bishop(PieceColor.black, 5),
+            new Knight(PieceColor.black, 6),
+            new Rook(PieceColor.black, 7),
           ];
         }
         default: {
@@ -620,8 +673,10 @@ export class Position {
         }
       }
     });
+  }
 
-    this._playerArrangement = [...Array(BOARD_SIZE)].map((_, i) => {
+  private static get startPlayerArrangement(): number[][] {
+    return [...Array(BOARD_SIZE)].map((_, i) => {
       switch (i) {
         case 0: {
           return [...Array(BOARD_SIZE)].map((_, j) => j);
@@ -640,8 +695,13 @@ export class Position {
         }
       }
     });
+  }
 
-    this._castleRights = new Map<PieceColor, Map<CastleSide, boolean>>([
+  private static get startCastleRights(): Map<
+    PieceColor,
+    Map<CastleSide, boolean>
+  > {
+    return new Map<PieceColor, Map<CastleSide, boolean>>([
       [
         PieceColor.white,
         new Map<CastleSide, boolean>([
@@ -657,10 +717,45 @@ export class Position {
         ]),
       ],
     ]);
-    this._enPassantRights = new Map<PieceColor, boolean[][]>([
+  }
+
+  private static get startEnPassantRights(): Map<PieceColor, boolean[][]> {
+    return new Map<PieceColor, boolean[][]>([
       [PieceColor.white, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
       [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
     ]);
+  }
+
+  private static getStartPieceByPlayer(playerIndex: number): Piece {
+    let startSquare = Position.startPlayerLocations[playerIndex];
+    return Position.startBoardArrangement[startSquare.row][startSquare.column];
+  }
+
+  get playerLocations(): Square[] {
+    return [...this._playerLocations];
+  }
+
+  get playingPieces(): PlayingPiece[] {
+    return this.playerLocations.map(
+      (square: Square): PlayingPiece => {
+        if (square == null) {
+          return { piece: null as any, row: null as any, column: null as any };
+        }
+        return {
+          piece: this.pieceAt(square.row, square.column),
+          row: square.row,
+          column: square.column,
+        };
+      }
+    );
+  }
+
+  setToStartingPosition() {
+    this._playerLocations = Position.startPlayerLocations;
+    this._boardArrangement = Position.startBoardArrangement;
+    this._playerArrangement = Position.startPlayerArrangement;
+    this._castleRights = Position.startCastleRights;
+    this._enPassantRights = Position.startEnPassantRights;
   }
 
   getPieceByPlayer(playerIndex: number): Piece {
@@ -784,11 +879,13 @@ export class Position {
         return;
       }
       this.killPlayerAt(row, column);
-      this._boardArrangement[row][column] =
-        this._boardArrangement[startRow][startColumn];
+      this._boardArrangement[row][column] = this._boardArrangement[startRow][
+        startColumn
+      ];
       this._boardArrangement[startRow][startColumn] = null as any;
-      this._playerArrangement[row][column] =
-        this._playerArrangement[startRow][startColumn];
+      this._playerArrangement[row][column] = this._playerArrangement[startRow][
+        startColumn
+      ];
       this._playerArrangement[startRow][startColumn] = null as any;
       this._playerLocations[playerIndex] = new Square(row, column);
       this._updateCastleRights(startRow, startColumn);
@@ -869,6 +966,30 @@ export class Position {
       this._boardArrangement[row][column]!.color
     );
   }
+
+  getRespawnSquareForPlayer(playerIndex: number): Square {
+    for (let respawnSquare of Position.getStartPieceByPlayer(playerIndex)
+      .respawnSquares) {
+      if (
+        this._boardArrangement[respawnSquare.row][respawnSquare.column] == null
+      ) {
+        return respawnSquare;
+      }
+    }
+    return null as any;
+  }
+
+  respawnPlayerAt(playerIndex: number, respawnSquare: Square) {
+    if (respawnSquare != null) {
+      this._playerLocations[playerIndex] = respawnSquare;
+      this._boardArrangement[respawnSquare.row][
+        respawnSquare.column
+      ] = Position.getStartPieceByPlayer(playerIndex);
+      this._playerArrangement[respawnSquare.row][
+        respawnSquare.column
+      ] = playerIndex;
+    }
+  }
 }
 
 export interface Board {
@@ -880,7 +1001,7 @@ export interface Board {
     movingPieceIndex: number,
     cooldownTimer: number,
     remainingCooldown: number,
-    selectedMove: Square,
+    selectedMove: Square
   ): void;
 }
 

@@ -2,16 +2,22 @@ export enum EventType {
   playerListUpdate,
   gameStarted,
   move,
+  respawn,
 }
 
 export enum EventInfo {
+  // playerListUpdate
   connectedPlayers,
+  // gameStarted
   connectedPlayerIndices,
+  // move
   playerIndex,
   move,
   cooldown,
   respawnTimer,
   enPassantRespawnTimer,
+  // respawn
+  respawnSquare
 }
 
 export interface Event {

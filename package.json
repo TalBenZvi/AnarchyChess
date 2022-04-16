@@ -40,7 +40,7 @@
   "scripts": {
     "start-js": "react-scripts start",
     "backend-start": "NODE_ENV=production node server/index.js",
-    "start": "concurrently \"npm-run-all -p backend-start start-js\"",
+    "start": "npm-run-all -p backend-start start-js",
     "build": "npm-run-all build-css && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

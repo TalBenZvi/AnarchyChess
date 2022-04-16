@@ -37,7 +37,7 @@ export class ClientFlowEngine implements ClientObserver {
   private cooldownTimer: number = null as any;
   // in millis
   private cooldownCompletionTime: number = null as any;
-  private selectedMove: Square = null as any
+  private selectedMove: Square = null as any;
 
   constructor(playerID: string) {
     this.playerID = playerID;
@@ -58,7 +58,8 @@ export class ClientFlowEngine implements ClientObserver {
 
   sendMove(move: Move) {
     this.gameClient.sendMove(move);
-    this.selectedMove = move == null ? null as any : new Square(move.row, move.column);
+    this.selectedMove =
+      move == null ? (null as any) : new Square(move.row, move.column);
     this.updateBoard(null as any);
   }
 
@@ -103,12 +104,12 @@ export class ClientFlowEngine implements ClientObserver {
       }
       case EventType.move: {
         let moveUpdateTime = new Date().getTime();
-        let moveRequest: Move = JSON.parse(
+        let moveNotification: Move = JSON.parse(
           event.info.get(EventInfo.move) as string
         );
         let move: Move = this.position.locateMoveForPlayer(
           parseInt(event.info.get(EventInfo.playerIndex) as string),
-          moveRequest
+          moveNotification
         );
         let movingPlayerIndex: number = parseInt(
           event.info.get(EventInfo.playerIndex) as string
@@ -124,10 +125,13 @@ export class ClientFlowEngine implements ClientObserver {
           movingPlayerIndex
         );
         if (move != null) {
-          this.position.move(movingPlayerIndex, move.row, move.column);
+          if (move.isCapture) {
+            this.position.killPlayerAt(move.row, move.column);
+          }
           if (move.isEnPassant) {
             this.position.killPlayerAt(movingPlayerLocation.row, move.column);
           }
+          this.position.move(movingPlayerIndex, move.row, move.column);
           if (movingPlayerIndex === this.playerIndex) {
             this.selectedMove = null as any;
           }
@@ -135,12 +139,12 @@ export class ClientFlowEngine implements ClientObserver {
           await new Promise((f) => setTimeout(f, 140));
           this.updateBoard(null as any);
           if (move.isPromotion) {
-            let promotionType: PieceType = moveRequest.promotionType;
+            let promotionType: PieceType = moveNotification.promotionType;
             if (promotionType != null) {
               this.position.promotePieceAt(
                 move.row,
                 move.column,
-                moveRequest.promotionType
+                moveNotification.promotionType
               );
               this.updateBoard(null as any);
             }
@@ -161,6 +165,16 @@ export class ClientFlowEngine implements ClientObserver {
           }
         }
         break;
+      }
+      case EventType.respawn: {
+        let respawningPlayerIndex: number = parseInt(
+          event.info.get(EventInfo.playerIndex) as string
+        );
+        let respawnSquare: Square = JSON.parse(
+          event.info.get(EventInfo.respawnSquare) as string
+        );
+        this.position.respawnPlayerAt(respawningPlayerIndex, respawnSquare);
+        this.updateBoard(null as any);
       }
     }
   }
