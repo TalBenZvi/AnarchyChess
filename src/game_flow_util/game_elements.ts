@@ -1015,16 +1015,17 @@ export interface DeathScreenComponent {
   hide(): void;
 }
 
-/*
+
 // interface
-class GraveYard {
-  void addPiece(Piece piece, double respawnTimer) {}
+export interface GraveYardComponent {
+  addPiece(piece: Piece, respawnCompletionTime: number): void;
 
-  set povColor(PieceColor color) {}
+  setPovColor(povColor: PieceColor): void;
 
-  void clear() {}
+  clear(): void;
 }
 
+/*
 // interface
 class MoveList {
   void addMove(Move move, int startRow, int startColumn, Position position) {}

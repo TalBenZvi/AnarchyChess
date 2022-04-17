@@ -8,6 +8,7 @@ import {
 import {
   ChessBoardComponent,
   DeathScreenComponent,
+  GraveYardComponent,
   Position,
   Move,
   Square,
@@ -31,6 +32,7 @@ export class ClientFlowEngine implements ClientObserver {
   private position: Position = new Position();
   private _board: ChessBoardComponent = null as any;
   private _deathScreen: DeathScreenComponent = null as any;
+  private _graveYard: GraveYardComponent = null as any;
 
   private isGameRunning: boolean = false;
   private playerIndex: number = null as any;
@@ -54,6 +56,10 @@ export class ClientFlowEngine implements ClientObserver {
 
   set deathScreen(deathScreen: DeathScreenComponent) {
     this._deathScreen = deathScreen;
+  }
+
+  set graveYard(graveYard: GraveYardComponent) {
+    this._graveYard = graveYard;
   }
 
   async attemptToConnect(ip: string, gameID: string) {
@@ -93,14 +99,32 @@ export class ClientFlowEngine implements ClientObserver {
           ? (this.cooldownCompletionTime - new Date().getTime()) / 1000
           : (null as any),
         this.selectedMove,
-        isAlive ? null as any : this.position.getRespawnSquareForPlayer(this.playerIndex),
-        isAlive ? null as any : Position.getStartPieceByPlayer(this.playerIndex),
+        isAlive
+          ? (null as any)
+          : this.position.getRespawnSquareForPlayer(this.playerIndex),
+        isAlive
+          ? (null as any)
+          : Position.getStartPieceByPlayer(this.playerIndex)
       );
+    }
+  }
+
+  private killPlayer(dyingPlayerIndex: number, respawnTimer: number) {
+    if (this._graveYard != null) {
+      this._graveYard.addPiece(
+        this.position.getPieceByPlayer(dyingPlayerIndex),
+        new Date().getTime() + respawnTimer * 1000
+      );
+    }
+    this.position.killPlayer(dyingPlayerIndex);
+    if (dyingPlayerIndex === this.playerIndex && this._deathScreen != null) {
+      this._deathScreen.show(respawnTimer);
     }
   }
 
   private async registerEvent(event: Event) {
     switch (event.type) {
+      // game started
       case EventType.gameStarted: {
         let playerIndex: number = (JSON.parse(
           event.info.get(EventInfo.connectedPlayerIndices) as string,
@@ -116,6 +140,7 @@ export class ClientFlowEngine implements ClientObserver {
         this.updateBoard(null as any);
         break;
       }
+      // move
       case EventType.move: {
         let moveUpdateTime = new Date().getTime();
         let moveNotification: Move = JSON.parse(
@@ -138,40 +163,35 @@ export class ClientFlowEngine implements ClientObserver {
         let movingPlayerLocation: Square = this.position.getPlayerLocation(
           movingPlayerIndex
         );
+        // if move is valid
         if (move != null) {
-          let respawnTimer: number = null as any;
+          // isCapture
           if (move.isCapture) {
             let dyingPlayerIndex = this.position.playerAt(
               move.row,
               move.column
             );
-            this.position.killPlayer(dyingPlayerIndex);
-            if (dyingPlayerIndex === this.playerIndex) {
-              respawnTimer = parseInt(
-                event.info.get(EventInfo.respawnTimer) as string
-              );
-            }
+            let respawnTimer: number = parseInt(
+              event.info.get(EventInfo.respawnTimer) as string
+            );
+            this.killPlayer(dyingPlayerIndex, respawnTimer);
           }
+          // isEnpassant
           if (move.isEnPassant) {
             let enPassantedPlayerIndex = this.position.playerAt(
               movingPlayerLocation.row,
               move.column
             );
-            this.position.killPlayer(enPassantedPlayerIndex);
-            if (enPassantedPlayerIndex === this.playerIndex) {
-              respawnTimer = parseInt(
-                event.info.get(EventInfo.enPassantRespawnTimer) as string
-              );
-            }
+            let respawnTimer: number = parseInt(
+              event.info.get(EventInfo.enPassantRespawnTimer) as string
+            );
+            this.killPlayer(enPassantedPlayerIndex, respawnTimer);
           }
           this.position.move(movingPlayerIndex, move.row, move.column);
           if (movingPlayerIndex === this.playerIndex) {
             this.selectedMove = null as any;
           }
           this.updateBoard(movingPlayerIndex);
-          if (respawnTimer != null && this._deathScreen != null) {
-            this._deathScreen.show(respawnTimer);
-          }
           await new Promise((f) => setTimeout(f, 70));
           this.updateBoard(null as any);
           if (move.isPromotion) {
@@ -213,7 +233,10 @@ export class ClientFlowEngine implements ClientObserver {
           respawningPlayerIndex,
           new Square(respawnSquare.row, respawnSquare.column)
         );
-        if (respawningPlayerIndex === this.playerIndex && this._deathScreen != null) {
+        if (
+          respawningPlayerIndex === this.playerIndex &&
+          this._deathScreen != null
+        ) {
           this._deathScreen.hide();
         }
         this.updateBoard(null as any);

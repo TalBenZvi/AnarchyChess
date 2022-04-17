@@ -3,6 +3,8 @@ import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { DeathScreenComponent } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
+const FONT_COLOR: string = "#900000";
+
 interface DeathScreenProps {
   clientFlowEngine: ClientFlowEngine;
 }
@@ -49,7 +51,8 @@ class DeathScreen
           style={{
             top: 0,
             fontSize: 100,
-            color: "#900000",
+            color: FONT_COLOR,
+            textShadow: "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
             zIndex: 3,
           }}
         >
@@ -60,7 +63,8 @@ class DeathScreen
           style={{
             top: 320,
             fontSize: 30,
-            color: "#900000",
+            color: FONT_COLOR,
+            textShadow: "-0.5px -0.5px 0 #000, 0.5px -0.5px 0 #000, -0.5px 0.5px 0 #000, 0.5px 0.5px 0 #000",
             zIndex: 3,
           }}
         >
@@ -71,7 +75,8 @@ class DeathScreen
           style={{
             top: 330,
             fontSize: 60,
-            color: "#900000",
+            color: FONT_COLOR,
+            textShadow: "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
             zIndex: 3,
           }}
         >

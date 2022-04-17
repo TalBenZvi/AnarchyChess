@@ -196,6 +196,9 @@ class BoardComponent
       respawnSquare,
       respawnPiece,
     } = this.state;
+    if (respawnSquare != null) {
+      isPromotionDialogOpen = false;
+    }
     let squareSize: number = size / BOARD_SIZE;
     let coordinateIndexFontSize: number = size * 0.03;
     let moveIndicatorSize: number = squareSize * 0.5;
