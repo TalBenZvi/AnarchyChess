@@ -9,6 +9,7 @@ import {
   ChessBoardComponent,
   DeathScreenComponent,
   GraveYardComponent,
+  MoveListComponent,
   Position,
   Move,
   Square,
@@ -23,7 +24,6 @@ import {
   EventInfo,
   EventType,
   GameStatus,
-  replacer,
   reviver,
 } from "../game_flow_util/communication";
 
@@ -33,6 +33,7 @@ export class ClientFlowEngine implements ClientObserver {
   private _board: ChessBoardComponent = null as any;
   private _deathScreen: DeathScreenComponent = null as any;
   private _graveYard: GraveYardComponent = null as any;
+  private _moveList: MoveListComponent = null as any;
 
   private isGameRunning: boolean = false;
   private playerIndex: number = null as any;
@@ -60,6 +61,10 @@ export class ClientFlowEngine implements ClientObserver {
 
   set graveYard(graveYard: GraveYardComponent) {
     this._graveYard = graveYard;
+  }
+
+  set moveList(moveList: MoveListComponent) {
+    this._moveList = moveList;
   }
 
   async attemptToConnect(ip: string, gameID: string) {
@@ -112,7 +117,7 @@ export class ClientFlowEngine implements ClientObserver {
   private killPlayer(dyingPlayerIndex: number, respawnTimer: number) {
     if (this._graveYard != null) {
       this._graveYard.addPiece(
-        this.position.getPieceByPlayer(dyingPlayerIndex),
+        Position.getStartPieceByPlayer(dyingPlayerIndex),
         new Date().getTime() + respawnTimer * 1000
       );
     }
@@ -137,6 +142,14 @@ export class ClientFlowEngine implements ClientObserver {
           this._board.setPlayerIndex(playerIndex);
         }
         this.position.setToStartingPosition();
+        let povColor: PieceColor = this.position.getPieceByPlayer(this.playerIndex).color;
+        if (this._graveYard != null) {
+          this._graveYard.clear();
+          this._graveYard.setPovColor(povColor);
+        }
+        if (this._board != null) {
+          this._board.setPovColor(povColor);
+        }
         this.updateBoard(null as any);
         break;
       }
@@ -153,6 +166,7 @@ export class ClientFlowEngine implements ClientObserver {
         let movingPlayerIndex: number = parseInt(
           event.info.get(EventInfo.playerIndex) as string
         );
+        // cooldown
         if (movingPlayerIndex === this.playerIndex) {
           this.cooldownTimer = parseInt(
             event.info.get(EventInfo.cooldown) as string
@@ -187,6 +201,7 @@ export class ClientFlowEngine implements ClientObserver {
             );
             this.killPlayer(enPassantedPlayerIndex, respawnTimer);
           }
+          // execute move
           this.position.move(movingPlayerIndex, move.row, move.column);
           if (movingPlayerIndex === this.playerIndex) {
             this.selectedMove = null as any;
@@ -194,6 +209,7 @@ export class ClientFlowEngine implements ClientObserver {
           this.updateBoard(movingPlayerIndex);
           await new Promise((f) => setTimeout(f, 70));
           this.updateBoard(null as any);
+          // isPromotion
           if (move.isPromotion) {
             let promotionType: PieceType = moveNotification.promotionType;
             if (promotionType != null) {
@@ -205,6 +221,7 @@ export class ClientFlowEngine implements ClientObserver {
               this.updateBoard(null as any);
             }
           }
+          // isCastle
           if (move.isCastle) {
             let movingPiece: Piece = this.position.getPieceByPlayer(
               movingPlayerIndex

@@ -91,6 +91,12 @@ class BoardComponent
     });
   }
 
+  setPovColor(povColor: PieceColor): void {
+    this.setState(() => {
+      return { povColor: povColor };
+    });
+  }
+
   setPieces(
     playingPieces: PlayingPiece[],
     availableMoves: Move[],

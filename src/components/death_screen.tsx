@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { DeathScreenComponent } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";

@@ -7,6 +7,8 @@ import GraveYard from "./components/graveyard";
 import { PieceColor, Move } from "./game_flow_util/game_elements";
 import { ClientFlowEngine } from "./client_side/client_flow_engine";
 import { ServerFlowEngine } from "./server_side/server_flow_engine";
+import MoveList from "./components/move_list";
+import TestComponent from "./components/test_component";
 
 //import { GameClient } from "./client_side/game_client";
 //import { GameServer } from "./server_side/game_server";
@@ -32,6 +34,7 @@ function App() {
   );
   */
   return (
+    /* background */
     <div
       style={{
         position: "absolute",
@@ -40,6 +43,7 @@ function App() {
         height: "100%",
       }}
     >
+      { /* board */}
       <div className="centered">
         <BoardComponent
           size={850}
@@ -49,34 +53,36 @@ function App() {
           clientFlowEngine={clientFlowEngines[0]}
         />
       </div>
+      { /* buttons */}
       <button
-          style={{ color: "white", margin: 20}}
-          onClick={() => {
-            let gameID: string = Math.random().toString();
-            serverFlowEngine.acceptConnections(gameID);
-            for (let clientFlowEngine of clientFlowEngines) {
-              clientFlowEngine.attemptToConnect("localhost", gameID);
-            }
-          }}
-        >
-          start
-        </button>
-        <div></div>
-        <button
-          style={{ color: "white", margin: 20 }}
-          onClick={async () => {
-            clientFlowEngines[1].sendMove(new Move(5, 4));
+        style={{ color: "white", margin: 20 }}
+        onClick={() => {
+          let gameID: string = Math.random().toString();
+          serverFlowEngine.acceptConnections(gameID);
+          for (let clientFlowEngine of clientFlowEngines) {
+            clientFlowEngine.attemptToConnect("localhost", gameID);
+          }
+        }}
+      >
+        start
+      </button>
+      <div/>
+      <button
+        style={{ color: "white", margin: 20 }}
+        onClick={async () => {
+          clientFlowEngines[1].sendMove(new Move(5, 4));
+          await new Promise((f) => setTimeout(f, 1000));
+          while (true) {
+            clientFlowEngines[2].sendMove(new Move(2, 0));
             await new Promise((f) => setTimeout(f, 1000));
-            while (true) {
-              clientFlowEngines[2].sendMove(new Move(2, 0));
-              await new Promise((f) => setTimeout(f, 1000));
-              clientFlowEngines[2].sendMove(new Move(7, 5));
-              await new Promise((f) => setTimeout(f, 1000));
-            }
-          }}
-        >
-          test
-        </button>
+            clientFlowEngines[2].sendMove(new Move(7, 5));
+            await new Promise((f) => setTimeout(f, 1000));
+          }
+        }}
+      >
+        test
+      </button>
+      {/* graveyard */}
       <div
         style={{
           position: "absolute",
@@ -94,11 +100,10 @@ function App() {
           clientFlowEngine={clientFlowEngines[0]}
         />
       </div>
+      {/* move list */}
       <DeathScreen clientFlowEngine={clientFlowEngines[0]} />
     </div>
   );
-
-  return <h1>Hello</h1>;
 }
 
 export default App;

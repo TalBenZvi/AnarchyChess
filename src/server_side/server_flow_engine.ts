@@ -79,19 +79,21 @@ export class ServerFlowEngine implements ServerObserver {
         playerIndex,
         moveRequest
       );
+      // move is valid
       if (move != null) {
         let event: Event = {
           type: EventType.move,
           info: new Map<EventInfo, string>([
             [EventInfo.playerIndex, playerIndex.toString()],
-            [EventInfo.move, JSON.stringify(move, replacer)],
           ]),
         }
+        // isCapture
         if (move.isCapture) {
           let dyingPlayerIndex = this.position.playerAt(move.row, move.column);
           let respawnTimer: number = this.killPlayer(dyingPlayerIndex);
           event.info.set(EventInfo.respawnTimer, respawnTimer.toString());
         }
+        // isEnpassant
         if (move.isEnPassant) {
           let enPassantedPlayerIndex = this.position.playerAt(playerLocation.row, move.column);
           let enPassantRespawnTimer: number = this.killPlayer(enPassantedPlayerIndex);
@@ -99,11 +101,14 @@ export class ServerFlowEngine implements ServerObserver {
         }
         this.position.move(playerIndex, move.row, move.column);
         let movingPiece: Piece = this.position.getPieceByPlayer(playerIndex);
+        // isPromotion
         if (move.isPromotion && moveRequest.promotionType != null) {
           let promotionType: PieceType = moveRequest.promotionType;
           move.promotionType = promotionType;
           this.position.promotePieceAt(move.row, move.column, promotionType);
         }
+        event.info.set(EventInfo.move, JSON.stringify(move));
+        // isCastle
         if (move.isCastle) {
           let startRow: number = movingPiece.color === PieceColor.white ? 0 : 7;
           let startColumn: number =
@@ -112,6 +117,7 @@ export class ServerFlowEngine implements ServerObserver {
             move.castleSide === CastleSide.kingSide ? 5 : 3;
           this.position.moveFrom(startRow, startColumn, startRow, destColumn);
         }
+        // cooldown
         this.isOnCooldown[playerIndex] = true;
         this.moveRequests[playerIndex] = null as any;
         let cooldown: number = movingPiece.cooldown;

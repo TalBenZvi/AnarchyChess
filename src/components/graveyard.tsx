@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Component } from "react";
 import {
   PieceColor,
   reverseColor,
@@ -10,7 +9,6 @@ import {
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
-import { replacer } from "../game_flow_util/communication";
 
 function importAll(r: any) {
   let images: Map<string, any> = new Map<string, any>();
@@ -26,8 +24,6 @@ const images = importAll(
 
 const ROW_SIZE: number = 5;
 const NUM_OF_ROWS: number = 6;
-
-const GRAY_FILTER: string = "#404040c0";
 
 interface GraveYardItem {
   imagePath: string;

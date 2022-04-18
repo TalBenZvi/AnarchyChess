@@ -1,5 +1,3 @@
-import { replacer } from "./communication";
-
 export const BOARD_SIZE = 8;
 
 export const NUM_OF_PLAYERS = 32;
@@ -149,7 +147,7 @@ export abstract class Piece {
           let startRow = this.getType() === PieceType.pawn ? 1 : 0;
           this._respawnSquares = firstFourRows(startRow).sort(
             (square1, square2) => {
-              if (square1.row != square2.row) {
+              if (square1.row !== square2.row) {
                 return square1.row - square2.row;
               }
               return (
@@ -164,7 +162,7 @@ export abstract class Piece {
           let startRow = this.getType() === PieceType.pawn ? 3 : 4;
           this._respawnSquares = firstFourRows(startRow).sort(
             (square1, square2) => {
-              if (square1.row != square2.row) {
+              if (square1.row !== square2.row) {
                 return square2.row - square1.row;
               }
               return (
@@ -997,6 +995,8 @@ export class Position {
 export interface ChessBoardComponent {
   setPlayerIndex(playerIndex: number): void;
 
+  setPovColor(povColor: PieceColor): void;
+
   setPieces(
     playingPieces: PlayingPiece[],
     availableMoves: Move[],
@@ -1015,8 +1015,6 @@ export interface DeathScreenComponent {
   hide(): void;
 }
 
-
-// interface
 export interface GraveYardComponent {
   addPiece(piece: Piece, respawnCompletionTime: number): void;
 
@@ -1025,11 +1023,9 @@ export interface GraveYardComponent {
   clear(): void;
 }
 
-/*
-// interface
-class MoveList {
-  void addMove(Move move, int startRow, int startColumn, Position position) {}
+export interface MoveListComponent {
+  addMove(move: Move, playerIndex: number, position: Position): void;
 
-  void clear() {}
+  clear(): void;
 }
-*/
+
