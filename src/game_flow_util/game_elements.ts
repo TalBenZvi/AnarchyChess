@@ -56,7 +56,7 @@ class MoveOffset {
 
 export class Square {
   constructor(readonly row: number, readonly column: number) {
-    this.applyMove = this.applyMove.bind(this)
+    this.applyMove = this.applyMove.bind(this);
   }
 
   isOnTheBoard = (): boolean =>
@@ -107,9 +107,9 @@ export class Move {
   ) {
     if (params != null) {
       this.isPromotion = Boolean(params.isPromotion);
-      this.promotionType = (Boolean(params.promotionType)
-        ? params.promotionType
-        : null) as PieceType;
+      this.promotionType = (
+        Boolean(params.promotionType) ? params.promotionType : null
+      ) as PieceType;
       this.isCapture = Boolean(params.isCapture);
       this.isEnPassant = Boolean(params.isEnPassant);
       this.isCastle = Boolean(params.isCastle);
@@ -622,7 +622,6 @@ export class Position {
     [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
   ]);
 
-
   private static get startPlayerLocations(): Square[] {
     return [...Array(BOARD_SIZE)]
       .map((_, j) => new Square(0, j))
@@ -736,18 +735,16 @@ export class Position {
   }
 
   get playingPieces(): PlayingPiece[] {
-    return this.playerLocations.map(
-      (square: Square): PlayingPiece => {
-        if (square == null) {
-          return { piece: null as any, row: null as any, column: null as any };
-        }
-        return {
-          piece: this.pieceAt(square.row, square.column),
-          row: square.row,
-          column: square.column,
-        };
+    return this.playerLocations.map((square: Square): PlayingPiece => {
+      if (square == null) {
+        return { piece: null as any, row: null as any, column: null as any };
       }
-    );
+      return {
+        piece: this.pieceAt(square.row, square.column),
+        row: square.row,
+        column: square.column,
+      };
+    });
   }
 
   setToStartingPosition() {
@@ -879,13 +876,11 @@ export class Position {
         return;
       }
       this.killPlayerAt(row, column);
-      this._boardArrangement[row][column] = this._boardArrangement[startRow][
-        startColumn
-      ];
+      this._boardArrangement[row][column] =
+        this._boardArrangement[startRow][startColumn];
       this._boardArrangement[startRow][startColumn] = null as any;
-      this._playerArrangement[row][column] = this._playerArrangement[startRow][
-        startColumn
-      ];
+      this._playerArrangement[row][column] =
+        this._playerArrangement[startRow][startColumn];
       this._playerArrangement[startRow][startColumn] = null as any;
       this._playerLocations[playerIndex] = new Square(row, column);
       this._updateCastleRights(startRow, startColumn);
@@ -982,31 +977,30 @@ export class Position {
   respawnPlayerAt(playerIndex: number, respawnSquare: Square) {
     if (respawnSquare != null) {
       this._playerLocations[playerIndex] = respawnSquare;
-      this._boardArrangement[respawnSquare.row][
-        respawnSquare.column
-      ] = Position.getStartPieceByPlayer(playerIndex);
-      this._playerArrangement[respawnSquare.row][
-        respawnSquare.column
-      ] = playerIndex;
+      this._boardArrangement[respawnSquare.row][respawnSquare.column] =
+        Position.getStartPieceByPlayer(playerIndex);
+      this._playerArrangement[respawnSquare.row][respawnSquare.column] =
+        playerIndex;
     }
   }
 }
 
 export interface ChessBoardComponent {
-  setPlayerIndex(playerIndex: number): void;
+  setPlayerSquare(playerSquare: Square): void;
 
   setPovColor(povColor: PieceColor): void;
 
-  setPieces(
-    playingPieces: PlayingPiece[],
-    availableMoves: Move[],
-    movingPieceIndex: number,
-    cooldownTimer: number,
-    remainingCooldown: number,
-    selectedMove: Square,
-    respawnSquare: Square,
-    respawnPiece: Piece
-  ): void;
+  setPieces(playingPieces: PlayingPiece[]): void;
+
+  setAvailableMoves(availableMoves: Move[]): void;
+
+  setSelectedMove(selectedMove: Square): void;
+
+  movePlayer(playerIndex: number, row: number, column: number): void;
+
+  killPlayer(playerIndex: number): void;
+
+  respawnPlayer(playerIndex: number, row: number, column: number, piece: Piece): void;
 }
 
 export interface DeathScreenComponent {
@@ -1028,4 +1022,3 @@ export interface MoveListComponent {
 
   clear(): void;
 }
-

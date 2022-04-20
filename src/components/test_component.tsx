@@ -2,7 +2,6 @@ import * as React from "react";
 import "./chess_board.css";
 import Box from "@mui/material/Box";
 import { Dialog } from "@headlessui/react";
-import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import {
   ChessBoardComponent,
   BOARD_SIZE,
@@ -18,10 +17,6 @@ import {
   Knight,
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
-
-import captureIcon from "../assets/action_icons/capture_icon.png";
-import BoardComponent from "./chess_board";
-import { ContextProvider } from "recyclerlistview/web";
 
 const PIECE_IMAGES: Map<PieceColor, Map<PieceType, any>> = new Map();
 for (const color in PieceColor) {
@@ -43,6 +38,13 @@ for (const color in PieceColor) {
 const CAPTURE_ICON: any = new Image();
 CAPTURE_ICON.src = require(`../assets/action_icons/capture_icon.png`);
 
+const MOVE_BUTTON_OPACITY = 0.2;
+const FPS = 60;
+// in seconds
+const PIECE_TRAVEL_TIME = 0.1;
+const PIECE_DYING_TIME = 0.15;
+const DYING_PIECE_ELEVATION_FACTOR = 1;
+
 const PROMOTION_TYPES: PieceType[] = [
   PieceType.knight,
   PieceType.bishop,
@@ -61,10 +63,11 @@ interface TestComponentProps {
 interface TestComponentState {}
 
 class CanvasPiece {
-  image: any;
-  vx: number = 0;
-  vy: number = 0;
-  isLoaded: boolean = false;
+  private image: any;
+  opacity: number = 1;
+  isMoving: boolean = false;
+  isDying: boolean = false;
+
   constructor(
     private ctx: any,
     piece: Piece,
@@ -75,25 +78,21 @@ class CanvasPiece {
     this.image = PIECE_IMAGES.get(piece.color)?.get(piece.type);
   }
 
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-  }
-
   draw() {
+    this.ctx.globalAlpha = this.opacity;
     this.ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
+    this.ctx.globalAlpha = 1;
   }
 }
 
 class CanvasMoveButton {
-  static OPACITY: number = 0.2;
-
   constructor(
     private ctx: any,
     public x: number,
     public y: number,
     private squareSize: number,
-    private isCapture: boolean
+    private isCapture: boolean,
+    private isSelected: boolean
   ) {}
 
   isPointInBounds(pointX: number, pointY: number): boolean {
@@ -106,8 +105,13 @@ class CanvasMoveButton {
   }
 
   draw() {
-    if (this.isCapture) {
-      this.ctx.globalAlpha = CanvasMoveButton.OPACITY;
+    if (this.isSelected) {
+      // selected move
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      this.ctx.fillRect(this.x, this.y, this.squareSize, this.squareSize);
+    } else if (this.isCapture) {
+      // captue move
+      this.ctx.globalAlpha = MOVE_BUTTON_OPACITY;
       this.ctx.drawImage(
         CAPTURE_ICON,
         this.x,
@@ -117,6 +121,7 @@ class CanvasMoveButton {
       );
       this.ctx.globalAlpha = 1;
     } else {
+      // standard move
       this.ctx.beginPath();
       this.ctx.arc(
         this.x + this.squareSize / 2,
@@ -125,7 +130,7 @@ class CanvasMoveButton {
         0,
         2 * Math.PI
       );
-      this.ctx.fillStyle = `rgba(0, 0, 0, ${CanvasMoveButton.OPACITY})`;
+      this.ctx.fillStyle = `rgba(0, 0, 0, ${MOVE_BUTTON_OPACITY})`;
       this.ctx.fill();
       this.ctx.closePath();
     }
@@ -134,58 +139,117 @@ class CanvasMoveButton {
 
 class BoardArea {
   povColor: PieceColor = PieceColor.white;
+  private squareSize;
+
   private canvasPieces: CanvasPiece[] = [];
   private canvasMoveButtons: CanvasMoveButton[] = [];
-  private selectedMove: Square = null as any;
+  private selectedMove: CanvasMoveButton = null as any;
 
+  private playerSquare: Square = null as any;
   private availableMoves: Move[] = [];
 
   constructor(private ctx: any, private props: TestComponentProps) {
     this.povColor = props.povColor;
-    this.povColor = PieceColor.white;
+    this.squareSize = Math.floor(props.size / BOARD_SIZE);
+  }
+
+  setPlayerSquare(playerSquare: Square) {
+    this.playerSquare = playerSquare;
   }
 
   setPieces(playingPieces: PlayingPiece[]) {
-    let squareSize: number = this.props.size / BOARD_SIZE;
-    this.canvasPieces = playingPieces
-      .map((playingPiece: PlayingPiece) => {
-        if (playingPiece.piece == null) {
-          return null as any;
-        }
-        return new CanvasPiece(
-          this.ctx,
-          playingPiece.piece,
-          this.fitColumnIndexToPOV(playingPiece.column) * squareSize,
-          this.fitRowIndexToPOV(playingPiece.row) * squareSize,
-          squareSize
-        );
-      })
-      .filter((canvasPiece) => canvasPiece != null);
+    this.canvasPieces = playingPieces.map((playingPiece: PlayingPiece) => {
+      if (playingPiece.piece == null) {
+        return null as any;
+      }
+      return new CanvasPiece(
+        this.ctx,
+        playingPiece.piece,
+        this.fitColumnIndexToPOV(playingPiece.column) * this.squareSize,
+        this.fitRowIndexToPOV(playingPiece.row) * this.squareSize,
+        this.squareSize
+      );
+    });
   }
 
   setAvailableMoves(availableMoves: Move[]) {
     this.availableMoves = [...availableMoves];
-    let squareSize: number = this.props.size / BOARD_SIZE;
     this.canvasMoveButtons = availableMoves.map(
       (availableMove: Move) =>
         new CanvasMoveButton(
           this.ctx,
-          this.fitColumnIndexToPOV(availableMove.column) * squareSize,
-          this.fitRowIndexToPOV(availableMove.row) * squareSize,
-          squareSize,
-          availableMove.isCapture
+          this.fitColumnIndexToPOV(availableMove.column) * this.squareSize,
+          this.fitRowIndexToPOV(availableMove.row) * this.squareSize,
+          this.squareSize,
+          availableMove.isCapture,
+          false
         )
     );
   }
 
   setSelectedMove(selectedMove: Square) {
-    this.selectedMove = selectedMove;
+    this.selectedMove =
+      selectedMove == null
+        ? (null as any)
+        : new CanvasMoveButton(
+            this.ctx,
+            this.fitColumnIndexToPOV(selectedMove.column) * this.squareSize,
+            this.fitRowIndexToPOV(selectedMove.row) * this.squareSize,
+            this.squareSize,
+            false,
+            true
+          );
+  }
+
+  movePlayer(playerIndex: number, row: number, column: number) {
+    let movingPiece: CanvasPiece = this.canvasPieces[playerIndex];
+    if (movingPiece != null) {
+      movingPiece.isMoving = true;
+      let destX: number = this.fitColumnIndexToPOV(column) * this.squareSize;
+      let destY: number = this.fitRowIndexToPOV(row) * this.squareSize;
+      let dx = (destX - movingPiece.x) / (PIECE_TRAVEL_TIME * FPS);
+      let dy = (destY - movingPiece.y) / (PIECE_TRAVEL_TIME * FPS);
+      let moveInterval = setInterval(() => {
+        movingPiece.x += dx;
+        movingPiece.y += dy;
+      }, 1000 / FPS);
+      setTimeout(() => {
+        clearInterval(moveInterval);
+        movingPiece.x = destX;
+        movingPiece.y = destY;
+        movingPiece.isMoving = false;
+      }, PIECE_TRAVEL_TIME * 1000);
+    }
+  }
+
+  killPlayer(playerIndex: number) {
+    let dyingPiece: CanvasPiece = this.canvasPieces[playerIndex];
+    if (dyingPiece != null) {
+      dyingPiece.isDying = true;
+      let deathElevation = this.squareSize * DYING_PIECE_ELEVATION_FACTOR;
+      let dy = -deathElevation / (PIECE_DYING_TIME * FPS);
+      let dOpacity = -1 / (PIECE_DYING_TIME * FPS);
+      let moveInterval = setInterval(() => {
+        dyingPiece.y += dy;
+        dyingPiece.opacity += dOpacity;
+      }, 1000 / FPS);
+      setTimeout(() => {
+        clearInterval(moveInterval);
+        this.canvasPieces[playerIndex] = null as any;
+      }, PIECE_DYING_TIME * 1000);
+    }
   }
 
   mouseClicked(x: number, y: number) {
-    for (let i = 0; i < this.availableMoves.length; i++) {
-      if (this.canvasMoveButtons[i].isPointInBounds(x, y)) {
-        this.props.clientFlowEngine.sendMove(this.availableMoves[i]);
+    if (this.selectedMove == null) {
+      for (let i = 0; i < this.availableMoves.length; i++) {
+        if (this.canvasMoveButtons[i].isPointInBounds(x, y)) {
+          this.props.clientFlowEngine.sendMove(this.availableMoves[i]);
+        }
+      }
+    } else {
+      if (!this.selectedMove.isPointInBounds(x, y)) {
+        this.props.clientFlowEngine.sendMove(null as any);
       }
     }
   }
@@ -206,40 +270,23 @@ class BoardArea {
       : BOARD_SIZE - 1 - columnIndex;
   }
 
-  update() {}
-
   // return wehther or not there's a need for an update
   draw(): boolean {
-    let {
-      size,
-      lightColor,
-      darkColor,
-      povColor,
-      clientFlowEngine,
-    } = this.props;
-    let squareSize: number = size / BOARD_SIZE;
+    let shouldUpdate: boolean = false;
+    let { size, lightColor, darkColor, povColor, clientFlowEngine } =
+      this.props;
     let coordinateIndexFontSize: number = size * 0.035;
     // squares
     for (let i = 0; i < BOARD_SIZE; i++) {
       for (let j = 0; j < BOARD_SIZE; j++) {
         this.ctx.fillStyle = (i + j) % 2 === 0 ? lightColor : darkColor;
         this.ctx.fillRect(
-          i * squareSize,
-          j * squareSize,
-          squareSize,
-          squareSize
+          i * this.squareSize,
+          j * this.squareSize,
+          this.squareSize,
+          this.squareSize
         );
       }
-    }
-    // selected move
-    if (this.selectedMove != null) {
-      this.ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      this.ctx.fillRect(
-        this.fitColumnIndexToPOV(this.selectedMove.column) * squareSize,
-        this.fitRowIndexToPOV(this.selectedMove.row) * squareSize,
-        squareSize,
-        squareSize
-      );
     }
     // row indices
     for (let i = 0; i < BOARD_SIZE; i++) {
@@ -248,8 +295,8 @@ class BoardArea {
         this.fitRowIndexToPOV(i) % 2 === 0 ? darkColor : lightColor;
       this.ctx.fillText(
         (i + 1).toString(),
-        squareSize * 0.05,
-        (this.fitRowIndexToPOV(i) + 0.25) * squareSize
+        this.squareSize * 0.05,
+        (this.fitRowIndexToPOV(i) + 0.25) * this.squareSize
       );
     }
     // column indices
@@ -259,28 +306,61 @@ class BoardArea {
         this.fitColumnIndexToPOV(i) % 2 === 0 ? lightColor : darkColor;
       this.ctx.fillText(
         String.fromCharCode("a".charCodeAt(0) + i),
-        (this.fitColumnIndexToPOV(i) + 0.75) * squareSize,
-        (BOARD_SIZE - 0.08) * squareSize
+        (this.fitColumnIndexToPOV(i) + 0.75) * this.squareSize,
+        (BOARD_SIZE - 0.08) * this.squareSize
       );
     }
-    // pieces
+    // player square highlight
+    if (this.playerSquare != null) {
+      this.ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      this.ctx.fillRect(
+        this.fitColumnIndexToPOV(this.playerSquare.column) * this.squareSize,
+        this.fitRowIndexToPOV(this.playerSquare.row) * this.squareSize,
+        this.squareSize,
+        this.squareSize
+      );
+    }
+    // dying pieces
     for (let canvasPiece of this.canvasPieces) {
-      canvasPiece.draw();
+      if (canvasPiece != null && canvasPiece.isDying) {
+        canvasPiece.draw();
+        shouldUpdate = true;
+      }
+    }
+    // non-moving pieces
+    for (let canvasPiece of this.canvasPieces) {
+      if (
+        canvasPiece != null &&
+        !canvasPiece.isMoving &&
+        !canvasPiece.isDying
+      ) {
+        canvasPiece.draw();
+      }
+    }
+    // moving pieces
+    for (let canvasPiece of this.canvasPieces) {
+      if (canvasPiece != null && canvasPiece.isMoving && !canvasPiece.isDying) {
+        canvasPiece.draw();
+        shouldUpdate = true;
+      }
     }
     // move buttons
     if (this.selectedMove == null) {
       for (let canvasMoveButton of this.canvasMoveButtons) {
         canvasMoveButton.draw();
       }
+    } else {
+      // selected move
+      this.selectedMove.draw();
     }
-
-    return false;
+    return shouldUpdate;
   }
 }
 
 class TestComponent
   extends React.Component<TestComponentProps, TestComponentState>
-  implements ChessBoardComponent {
+  implements ChessBoardComponent
+{
   state = {};
   canvasRef = null as any;
   boardArea: BoardArea = null as any;
@@ -314,25 +394,46 @@ class TestComponent
     requestAnimationFrame(this.renderFunction);
   }
 
-  setPlayerIndex(playerIndex: number): void {}
+  setPlayerSquare(playerSquare: Square): void {
+    this.boardArea.setPlayerSquare(playerSquare);
+    this.shouldUpdateBoard = true;
+  }
 
-  setPovColor(povColor: PieceColor): void {}
-
-  setPieces(
-    playingPieces: PlayingPiece[],
-    availableMoves: Move[],
-    movingPieceIndex: number,
-    cooldownTimer: number,
-    remainingCooldown: number,
-    selectedMove: Square,
-    respawnSquare: Square,
-    respawnPiece: Piece
-  ): void {
+  setPieces(playingPieces: PlayingPiece[]): void {
     this.boardArea.setPieces(playingPieces);
+    this.shouldUpdateBoard = true;
+  }
+
+  setAvailableMoves(availableMoves: Move[]): void {
     this.boardArea.setAvailableMoves(availableMoves);
+    this.shouldUpdateBoard = true;
+  }
+
+  setSelectedMove(selectedMove: Square): void {
     this.boardArea.setSelectedMove(selectedMove);
     this.shouldUpdateBoard = true;
   }
+
+  movePlayer(playerIndex: number, row: number, column: number): void {
+    this.boardArea.movePlayer(playerIndex, row, column);
+    this.shouldUpdateBoard = true;
+  }
+
+  killPlayer(playerIndex: number): void {
+    this.boardArea.killPlayer(playerIndex);
+    this.shouldUpdateBoard = true;
+  }
+
+  respawnPlayer(
+    playerIndex: number,
+    row: number,
+    column: number,
+    piece: Piece
+  ): void {
+    throw new Error("Method not implemented.");
+  }
+
+  setPovColor(povColor: PieceColor): void {}
 
   private sendMove(move: Move): void {
     this.props.clientFlowEngine.sendMove(move);

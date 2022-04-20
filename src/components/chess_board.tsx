@@ -61,8 +61,7 @@ interface BoardComponentState {
 }
 
 class BoardComponent
-  extends React.Component<BoardComponentProps, BoardComponentState>
-  implements ChessBoardComponent {
+  extends React.Component<BoardComponentProps, BoardComponentState> {
   state = {
     playerIndex: null as any,
     povColor: this.props.povColor,
@@ -82,7 +81,7 @@ class BoardComponent
 
   constructor(props: BoardComponentProps) {
     super(props);
-    props.clientFlowEngine.board = this;
+    //props.clientFlowEngine.board = this;
   }
 
   setPlayerIndex(playerIndex: number): void {
