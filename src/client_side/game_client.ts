@@ -43,6 +43,7 @@ export class GameClient {
       this.gameID = gameID;
       this.gun = Gun({
         peers: [`http://${ip}:${GUN_SERVER_PORT}/gun`],
+        localStorage: false,
       });
       let didConnect: boolean = false;
       this.gun

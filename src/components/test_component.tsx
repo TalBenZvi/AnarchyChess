@@ -40,6 +40,9 @@ for (const color in PieceColor) {
   }
 }
 
+const CAPTURE_ICON: any = new Image();
+CAPTURE_ICON.src = require(`../assets/action_icons/capture_icon.png`);
+
 const PROMOTION_TYPES: PieceType[] = [
   PieceType.knight,
   PieceType.bishop,
@@ -79,24 +82,18 @@ class CanvasPiece {
 
   draw() {
     this.ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
-    /*
-    this.ctx.fillStyle = "#0000ff";
-    this.ctx.fillRect(
-      this.x,
-      this.y,
-      this.size / 2,
-      this.size / 2,
-    );
-    */
   }
 }
 
 class CanvasMoveButton {
+  static OPACITY: number = 0.2;
+
   constructor(
     private ctx: any,
     public x: number,
     public y: number,
-    private squareSize: number
+    private squareSize: number,
+    private isCapture: boolean
   ) {}
 
   isPointInBounds(pointX: number, pointY: number): boolean {
@@ -109,17 +106,29 @@ class CanvasMoveButton {
   }
 
   draw() {
-    this.ctx.beginPath();
-    this.ctx.arc(
-      this.x + this.squareSize / 2,
-      this.y + this.squareSize / 2,
-      this.squareSize * 0.25,
-      0,
-      2 * Math.PI
-    );
-    this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-    this.ctx.fill();
-    this.ctx.closePath();
+    if (this.isCapture) {
+      this.ctx.globalAlpha = CanvasMoveButton.OPACITY;
+      this.ctx.drawImage(
+        CAPTURE_ICON,
+        this.x,
+        this.y,
+        this.squareSize,
+        this.squareSize
+      );
+      this.ctx.globalAlpha = 1;
+    } else {
+      this.ctx.beginPath();
+      this.ctx.arc(
+        this.x + this.squareSize / 2,
+        this.y + this.squareSize / 2,
+        this.squareSize * 0.25,
+        0,
+        2 * Math.PI
+      );
+      this.ctx.fillStyle = `rgba(0, 0, 0, ${CanvasMoveButton.OPACITY})`;
+      this.ctx.fill();
+      this.ctx.closePath();
+    }
   }
 }
 
@@ -127,7 +136,7 @@ class BoardArea {
   povColor: PieceColor = PieceColor.white;
   private canvasPieces: CanvasPiece[] = [];
   private canvasMoveButtons: CanvasMoveButton[] = [];
-  private drawnImageIndex = 0;
+  private selectedMove: Square = null as any;
 
   private availableMoves: Move[] = [];
 
@@ -138,19 +147,20 @@ class BoardArea {
 
   setPieces(playingPieces: PlayingPiece[]) {
     let squareSize: number = this.props.size / BOARD_SIZE;
-    this.canvasPieces = playingPieces.map((playingPiece: PlayingPiece) => {
-      if (playingPiece.piece == null) {
-        return null as any;
-      }
-      return new CanvasPiece(
-        this.ctx,
-        playingPiece.piece,
-        this.fitColumnIndexToPOV(playingPiece.column) * squareSize,
-        this.fitRowIndexToPOV(playingPiece.row) * squareSize,
-        squareSize
-      );
-    });
-    this.canvasPieces.filter((canvasPiece) => canvasPiece != null);
+    this.canvasPieces = playingPieces
+      .map((playingPiece: PlayingPiece) => {
+        if (playingPiece.piece == null) {
+          return null as any;
+        }
+        return new CanvasPiece(
+          this.ctx,
+          playingPiece.piece,
+          this.fitColumnIndexToPOV(playingPiece.column) * squareSize,
+          this.fitRowIndexToPOV(playingPiece.row) * squareSize,
+          squareSize
+        );
+      })
+      .filter((canvasPiece) => canvasPiece != null);
   }
 
   setAvailableMoves(availableMoves: Move[]) {
@@ -162,9 +172,14 @@ class BoardArea {
           this.ctx,
           this.fitColumnIndexToPOV(availableMove.column) * squareSize,
           this.fitRowIndexToPOV(availableMove.row) * squareSize,
-          squareSize
+          squareSize,
+          availableMove.isCapture
         )
     );
+  }
+
+  setSelectedMove(selectedMove: Square) {
+    this.selectedMove = selectedMove;
   }
 
   mouseClicked(x: number, y: number) {
@@ -216,6 +231,16 @@ class BoardArea {
         );
       }
     }
+    // selected move
+    if (this.selectedMove != null) {
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      this.ctx.fillRect(
+        this.fitColumnIndexToPOV(this.selectedMove.column) * squareSize,
+        this.fitRowIndexToPOV(this.selectedMove.row) * squareSize,
+        squareSize,
+        squareSize
+      );
+    }
     // row indices
     for (let i = 0; i < BOARD_SIZE; i++) {
       this.ctx.font = `${coordinateIndexFontSize}px Arial`;
@@ -239,20 +264,16 @@ class BoardArea {
       );
     }
     // pieces
-    /*
-    for (let canvasPiece of this.canvasPieces) {
-      if (!canvasPiece.isLoaded) {
-        return true;
-      }
-    }
-    */
     for (let canvasPiece of this.canvasPieces) {
       canvasPiece.draw();
     }
     // move buttons
-    for (let canvasMoveButton of this.canvasMoveButtons) {
-      canvasMoveButton.draw();
+    if (this.selectedMove == null) {
+      for (let canvasMoveButton of this.canvasMoveButtons) {
+        canvasMoveButton.draw();
+      }
     }
+
     return false;
   }
 }
@@ -309,6 +330,7 @@ class TestComponent
   ): void {
     this.boardArea.setPieces(playingPieces);
     this.boardArea.setAvailableMoves(availableMoves);
+    this.boardArea.setSelectedMove(selectedMove);
     this.shouldUpdateBoard = true;
   }
 
