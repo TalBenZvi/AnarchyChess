@@ -9,6 +9,7 @@ import { ClientFlowEngine } from "./client_side/client_flow_engine";
 import { ServerFlowEngine } from "./server_side/server_flow_engine";
 import MoveList from "./components/move_list";
 import TestComponent from "./components/test_component";
+import TestCanvas from "./components/test_canvas"
 
 //import { GameClient } from "./client_side/game_client";
 //import { GameServer } from "./server_side/game_server";
@@ -43,7 +44,8 @@ function App() {
         height: "100%",
       }}
     >
-      { /* board */}
+      {/* board */}
+      {/*}
       <div className="centered">
         <BoardComponent
           size={850}
@@ -52,8 +54,17 @@ function App() {
           povColor={PieceColor.white}
           clientFlowEngine={clientFlowEngines[0]}
         />
+    </div>*/}
+      <div className="centered">
+        <TestComponent
+          size={850}
+          lightColor="#9999bb"
+          darkColor="#454545"
+          povColor={PieceColor.white}
+          clientFlowEngine={clientFlowEngines[0]}
+        />
       </div>
-      { /* buttons */}
+      {/* buttons */}
       <button
         style={{ color: "white", margin: 20 }}
         onClick={() => {
@@ -66,7 +77,7 @@ function App() {
       >
         start
       </button>
-      <div/>
+      <div />
       <button
         style={{ color: "white", margin: 20 }}
         onClick={async () => {
