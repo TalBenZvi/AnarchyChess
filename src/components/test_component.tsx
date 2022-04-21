@@ -38,12 +38,14 @@ for (const color in PieceColor) {
 const CAPTURE_ICON: any = new Image();
 CAPTURE_ICON.src = require(`../assets/action_icons/capture_icon.png`);
 
-const MOVE_BUTTON_OPACITY = 0.2;
-const FPS = 60;
+const MOVE_BUTTON_OPACITY: number = 0.2;
+const FPS: number = 60;
 // in seconds
-const PIECE_TRAVEL_TIME = 0.1;
-const PIECE_DYING_TIME = 0.15;
-const DYING_PIECE_ELEVATION_FACTOR = 1;
+const PIECE_TRAVEL_TIME: number = 0.1;
+const PIECE_DYING_TIME: number = 0.15;
+const DYING_PIECE_ELEVATION_FACTOR: number = 1;
+const WHITE_TIMER_COLOR: string = "#eeeeee";
+const BLACK_TIMER_COLOR: string = "#333333";
 
 const PROMOTION_TYPES: PieceType[] = [
   PieceType.knight,
@@ -137,6 +139,45 @@ class CanvasMoveButton {
   }
 }
 
+class CanvasCooldownTimer {
+  remainingCooldown: number = 0;
+
+  constructor(
+    private ctx: any,
+    private x: number,
+    private y: number,
+    private radius: number,
+    private width: number,
+    private color: string,
+    private cooldownTimer: number
+  ) {
+    this.remainingCooldown = cooldownTimer;
+  }
+
+  draw() {
+    if (this.remainingCooldown > 0.01 && this.cooldownTimer > 0) {
+      this.ctx.beginPath();
+      this.ctx.arc(
+        this.x,
+        this.y,
+        this.radius,
+        -Math.PI * 0.5,
+        Math.PI * (2 * (1 - this.remainingCooldown / this.cooldownTimer) - 0.5),
+        /*Math.PI * (2 * (1 - 0.75) - 0.5),*/
+        true
+      );
+      this.ctx.lineWidth = this.width;
+      this.ctx.strokeStyle = this.color;
+      this.ctx.lineCap = "round";
+      this.ctx.stroke();
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeStyle = "black";
+      this.ctx.lineCap = "butt";
+      this.ctx.closePath();
+    }
+  }
+}
+
 class BoardArea {
   povColor: PieceColor = PieceColor.white;
   private squareSize;
@@ -144,6 +185,7 @@ class BoardArea {
   private canvasPieces: CanvasPiece[] = [];
   private canvasMoveButtons: CanvasMoveButton[] = [];
   private selectedMove: CanvasMoveButton = null as any;
+  private cooldownTimer: CanvasCooldownTimer = null as any;
 
   private playerSquare: Square = null as any;
   private availableMoves: Move[] = [];
@@ -219,6 +261,33 @@ class BoardArea {
         movingPiece.y = destY;
         movingPiece.isMoving = false;
       }, PIECE_TRAVEL_TIME * 1000);
+    }
+  }
+
+  startCooldownTimer(cooldown: number, color: PieceColor): void {
+    if (cooldown == null) {
+      this.cooldownTimer = null as any;
+    } else if (this.playerSquare != null) {
+      this.cooldownTimer = new CanvasCooldownTimer(
+        this.ctx,
+        (this.fitColumnIndexToPOV(this.playerSquare.column) + 0.8) *
+          this.squareSize,
+        (this.fitRowIndexToPOV(this.playerSquare.row) + 0.2) * this.squareSize,
+        this.squareSize * 0.12,
+        this.squareSize * 0.05,
+        color === PieceColor.white ? WHITE_TIMER_COLOR : BLACK_TIMER_COLOR,
+        cooldown
+      );
+      let cooldownTimer: CanvasCooldownTimer = this.cooldownTimer;
+      let moveInterval = setInterval(() => {
+        cooldownTimer.remainingCooldown -= 1 / FPS;
+      }, 1000 / FPS);
+      setTimeout(() => {
+        clearInterval(moveInterval);
+        if (this.cooldownTimer === cooldownTimer) {
+          this.cooldownTimer = null as any;
+        }
+      }, cooldown * 1000);
     }
   }
 
@@ -353,6 +422,11 @@ class BoardArea {
       // selected move
       this.selectedMove.draw();
     }
+    // cooldown timer
+    if (this.cooldownTimer != null) {
+      this.cooldownTimer.draw();
+      shouldUpdate = true;
+    }
     return shouldUpdate;
   }
 }
@@ -417,6 +491,10 @@ class TestComponent
   movePlayer(playerIndex: number, row: number, column: number): void {
     this.boardArea.movePlayer(playerIndex, row, column);
     this.shouldUpdateBoard = true;
+  }
+
+  startCooldownTimer(cooldown: number, color: PieceColor): void {
+    this.boardArea.startCooldownTimer(cooldown, color);
   }
 
   killPlayer(playerIndex: number): void {

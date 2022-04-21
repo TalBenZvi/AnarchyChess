@@ -40,9 +40,9 @@ export class ClientFlowEngine implements ClientObserver {
   private playerID: string;
 
   // in seconds
-  private cooldownTimer: number = null as any;
+  //private cooldownTimer: number = null as any;
   // in millis
-  private cooldownCompletionTime: number = null as any;
+  //private cooldownCompletionTime: number = null as any;
   // in millis
   private selectedMove: Square = null as any;
 
@@ -129,10 +129,11 @@ export class ClientFlowEngine implements ClientObserver {
       this._board.killPlayer(dyingPlayerIndex);
       if (dyingPlayerIndex == this.playerIndex) {
         this._board.setPlayerSquare(null as any);
+        this._board.startCooldownTimer(null as any, null as any);
       }
     }
     this.position.killPlayer(dyingPlayerIndex);
-    if (dyingPlayerIndex === this.playerIndex && this._deathScreen != null) {
+    if (this._deathScreen != null && dyingPlayerIndex === this.playerIndex) {
       this._deathScreen.show(respawnTimer);
     }
   }
@@ -172,7 +173,7 @@ export class ClientFlowEngine implements ClientObserver {
       }
       // move
       case EventType.move: {
-        let moveUpdateTime = new Date().getTime();
+        //let moveUpdateTime = new Date().getTime();
         let moveNotification: Move = JSON.parse(
           event.info.get(EventInfo.move) as string
         );
@@ -184,6 +185,7 @@ export class ClientFlowEngine implements ClientObserver {
           event.info.get(EventInfo.playerIndex) as string
         );
         // cooldown
+        /*
         if (movingPlayerIndex === this.playerIndex) {
           this.cooldownTimer = parseInt(
             event.info.get(EventInfo.cooldown) as string
@@ -191,6 +193,7 @@ export class ClientFlowEngine implements ClientObserver {
           this.cooldownCompletionTime =
             moveUpdateTime + this.cooldownTimer * 1000;
         }
+        */
         let movingPlayerLocation: Square =
           this.position.getPlayerLocation(movingPlayerIndex);
         // if move is valid
@@ -224,6 +227,13 @@ export class ClientFlowEngine implements ClientObserver {
             if (this._board != null) {
               this._board.setSelectedMove(null as any);
               this._board.setPlayerSquare(new Square(move.row, move.column));
+              let cooldownTimer: number = parseInt(
+                event.info.get(EventInfo.cooldown) as string
+              );
+              this._board.startCooldownTimer(
+                cooldownTimer,
+                this.position.getPieceByPlayer(this.playerIndex).color
+              );
             }
           }
           //this.updateBoard(movingPlayerIndex);
