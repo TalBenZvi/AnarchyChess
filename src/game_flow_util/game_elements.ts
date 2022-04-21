@@ -1002,13 +1002,11 @@ export interface ChessBoardComponent {
 
   killPlayer(playerIndex: number): void;
 
+  setRespawnPreview(respawnPreviewSquare: Square, respawnPiece: Piece): void;
+
   respawnPlayer(playerIndex: number, row: number, column: number, piece: Piece): void;
-}
 
-export interface DeathScreenComponent {
-  show(respawnTimer: number): void;
-
-  hide(): void;
+  promotePlayer(playerIndex: number, promotionPiece: Piece): void;
 }
 
 export interface GraveYardComponent {
@@ -1023,4 +1021,16 @@ export interface MoveListComponent {
   addMove(move: Move, playerIndex: number, position: Position): void;
 
   clear(): void;
+}
+
+export interface DeathScreenComponent {
+  show(respawnTimer: number): void;
+
+  hide(): void;
+}
+
+export interface PromotionScreenComponent {
+  show(move: Move, color: PieceColor): void;
+
+  hide(): void;
 }

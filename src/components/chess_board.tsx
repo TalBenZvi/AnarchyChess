@@ -520,7 +520,7 @@ class BoardComponent
             </ul>
           </div>
         </Dialog>
-        {/* respawn location  indicator*/}
+        {/* respawn location indicator*/}
         {respawnSquare == null ? (
           <div />
         ) : (

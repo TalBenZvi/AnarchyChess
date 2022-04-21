@@ -44,9 +44,8 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   private killPlayer(playerIndex: number): number {
-    
     this.isAlive[playerIndex] = false;
-    let respawnTimer: number = this.position.getPieceByPlayer(playerIndex).respawnTimer;
+    let respawnTimer: number = Position.getStartPieceByPlayer(playerIndex).respawnTimer;
     this.position.killPlayer(playerIndex);
     this.isOnCooldown[playerIndex] = false;
     this.moveRequests[playerIndex] = null as any;

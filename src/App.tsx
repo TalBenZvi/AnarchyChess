@@ -1,13 +1,13 @@
 import React from "react";
 import "./App.css";
 import BoardComponent from "./components/chess_board";
-import DeathScreen from "./components/death_screen";
 import GraveYard from "./components/graveyard";
+import DeathScreen from "./components/death_screen";
+import PromotionScreen from "./components/promotion_screen";
 
 import { PieceColor, Move } from "./game_flow_util/game_elements";
 import { ClientFlowEngine } from "./client_side/client_flow_engine";
 import { ServerFlowEngine } from "./server_side/server_flow_engine";
-import MoveList from "./components/move_list";
 import TestComponent from "./components/test_component";
 import TestCanvas from "./components/test_canvas"
 
@@ -111,8 +111,10 @@ function App() {
           clientFlowEngine={clientFlowEngines[0]}
         />
       </div>
-      {/* move list */}
+      {/* death screen */}
       <DeathScreen clientFlowEngine={clientFlowEngines[0]} />
+      {/* promotion screen */}
+      <PromotionScreen clientFlowEngine={clientFlowEngines[0]} />
     </div>
   );
 }

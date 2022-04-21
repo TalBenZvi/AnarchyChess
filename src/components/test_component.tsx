@@ -43,7 +43,8 @@ const FPS: number = 60;
 // in seconds
 const PIECE_TRAVEL_TIME: number = 0.1;
 const PIECE_DYING_TIME: number = 0.15;
-const DYING_PIECE_ELEVATION_FACTOR: number = 1;
+const PIECE_RESPAWNING_TIME: number = 0.15;
+const DEAD_PIECE_ELEVATION_FACTOR: number = 1;
 const WHITE_TIMER_COLOR: string = "#eeeeee";
 const BLACK_TIMER_COLOR: string = "#333333";
 
@@ -69,6 +70,7 @@ class CanvasPiece {
   opacity: number = 1;
   isMoving: boolean = false;
   isDying: boolean = false;
+  isRespawning: boolean = false;
 
   constructor(
     private ctx: any,
@@ -162,8 +164,7 @@ class CanvasCooldownTimer {
         this.y,
         this.radius,
         -Math.PI * 0.5,
-        Math.PI * (2 * (1 - this.remainingCooldown / this.cooldownTimer) - 0.5),
-        /*Math.PI * (2 * (1 - 0.75) - 0.5),*/
+        Math.PI * (1.5 - (2 * this.remainingCooldown) / this.cooldownTimer),
         true
       );
       this.ctx.lineWidth = this.width;
@@ -186,6 +187,7 @@ class BoardArea {
   private canvasMoveButtons: CanvasMoveButton[] = [];
   private selectedMove: CanvasMoveButton = null as any;
   private cooldownTimer: CanvasCooldownTimer = null as any;
+  private respawnPreviewPiece: CanvasPiece = null as any;
 
   private playerSquare: Square = null as any;
   private availableMoves: Move[] = [];
@@ -195,11 +197,11 @@ class BoardArea {
     this.squareSize = Math.floor(props.size / BOARD_SIZE);
   }
 
-  setPlayerSquare(playerSquare: Square) {
+  setPlayerSquare(playerSquare: Square): void {
     this.playerSquare = playerSquare;
   }
 
-  setPieces(playingPieces: PlayingPiece[]) {
+  setPieces(playingPieces: PlayingPiece[]): void {
     this.canvasPieces = playingPieces.map((playingPiece: PlayingPiece) => {
       if (playingPiece.piece == null) {
         return null as any;
@@ -214,7 +216,7 @@ class BoardArea {
     });
   }
 
-  setAvailableMoves(availableMoves: Move[]) {
+  setAvailableMoves(availableMoves: Move[]): void {
     this.availableMoves = [...availableMoves];
     this.canvasMoveButtons = availableMoves.map(
       (availableMove: Move) =>
@@ -229,7 +231,7 @@ class BoardArea {
     );
   }
 
-  setSelectedMove(selectedMove: Square) {
+  setSelectedMove(selectedMove: Square): void {
     this.selectedMove =
       selectedMove == null
         ? (null as any)
@@ -243,7 +245,7 @@ class BoardArea {
           );
   }
 
-  movePlayer(playerIndex: number, row: number, column: number) {
+  movePlayer(playerIndex: number, row: number, column: number): void {
     let movingPiece: CanvasPiece = this.canvasPieces[playerIndex];
     if (movingPiece != null) {
       movingPiece.isMoving = true;
@@ -291,22 +293,83 @@ class BoardArea {
     }
   }
 
-  killPlayer(playerIndex: number) {
+  killPlayer(playerIndex: number): void {
     let dyingPiece: CanvasPiece = this.canvasPieces[playerIndex];
     if (dyingPiece != null) {
       dyingPiece.isDying = true;
-      let deathElevation = this.squareSize * DYING_PIECE_ELEVATION_FACTOR;
+      let deathElevation = this.squareSize * DEAD_PIECE_ELEVATION_FACTOR;
       let dy = -deathElevation / (PIECE_DYING_TIME * FPS);
       let dOpacity = -1 / (PIECE_DYING_TIME * FPS);
-      let moveInterval = setInterval(() => {
+      let deathInterval = setInterval(() => {
         dyingPiece.y += dy;
         dyingPiece.opacity += dOpacity;
       }, 1000 / FPS);
       setTimeout(() => {
-        clearInterval(moveInterval);
+        clearInterval(deathInterval);
         this.canvasPieces[playerIndex] = null as any;
       }, PIECE_DYING_TIME * 1000);
     }
+  }
+
+  setRespawnPreview(respawnPreviewSquare: Square, respawnPiece: Piece): void {
+    if (respawnPreviewSquare == null) {
+      this.respawnPreviewPiece = null as any;
+    } else {
+      let respawnPreviewPiece = new CanvasPiece(
+        this.ctx,
+        respawnPiece,
+        this.fitColumnIndexToPOV(respawnPreviewSquare.column) * this.squareSize,
+        this.fitRowIndexToPOV(respawnPreviewSquare.row) * this.squareSize,
+        this.squareSize
+      );
+      respawnPreviewPiece.opacity = 0.2;
+      this.respawnPreviewPiece = respawnPreviewPiece;
+    }
+  }
+
+  respawnPlayer(
+    playerIndex: number,
+    row: number,
+    column: number,
+    piece: Piece
+  ): void {
+    let destY: number = this.fitRowIndexToPOV(row) * this.squareSize;
+    let deathElevation = this.squareSize * DEAD_PIECE_ELEVATION_FACTOR;
+    this.canvasPieces[playerIndex] = new CanvasPiece(
+      this.ctx,
+      piece,
+      this.fitColumnIndexToPOV(column) * this.squareSize,
+      destY - deathElevation,
+      this.squareSize
+    );
+    let respawningPiece: CanvasPiece = this.canvasPieces[playerIndex];
+    respawningPiece.opacity = 0;
+    respawningPiece.isRespawning = true;
+    let dy = deathElevation / (PIECE_RESPAWNING_TIME * FPS);
+    let dOpacity = 1 / (PIECE_RESPAWNING_TIME * FPS);
+    let respawnInterval = setInterval(() => {
+      respawningPiece.y += dy;
+      respawningPiece.opacity += dOpacity;
+    }, 1000 / FPS);
+    setTimeout(() => {
+      clearInterval(respawnInterval);
+      respawningPiece.y = destY;
+      respawningPiece.opacity = 1;
+      respawningPiece.isRespawning = false;
+    }, PIECE_RESPAWNING_TIME * 1000);
+  }
+
+  promotePlayer(playerIndex: number, promotionPiece: Piece): void {
+    let previousCanvasPiece = this.canvasPieces[playerIndex];
+    if (!previousCanvasPiece.isMoving) {
+      this.canvasPieces[playerIndex] = new CanvasPiece(
+        this.ctx,
+        promotionPiece,
+        previousCanvasPiece.x,
+        previousCanvasPiece.y,
+        previousCanvasPiece.size,
+      )
+    } 
   }
 
   mouseClicked(x: number, y: number) {
@@ -319,11 +382,12 @@ class BoardArea {
     } else {
       if (!this.selectedMove.isPointInBounds(x, y)) {
         this.props.clientFlowEngine.sendMove(null as any);
+
       }
     }
   }
 
-  clear() {
+  clear(): void {
     this.ctx.clearRect(0, 0, this.props.size, this.props.size);
   }
 
@@ -401,17 +465,38 @@ class BoardArea {
       if (
         canvasPiece != null &&
         !canvasPiece.isMoving &&
-        !canvasPiece.isDying
+        !canvasPiece.isDying &&
+        !canvasPiece.isRespawning
       ) {
         canvasPiece.draw();
       }
     }
-    // moving pieces
+    // respawning pieces
     for (let canvasPiece of this.canvasPieces) {
-      if (canvasPiece != null && canvasPiece.isMoving && !canvasPiece.isDying) {
+      if (
+        canvasPiece != null &&
+        canvasPiece.isRespawning &&
+        !canvasPiece.isDying
+      ) {
         canvasPiece.draw();
         shouldUpdate = true;
       }
+    }
+    // moving pieces
+    for (let canvasPiece of this.canvasPieces) {
+      if (
+        canvasPiece != null &&
+        canvasPiece.isMoving &&
+        !canvasPiece.isDying &&
+        !canvasPiece.isRespawning
+      ) {
+        canvasPiece.draw();
+        shouldUpdate = true;
+      }
+    }
+    // respawn preview
+    if (this.respawnPreviewPiece != null) {
+      this.respawnPreviewPiece.draw();
     }
     // move buttons
     if (this.selectedMove == null) {
@@ -502,24 +587,31 @@ class TestComponent
     this.shouldUpdateBoard = true;
   }
 
+  setRespawnPreview(respawnPreviewSquare: Square, respawnPiece: Piece): void {
+    this.boardArea.setRespawnPreview(respawnPreviewSquare, respawnPiece);
+    this.shouldUpdateBoard = true;
+  }
+
   respawnPlayer(
     playerIndex: number,
     row: number,
     column: number,
     piece: Piece
   ): void {
-    throw new Error("Method not implemented.");
+    this.boardArea.respawnPlayer(playerIndex, row, column, piece);
+    this.shouldUpdateBoard = true;
   }
 
-  setPovColor(povColor: PieceColor): void {}
-
-  private sendMove(move: Move): void {
-    this.props.clientFlowEngine.sendMove(move);
+  promotePlayer(playerIndex: number, promotionPiece: Piece): void {
+    this.boardArea.promotePlayer(playerIndex, promotionPiece);
+    this.shouldUpdateBoard = true;
   }
 
-  private openPromotionDialog(move: Move) {}
+  setPovColor(povColor: PieceColor): void {
 
-  private closePromotionDialog(): void {}
+  }
+
+
 
   render() {
     let { size, lightColor, darkColor } = this.props;

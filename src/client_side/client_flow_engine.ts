@@ -7,9 +7,9 @@ import {
 } from "./game_client";
 import {
   ChessBoardComponent,
-  DeathScreenComponent,
   GraveYardComponent,
-  MoveListComponent,
+  DeathScreenComponent,
+  PromotionScreenComponent,
   Position,
   Move,
   Square,
@@ -31,9 +31,9 @@ export class ClientFlowEngine implements ClientObserver {
   private gameClient: GameClient;
   private position: Position = new Position();
   private _board: ChessBoardComponent = null as any;
-  private _deathScreen: DeathScreenComponent = null as any;
   private _graveYard: GraveYardComponent = null as any;
-  private _moveList: MoveListComponent = null as any;
+  private _deathScreen: DeathScreenComponent = null as any;
+  private _promotionScreen: PromotionScreenComponent = null as any;
 
   private isGameRunning: boolean = false;
   private playerIndex: number = null as any;
@@ -55,16 +55,16 @@ export class ClientFlowEngine implements ClientObserver {
     this._board = board;
   }
 
-  set deathScreen(deathScreen: DeathScreenComponent) {
-    this._deathScreen = deathScreen;
-  }
-
   set graveYard(graveYard: GraveYardComponent) {
     this._graveYard = graveYard;
   }
 
-  set moveList(moveList: MoveListComponent) {
-    this._moveList = moveList;
+  set deathScreen(deathScreen: DeathScreenComponent) {
+    this._deathScreen = deathScreen;
+  }
+
+  set promotionScreen(promotionScreen: PromotionScreenComponent) {
+    this._promotionScreen = promotionScreen;
   }
 
   async attemptToConnect(ip: string, gameID: string) {
@@ -74,49 +74,24 @@ export class ClientFlowEngine implements ClientObserver {
   }
 
   sendMove(move: Move) {
-    this.gameClient.sendMove(move);
-    this.selectedMove =
-      move == null ? (null as any) : new Square(move.row, move.column);
-    //this.updateBoard(null as any);
-    if (this._board != null) {
-      this._board.setSelectedMove(this.selectedMove);
+    if (move != null && move.isPromotion && move.promotionType == null) {
+      if (this._promotionScreen != null) {
+        console.log("here1");
+        this._promotionScreen.show(
+          move,
+          this.position.getPieceByPlayer(this.playerIndex).color
+        );
+      }
+    } else {
+      this.gameClient.sendMove(move);
+      this.selectedMove =
+        move == null ? (null as any) : new Square(move.row, move.column);
+      //this.updateBoard(null as any);
+      if (this._board != null) {
+        this._board.setSelectedMove(this.selectedMove);
+      }
     }
   }
-
-  /*
-  private updateBoard(movingPlayerIndex: number) {
-    let now: number = new Date().getTime();
-    let isOnCooldown: boolean =
-      this.cooldownCompletionTime != null && this.cooldownCompletionTime > now;
-    if (!isOnCooldown) {
-      this.cooldownTimer = null as any;
-      this.cooldownCompletionTime = null as any;
-    }
-    let playingPieces: PlayingPiece[] = this.position.playingPieces;
-    let isAlive: boolean = playingPieces[this.playerIndex].piece != null;
-    if (this._board != null) {
-      this._board.setPieces(
-        this.position.playingPieces,
-        isAlive
-          ? this.position.findAvaillableMovesForPlayer(this.playerIndex)
-          : [],
-        movingPlayerIndex,
-        isOnCooldown ? this.cooldownTimer : (null as any),
-        isOnCooldown
-          ? (this.cooldownCompletionTime - new Date().getTime()) / 1000
-          : (null as any),
-        this.selectedMove,
-        isAlive
-          ? (null as any)
-          : this.position.getRespawnSquareForPlayer(this.playerIndex),
-        isAlive
-          ? (null as any)
-          : Position.getStartPieceByPlayer(this.playerIndex)
-      );
-    }
-    
-  }
-  */
 
   private killPlayer(dyingPlayerIndex: number, respawnTimer: number) {
     if (this._graveYard != null) {
@@ -130,11 +105,21 @@ export class ClientFlowEngine implements ClientObserver {
       if (dyingPlayerIndex == this.playerIndex) {
         this._board.setPlayerSquare(null as any);
         this._board.startCooldownTimer(null as any, null as any);
+        this._board.setRespawnPreview(
+          this.position.getRespawnSquareForPlayer(this.playerIndex),
+          Position.getStartPieceByPlayer(this.playerIndex)
+        );
       }
     }
     this.position.killPlayer(dyingPlayerIndex);
     if (this._deathScreen != null && dyingPlayerIndex === this.playerIndex) {
       this._deathScreen.show(respawnTimer);
+    }
+    if (
+      this._promotionScreen != null &&
+      dyingPlayerIndex === this.playerIndex
+    ) {
+      this._promotionScreen.hide();
     }
   }
 
@@ -236,14 +221,8 @@ export class ClientFlowEngine implements ClientObserver {
               );
             }
           }
-          //this.updateBoard(movingPlayerIndex);
-          //await new Promise((f) => setTimeout(f, 70));
-          //this.updateBoard(null as any);
           if (this._board != null) {
             this._board.movePlayer(movingPlayerIndex, move.row, move.column);
-            this._board.setAvailableMoves(
-              this.position.findAvaillableMovesForPlayer(this.playerIndex)
-            );
           }
           // isPromotion
           if (move.isPromotion) {
@@ -254,7 +233,16 @@ export class ClientFlowEngine implements ClientObserver {
                 move.column,
                 moveNotification.promotionType
               );
-              //this.updateBoard(null as any);
+              if (this._board != null) {
+                await new Promise((f) => setTimeout(f, 140));
+                this._board.promotePlayer(
+                  movingPlayerIndex,
+                  Piece.generate(
+                    moveNotification.promotionType,
+                    this.position.getPieceByPlayer(movingPlayerIndex).color
+                  )
+                );
+              }
             }
           }
           // isCastle
@@ -269,12 +257,17 @@ export class ClientFlowEngine implements ClientObserver {
               move.castleSide === CastleSide.kingSide ? 5 : 3;
             let movingRookIndex = this.position.playerAt(startRow, startColumn);
             this.position.move(movingRookIndex, startRow, destColumn);
-            //this.updateBoard(movingRookIndex);
+          }
+          if (this._board != null) {
+            this._board.setAvailableMoves(
+              this.position.findAvaillableMovesForPlayer(this.playerIndex)
+            );
           }
         }
         break;
       }
       case EventType.respawn: {
+        // respawn
         let respawningPlayerIndex: number = parseInt(
           event.info.get(EventInfo.playerIndex) as string
         );
@@ -285,13 +278,23 @@ export class ClientFlowEngine implements ClientObserver {
           respawningPlayerIndex,
           new Square(respawnSquare.row, respawnSquare.column)
         );
+        if (this._board != null) {
+          this._board.respawnPlayer(
+            respawningPlayerIndex,
+            respawnSquare.row,
+            respawnSquare.column,
+            Position.getStartPieceByPlayer(respawningPlayerIndex)
+          );
+          if (respawningPlayerIndex === this.playerIndex) {
+            this._board.setRespawnPreview(null as any, null as any);
+          }
+        }
         if (
-          respawningPlayerIndex === this.playerIndex &&
-          this._deathScreen != null
+          this._deathScreen != null &&
+          respawningPlayerIndex === this.playerIndex
         ) {
           this._deathScreen.hide();
         }
-        //this.updateBoard(null as any);
       }
     }
   }

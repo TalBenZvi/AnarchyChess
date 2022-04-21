@@ -108,7 +108,7 @@ export class GameServer {
               );
             });
         }
-        let playerIndices: Map<string, number> = this.assignCustomIndices([1, 20, 29]);
+        let playerIndices: Map<string, number> = this.assignCustomIndices([9, 20, 29]);
         this.broadcastEvent({
           type: EventType.gameStarted,
           info: new Map<EventInfo, string>([
