@@ -20,7 +20,7 @@ import TestCanvas from "./components/test_canvas"
 
 function App() {
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
-  let clientFlowEngines: ClientFlowEngine[] = [...Array(3)].map(
+  let clientFlowEngines: ClientFlowEngine[] = [...Array(4)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
   /*
@@ -81,14 +81,10 @@ function App() {
       <button
         style={{ color: "white", margin: 20 }}
         onClick={async () => {
-          clientFlowEngines[1].sendMove(new Move(5, 4));
-          await new Promise((f) => setTimeout(f, 1000));
-          while (true) {
-            clientFlowEngines[2].sendMove(new Move(2, 0));
-            await new Promise((f) => setTimeout(f, 1000));
-            clientFlowEngines[2].sendMove(new Move(7, 5));
-            await new Promise((f) => setTimeout(f, 1000));
-          }
+          clientFlowEngines[1].sendMove(new Move(3, 4));
+          await new Promise((f) => setTimeout(f, 500));
+          clientFlowEngines[2].sendMove(new Move(3, 2));
+          clientFlowEngines[3].sendMove(new Move(2, 5));
         }}
       >
         test

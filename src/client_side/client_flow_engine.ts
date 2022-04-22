@@ -76,7 +76,6 @@ export class ClientFlowEngine implements ClientObserver {
   sendMove(move: Move) {
     if (move != null && move.isPromotion && move.promotionType == null) {
       if (this._promotionScreen != null) {
-        console.log("here1");
         this._promotionScreen.show(
           move,
           this.position.getPieceByPlayer(this.playerIndex).color
@@ -158,7 +157,6 @@ export class ClientFlowEngine implements ClientObserver {
       }
       // move
       case EventType.move: {
-        //let moveUpdateTime = new Date().getTime();
         let moveNotification: Move = JSON.parse(
           event.info.get(EventInfo.move) as string
         );
@@ -169,16 +167,6 @@ export class ClientFlowEngine implements ClientObserver {
         let movingPlayerIndex: number = parseInt(
           event.info.get(EventInfo.playerIndex) as string
         );
-        // cooldown
-        /*
-        if (movingPlayerIndex === this.playerIndex) {
-          this.cooldownTimer = parseInt(
-            event.info.get(EventInfo.cooldown) as string
-          );
-          this.cooldownCompletionTime =
-            moveUpdateTime + this.cooldownTimer * 1000;
-        }
-        */
         let movingPlayerLocation: Square =
           this.position.getPlayerLocation(movingPlayerIndex);
         // if move is valid
@@ -212,7 +200,8 @@ export class ClientFlowEngine implements ClientObserver {
             if (this._board != null) {
               this._board.setSelectedMove(null as any);
               this._board.setPlayerSquare(new Square(move.row, move.column));
-              let cooldownTimer: number = parseInt(
+              // cooldown
+              let cooldownTimer: number = parseFloat(
                 event.info.get(EventInfo.cooldown) as string
               );
               this._board.startCooldownTimer(
@@ -257,6 +246,9 @@ export class ClientFlowEngine implements ClientObserver {
               move.castleSide === CastleSide.kingSide ? 5 : 3;
             let movingRookIndex = this.position.playerAt(startRow, startColumn);
             this.position.move(movingRookIndex, startRow, destColumn);
+            if (this._board != null) {
+              this._board.movePlayer(movingRookIndex, startRow, destColumn);
+            }
           }
           if (this._board != null) {
             this._board.setAvailableMoves(
@@ -284,6 +276,9 @@ export class ClientFlowEngine implements ClientObserver {
             respawnSquare.row,
             respawnSquare.column,
             Position.getStartPieceByPlayer(respawningPlayerIndex)
+          );
+          this._board.setAvailableMoves(
+            this.position.findAvaillableMovesForPlayer(this.playerIndex)
           );
           if (respawningPlayerIndex === this.playerIndex) {
             this._board.setRespawnPreview(null as any, null as any);

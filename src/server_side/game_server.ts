@@ -56,7 +56,7 @@ export class GameServer {
   }
 
   acceptConnections(gameID: string): void {
-    this.fillWithDummies(NUM_OF_PLAYERS - 3);
+    this.fillWithDummies(NUM_OF_PLAYERS - 4);
     if (this.gameStatus === GameStatus.inactive) {
       this.gameStatus = GameStatus.waitingForPlayers;
       this.gameID = gameID;
@@ -108,7 +108,7 @@ export class GameServer {
               );
             });
         }
-        let playerIndices: Map<string, number> = this.assignCustomIndices([9, 20, 29]);
+        let playerIndices: Map<string, number> = this.assignCustomIndices([30, 12, 5, 6]);
         this.broadcastEvent({
           type: EventType.gameStarted,
           info: new Map<EventInfo, string>([

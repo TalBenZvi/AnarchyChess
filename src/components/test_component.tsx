@@ -180,7 +180,7 @@ class CanvasCooldownTimer {
 }
 
 class BoardArea {
-  povColor: PieceColor = PieceColor.white;
+  private povColor: PieceColor = PieceColor.white;
   private squareSize;
 
   private canvasPieces: CanvasPiece[] = [];
@@ -195,6 +195,10 @@ class BoardArea {
   constructor(private ctx: any, private props: TestComponentProps) {
     this.povColor = props.povColor;
     this.squareSize = Math.floor(props.size / BOARD_SIZE);
+  }
+
+  setPovColor(povColor: PieceColor) {
+    this.povColor = povColor
   }
 
   setPlayerSquare(playerSquare: Square): void {
@@ -553,6 +557,11 @@ class TestComponent
     requestAnimationFrame(this.renderFunction);
   }
 
+  setPovColor(povColor: PieceColor): void {
+    this.boardArea.setPovColor(povColor);
+    this.shouldUpdateBoard = true;
+  }
+
   setPlayerSquare(playerSquare: Square): void {
     this.boardArea.setPlayerSquare(playerSquare);
     this.shouldUpdateBoard = true;
@@ -606,12 +615,6 @@ class TestComponent
     this.boardArea.promotePlayer(playerIndex, promotionPiece);
     this.shouldUpdateBoard = true;
   }
-
-  setPovColor(povColor: PieceColor): void {
-
-  }
-
-
 
   render() {
     let { size, lightColor, darkColor } = this.props;

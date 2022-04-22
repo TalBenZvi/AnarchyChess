@@ -39,7 +39,7 @@ const pieceCooldowns: Map<PieceType, number> = new Map([
   [PieceType.bishop, 2],
   [PieceType.rook, 3],
   [PieceType.queen, 4],
-  [PieceType.king, 0.5],
+  [PieceType.king, 0.75],
 ]);
 
 const pieceRespawnTimers: Map<PieceType, number> = new Map([
@@ -986,9 +986,9 @@ export class Position {
 }
 
 export interface ChessBoardComponent {
-  setPlayerSquare(playerSquare: Square): void;
-
   setPovColor(povColor: PieceColor): void;
+
+  setPlayerSquare(playerSquare: Square): void;
 
   setPieces(playingPieces: PlayingPiece[]): void;
 
