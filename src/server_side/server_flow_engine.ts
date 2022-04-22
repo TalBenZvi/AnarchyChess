@@ -21,6 +21,8 @@ import {
   replacer,
 } from "../game_flow_util/communication";
 
+const COOLDOWN_VARIANCE = 0.2;
+
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
   private position: Position = new Position();
@@ -40,12 +42,17 @@ export class ServerFlowEngine implements ServerObserver {
   private startGame(): void {
     this.position.setToStartingPosition();
     this.isGameRunning = true;
-    this.gameServer.startGame();
+    let initialPlayerCooldowns: number[] = [];
+    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+      initialPlayerCooldowns.push(this.putPlayerOnCooldown(i, new Date().getTime()));
+    }
+    this.gameServer.startGame(initialPlayerCooldowns);
   }
 
   private killPlayer(playerIndex: number): number {
     this.isAlive[playerIndex] = false;
-    let respawnTimer: number = Position.getStartPieceByPlayer(playerIndex).respawnTimer;
+    let respawnTimer: number =
+      Position.getStartPieceByPlayer(playerIndex).respawnTimer;
     this.position.killPlayer(playerIndex);
     this.isOnCooldown[playerIndex] = false;
     this.moveRequests[playerIndex] = null as any;
@@ -56,22 +63,53 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   private respawnPlayer(playerIndex: number) {
-    let respawnSquare: Square = this.position.getRespawnSquareForPlayer(playerIndex);
+    let respawnSquare: Square =
+      this.position.getRespawnSquareForPlayer(playerIndex);
     this.position.respawnPlayerAt(playerIndex, respawnSquare);
     this.isAlive[playerIndex] = true;
     this.gameServer.broadcastEvent({
       type: EventType.respawn,
       info: new Map<EventInfo, string>([
         [EventInfo.playerIndex, playerIndex.toString()],
-        [EventInfo.respawnSquare, JSON.stringify(respawnSquare, replacer)]
-      ])
+        [EventInfo.respawnSquare, JSON.stringify(respawnSquare, replacer)],
+      ]),
     });
     if (this.moveRequests[playerIndex] != null) {
-      this.registerMove(playerIndex, this.moveRequests[playerIndex], new Date().getTime());
+      this.registerMove(
+        playerIndex,
+        this.moveRequests[playerIndex],
+        new Date().getTime()
+      );
     }
   }
 
-  private registerMove(playerIndex: number, moveRequest: Move, moveArrivalTime: number) {
+  // returns the chosen cooldown
+  private putPlayerOnCooldown(
+    playerIndex: number,
+    updateArrivalTime: number
+  ): number {
+    this.isOnCooldown[playerIndex] = true;
+    let cooldown: number =
+      this.position.getPieceByPlayer(playerIndex).cooldown *
+      ((Math.random() * 2 - 1) * COOLDOWN_VARIANCE + 1);
+    setTimeout(() => {
+      this.isOnCooldown[playerIndex] = false;
+      if (this.moveRequests[playerIndex] != null && this.isAlive[playerIndex]) {
+        this.registerMove(
+          playerIndex,
+          this.moveRequests[playerIndex],
+          new Date().getTime()
+        );
+      }
+    }, cooldown * 1000 - (new Date().getTime() - updateArrivalTime));
+    return cooldown;
+  }
+
+  private registerMove(
+    playerIndex: number,
+    moveRequest: Move,
+    moveArrivalTime: number
+  ) {
     let playerLocation: Square = this.position.getPlayerLocation(playerIndex);
     if (playerLocation != null) {
       let move: Move = this.position.locateMoveForPlayer(
@@ -85,19 +123,32 @@ export class ServerFlowEngine implements ServerObserver {
           info: new Map<EventInfo, string>([
             [EventInfo.playerIndex, playerIndex.toString()],
           ]),
-        }
+        };
         // isCapture
         if (move.isCapture) {
           let dyingPlayerIndex = this.position.playerAt(move.row, move.column);
+          // temp
+          if (this.position.getPieceByPlayer(dyingPlayerIndex).type === PieceType.king) {
+            return;
+          }
           let respawnTimer: number = this.killPlayer(dyingPlayerIndex);
           event.info.set(EventInfo.respawnTimer, respawnTimer.toString());
         }
         // isEnpassant
         if (move.isEnPassant) {
-          let enPassantedPlayerIndex = this.position.playerAt(playerLocation.row, move.column);
-          let enPassantRespawnTimer: number = this.killPlayer(enPassantedPlayerIndex);
-          event.info.set(EventInfo.enPassantRespawnTimer, enPassantRespawnTimer.toString());
+          let enPassantedPlayerIndex = this.position.playerAt(
+            playerLocation.row,
+            move.column
+          );
+          let enPassantRespawnTimer: number = this.killPlayer(
+            enPassantedPlayerIndex
+          );
+          event.info.set(
+            EventInfo.enPassantRespawnTimer,
+            enPassantRespawnTimer.toString()
+          );
         }
+        // execute move
         this.position.move(playerIndex, move.row, move.column);
         let movingPiece: Piece = this.position.getPieceByPlayer(playerIndex);
         // isPromotion
@@ -117,15 +168,23 @@ export class ServerFlowEngine implements ServerObserver {
           this.position.moveFrom(startRow, startColumn, startRow, destColumn);
         }
         // cooldown
+        /*
         this.isOnCooldown[playerIndex] = true;
         this.moveRequests[playerIndex] = null as any;
         let cooldown: number = movingPiece.cooldown;
         setTimeout(() => {
           this.isOnCooldown[playerIndex] = false;
           if (this.moveRequests[playerIndex] != null) {
-            this.registerMove(playerIndex, this.moveRequests[playerIndex], new Date().getTime());
+            this.registerMove(
+              playerIndex,
+              this.moveRequests[playerIndex],
+              new Date().getTime()
+            );
           }
         }, cooldown * 1000 - (new Date().getTime() - moveArrivalTime));
+        */
+        this.moveRequests[playerIndex] = null as any;
+        let cooldown: number = this.putPlayerOnCooldown(playerIndex, moveArrivalTime);
         event.info.set(EventInfo.cooldown, cooldown.toString());
         this.gameServer.broadcastEvent(event);
       }
@@ -154,11 +213,7 @@ export class ServerFlowEngine implements ServerObserver {
           );
           this.moveRequests[playerIndex] = moveRequest;
           if (!this.isOnCooldown[playerIndex] && this.isAlive[playerIndex]) {
-            this.registerMove(
-              playerIndex,
-              moveRequest,
-              moveArrivalTime
-            );
+            this.registerMove(playerIndex, moveRequest, moveArrivalTime);
           }
         }
         break;

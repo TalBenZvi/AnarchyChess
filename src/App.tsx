@@ -5,11 +5,15 @@ import GraveYard from "./components/graveyard";
 import DeathScreen from "./components/death_screen";
 import PromotionScreen from "./components/promotion_screen";
 
-import { PieceColor, Move } from "./game_flow_util/game_elements";
+import {
+  PieceColor,
+  Move,
+  NUM_OF_PLAYERS,
+} from "./game_flow_util/game_elements";
 import { ClientFlowEngine } from "./client_side/client_flow_engine";
 import { ServerFlowEngine } from "./server_side/server_flow_engine";
 import TestComponent from "./components/test_component";
-import TestCanvas from "./components/test_canvas"
+import TestCanvas from "./components/test_canvas";
 
 //import { GameClient } from "./client_side/game_client";
 //import { GameServer } from "./server_side/game_server";
@@ -20,7 +24,7 @@ import TestCanvas from "./components/test_canvas"
 
 function App() {
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
-  let clientFlowEngines: ClientFlowEngine[] = [...Array(4)].map(
+  let clientFlowEngines: ClientFlowEngine[] = [...Array(NUM_OF_PLAYERS)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
   /*
@@ -81,10 +85,11 @@ function App() {
       <button
         style={{ color: "white", margin: 20 }}
         onClick={async () => {
-          clientFlowEngines[1].sendMove(new Move(3, 4));
-          await new Promise((f) => setTimeout(f, 500));
-          clientFlowEngines[2].sendMove(new Move(3, 2));
-          clientFlowEngines[3].sendMove(new Move(2, 5));
+          for (let i = 0; i < clientFlowEngines.length; i++) {
+            if (i !== 0) {
+              clientFlowEngines[i].runTest();
+            }
+          }
         }}
       >
         test

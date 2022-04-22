@@ -44,7 +44,9 @@ export class GameServer {
 
   // debug
   private assignCustomIndices(customIndices: number[]): Map<string, number> {
-    let leftoverIndices: number[] = Array.from(Array(NUM_OF_PLAYERS).keys()).filter(i => customIndices.indexOf(i) <= -1);
+    let leftoverIndices: number[] = Array.from(
+      Array(NUM_OF_PLAYERS).keys()
+    ).filter((i) => customIndices.indexOf(i) <= -1);
     let playerIndices: Map<string, number> = new Map<string, number>();
     for (let i = 0; i < customIndices.length; i++) {
       playerIndices.set(`id${i}`, customIndices[i]);
@@ -56,7 +58,7 @@ export class GameServer {
   }
 
   acceptConnections(gameID: string): void {
-    this.fillWithDummies(NUM_OF_PLAYERS - 4);
+    //this.fillWithDummies(NUM_OF_PLAYERS - 16);
     if (this.gameStatus === GameStatus.inactive) {
       this.gameStatus = GameStatus.waitingForPlayers;
       this.gameID = gameID;
@@ -67,27 +69,29 @@ export class GameServer {
         .get(`${this.gameID}_connectionRequest`)
         .map()
         .once((request: any) => {
-          let playerID: string = request.data;
-          if (
-            this.playerIDs.indexOf(playerID) === -1 &&
-            this.playerIDs.length < NUM_OF_PLAYERS
-          ) {
-            this.playerIDs.push(playerID);
-            this.gun
-              .get(`${this.gameID}_conenctedPlayers`)
-              .set({ data: JSON.stringify(this.playerIDs) });
-            if (this.playerIDs.length >= NUM_OF_PLAYERS) {
-              this.observer.notify(
-                ServerNotificationType.filledServer,
-                new Map<ServerNotificationInfo, any>()
-              );
+          if (request !== undefined) {
+            let playerID: string = request.data;
+            if (
+              this.playerIDs.indexOf(playerID) === -1 &&
+              this.playerIDs.length < NUM_OF_PLAYERS
+            ) {
+              this.playerIDs.push(playerID);
+              this.gun
+                .get(`${this.gameID}_conenctedPlayers`)
+                .set({ data: JSON.stringify(this.playerIDs) });
+              if (this.playerIDs.length >= NUM_OF_PLAYERS) {
+                this.observer.notify(
+                  ServerNotificationType.filledServer,
+                  new Map<ServerNotificationInfo, any>()
+                );
+              }
             }
           }
         });
     }
   }
 
-  startGame(): void {
+  startGame(initialPlayerCooldowns: number[]): void {
     if (this.gameStatus === GameStatus.waitingForPlayers) {
       this.gameStatus = GameStatus.running;
       console.log("game started");
@@ -98,23 +102,39 @@ export class GameServer {
             .get(`${this.gameID}_moveRequest_${i}`)
             .map()
             .once((request: any) => {
-              let moveRequest: Move = JSON.parse(request.data);
-              this.observer.notify(
-                ServerNotificationType.receivedMove,
-                new Map<ServerNotificationInfo, any>([
-                  [ServerNotificationInfo.playerIndex, i],
-                  [ServerNotificationInfo.move, moveRequest],
-                ])
-              );
+              if (request !== undefined) {
+                let moveRequest: Move = JSON.parse(request.data);
+                this.observer.notify(
+                  ServerNotificationType.receivedMove,
+                  new Map<ServerNotificationInfo, any>([
+                    [ServerNotificationInfo.playerIndex, i],
+                    [ServerNotificationInfo.move, moveRequest],
+                  ])
+                );
+              }
             });
         }
-        let playerIndices: Map<string, number> = this.assignCustomIndices([30, 12, 5, 6]);
+        /*
+        let playerIndices: Map<string, number> = this.assignCustomIndices([
+          1, 17,
+        ]);
+        */
+
+        let playerIndices: Map<string, number> = new Map();
+        for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+          playerIndices.set(this.playerIDs[i], i);
+        }
+
         this.broadcastEvent({
           type: EventType.gameStarted,
           info: new Map<EventInfo, string>([
             [
               EventInfo.connectedPlayerIndices,
               JSON.stringify(playerIndices, replacer),
+            ],
+            [
+              EventInfo.initialPlayerCooldowns,
+              JSON.stringify(initialPlayerCooldowns),
             ],
           ]),
         });

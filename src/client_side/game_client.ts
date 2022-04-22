@@ -52,10 +52,12 @@ export class GameClient {
       this.gun
         .get(`${this.gameID}_conenctedPlayers`)
         .map()
-        .once((request: any) => {
-          let connectedIDs: string[] = JSON.parse(request.data);
-          if (connectedIDs.indexOf(this.playerID) > -1) {
-            didConnect = true;
+        .once((update: any) => {
+          if (update !== undefined) {
+            let connectedIDs: string[] = JSON.parse(update.data);
+            if (connectedIDs.indexOf(this.playerID) > -1) {
+              didConnect = true;
+            }
           }
         });
       for (let i = 0; i < MAX_CONNECTION_TRIES; i++) {
@@ -65,16 +67,22 @@ export class GameClient {
             .get(`${this.gameID}_events`)
             .map()
             .once((request: any) => {
-              let event: Event = JSON.parse(request.data, reviver);
-              this.observer.notify(
-                ClientNotificationType.receivedEvent,
-                new Map<ClientNotificationInfo, any>([
-                  [ClientNotificationInfo.event, event],
-                ])
-              );
+              if (request !== undefined) {
+                let event: Event = JSON.parse(request.data, reviver);
+                this.observer.notify(
+                  ClientNotificationType.receivedEvent,
+                  new Map<ClientNotificationInfo, any>([
+                    [ClientNotificationInfo.event, event],
+                  ])
+                );
+              }
             });
           this.gameStatus = GameStatus.waitingForPlayers;
           return ConnectionStatus.success;
+        } else {
+          this.gun
+            .get(`${this.gameID}_connectionRequest`)
+            .set({ data: this.playerID });
         }
       }
     }

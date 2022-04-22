@@ -132,6 +132,9 @@ export class ClientFlowEngine implements ClientObserver {
             reviver
           ) as Map<string, number>
         ).get(this.playerID) as number;
+        let initialCooldown: number = JSON.parse(
+          event.info.get(EventInfo.initialPlayerCooldowns) as string
+        )[playerIndex];
         this.playerIndex = playerIndex;
         this.gameClient.playerIndex = playerIndex;
         this.gameClient.gameStatus = GameStatus.running;
@@ -151,6 +154,10 @@ export class ClientFlowEngine implements ClientObserver {
           this._board.setPieces(this.position.playingPieces);
           this._board.setAvailableMoves(
             this.position.findAvaillableMovesForPlayer(this.playerIndex)
+          );
+          this._board.startCooldownTimer(
+            initialCooldown,
+            this.position.getPieceByPlayer(playerIndex).color
           );
         }
         break;
@@ -310,8 +317,27 @@ export class ClientFlowEngine implements ClientObserver {
   }
 
   async runTest() {
-    this.playerIndex = 0;
-    this.position.setToStartingPosition();
-    //this.updateBoard(null as any);
+    let promotionTypes: PieceType[] = [
+      PieceType.knight,
+      PieceType.bishop,
+      PieceType.rook,
+      PieceType.queen,
+    ];
+    let requestFrequesncy: number = Math.random() + 1;
+    while (true) {
+      await new Promise((f) => setTimeout(f, requestFrequesncy * 1000));
+      let availableMoves: Move[] = this.position.findAvaillableMovesForPlayer(
+        this.playerIndex
+      );
+      if (availableMoves.length !== 0) {
+        let chosenMove: Move =
+          availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        if (chosenMove.isPromotion) {
+          chosenMove.promotionType =
+            promotionTypes[Math.floor(Math.random() * promotionTypes.length)];
+        }
+        this.sendMove(chosenMove);
+      }
+    }
   }
 }

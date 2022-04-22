@@ -48,6 +48,7 @@ const pieceRespawnTimers: Map<PieceType, number> = new Map([
   [PieceType.bishop, 4],
   [PieceType.rook, 5],
   [PieceType.queen, 7],
+  [PieceType.king, 8],
 ]);
 
 class MoveOffset {

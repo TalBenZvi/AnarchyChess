@@ -10,6 +10,7 @@ export enum EventInfo {
   connectedPlayers,
   // gameStarted
   connectedPlayerIndices,
+  initialPlayerCooldowns,
   // move
   playerIndex,
   move,
