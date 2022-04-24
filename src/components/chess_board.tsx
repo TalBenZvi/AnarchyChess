@@ -1,8 +1,6 @@
 import * as React from "react";
-import "./chess_board.css";
 import Box from "@mui/material/Box";
 import { Dialog } from "@headlessui/react";
-import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import {
   ChessBoardComponent,
   BOARD_SIZE,
@@ -15,22 +13,39 @@ import {
   PieceType,
   Square,
   Piece,
+  Knight,
 } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
-import captureIcon from "../assets/action_icons/capture_icon.png";
-
-function importAll(r: any) {
-  let images: Map<string, any> = new Map<string, any>();
-  r.keys().forEach((item: any, index: number) => {
-    images.set(item.replace("./", ""), r(item));
-  });
-  return images;
+const PIECE_IMAGES: Map<PieceColor, Map<PieceType, any>> = new Map();
+for (const color in PieceColor) {
+  if (!isNaN(Number(color))) {
+    let colorImages: Map<PieceType, any> = new Map();
+    for (const type in PieceType) {
+      if (!isNaN(Number(type))) {
+        let image = new Image();
+        image.src = require(`../assets/piece_icons/${colorToString.get(
+          +color
+        )}_${typeToString.get(+type)}.png`);
+        colorImages.set(+type, image);
+      }
+    }
+    PIECE_IMAGES.set(+color, colorImages);
+  }
 }
 
-const images = importAll(
-  require.context("../assets/piece_icons", false, /\.(png|jpe?g|svg)$/)
-);
+const CAPTURE_ICON: any = new Image();
+CAPTURE_ICON.src = require(`../assets/action_icons/capture_icon.png`);
+
+const MOVE_BUTTON_OPACITY: number = 0.2;
+const FPS: number = 60;
+// in seconds
+const PIECE_TRAVEL_TIME: number = 0.1;
+const PIECE_DYING_TIME: number = 0.15;
+const PIECE_RESPAWNING_TIME: number = 0.15;
+const DEAD_PIECE_ELEVATION_FACTOR: number = 1;
+const WHITE_TIMER_COLOR: string = "#eeeeee";
+const BLACK_TIMER_COLOR: string = "#333333";
 
 const PROMOTION_TYPES: PieceType[] = [
   PieceType.knight,
@@ -39,7 +54,7 @@ const PROMOTION_TYPES: PieceType[] = [
   PieceType.queen,
 ];
 
-interface BoardComponentProps {
+interface ChessBoardProps {
   size: number;
   lightColor: string;
   darkColor: string;
@@ -47,507 +62,567 @@ interface BoardComponentProps {
   clientFlowEngine: ClientFlowEngine;
 }
 
-interface BoardComponentState {
-  playerIndex: number;
-  povColor: PieceColor;
-  playingPieces: PlayingPiece[];
-  availableMoves: Move[];
-  isPromotionDialogOpen: boolean;
-  cooldownTimer: number;
-  remainingCooldown: number;
-  selectedMove: Square;
-  respawnSquare: Square;
-  respawnPiece: Piece;
+interface ChessBoardState {}
+
+class CanvasPiece {
+  private image: any;
+  opacity: number = 1;
+  isMoving: boolean = false;
+  isDying: boolean = false;
+  isRespawning: boolean = false;
+
+  constructor(
+    private ctx: any,
+    piece: Piece,
+    public x: number,
+    public y: number,
+    public size: number
+  ) {
+    this.image = PIECE_IMAGES.get(piece.color)?.get(piece.type);
+  }
+
+  draw() {
+    this.ctx.globalAlpha = this.opacity;
+    this.ctx.drawImage(this.image, this.x, this.y, this.size, this.size);
+    this.ctx.globalAlpha = 1;
+  }
 }
 
-class BoardComponent
-  extends React.Component<BoardComponentProps, BoardComponentState> {
-  state = {
-    playerIndex: null as any,
-    povColor: this.props.povColor,
-    playingPieces: [...Array(NUM_OF_PLAYERS)].map((_, i) => {
-      return { piece: null as any, row: null as any, column: null as any };
-    }),
-    availableMoves: [],
-    isPromotionDialogOpen: false,
-    cooldownTimer: null as any,
-    remainingCooldown: null as any,
-    selectedMove: null as any,
-    respawnSquare: null as any,
-    respawnPiece: null as any,
-  };
-  movingPieceIndex: number = null as any;
-  promotionMoveToSend: Move = null as any;
+class CanvasMoveButton {
+  constructor(
+    private ctx: any,
+    public x: number,
+    public y: number,
+    private squareSize: number,
+    private isCapture: boolean,
+    private isSelected: boolean
+  ) {}
 
-  constructor(props: BoardComponentProps) {
-    super(props);
-    //props.clientFlowEngine.board = this;
+  isPointInBounds(pointX: number, pointY: number): boolean {
+    return (
+      this.x < pointX &&
+      pointX < this.x + this.squareSize &&
+      this.y < pointY &&
+      pointY < this.y + this.squareSize
+    );
   }
 
-  setPlayerIndex(playerIndex: number): void {
-    this.setState(() => {
-      return { playerIndex: playerIndex };
-    });
-  }
-
-  setPovColor(povColor: PieceColor): void {
-    this.setState(() => {
-      return { povColor: povColor };
-    });
-  }
-
-  setPieces(
-    playingPieces: PlayingPiece[],
-    availableMoves: Move[],
-    movingPieceIndex: number,
-    cooldownTimer: number,
-    remainingCooldown: number,
-    selectedMove: Square,
-    respawnSquare: Square,
-    respawnPiece: Piece,
-  ): void {
-    let root = document.documentElement;
-    let squareSize: number = this.props.size / BOARD_SIZE;
-    if (
-      movingPieceIndex != null &&
-      this.state.playingPieces[movingPieceIndex] != null
-    ) {
-      root.style.setProperty(
-        "--prev-row",
-        (
-          this.fitRowIndexToPOV(
-            this.state.playingPieces[movingPieceIndex].row
-          ) * squareSize
-        ).toString() + "px"
+  draw() {
+    if (this.isSelected) {
+      // selected move
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      this.ctx.fillRect(this.x, this.y, this.squareSize, this.squareSize);
+    } else if (this.isCapture) {
+      // captue move
+      this.ctx.globalAlpha = MOVE_BUTTON_OPACITY;
+      this.ctx.drawImage(
+        CAPTURE_ICON,
+        this.x,
+        this.y,
+        this.squareSize,
+        this.squareSize
       );
-      root.style.setProperty(
-        "--prev-column",
-        (
-          this.fitColumnIndexToPOV(
-            this.state.playingPieces[movingPieceIndex].column
-          ) * squareSize
-        ).toString() + "px"
+      this.ctx.globalAlpha = 1;
+    } else {
+      // standard move
+      this.ctx.beginPath();
+      this.ctx.arc(
+        this.x + this.squareSize / 2,
+        this.y + this.squareSize / 2,
+        this.squareSize * 0.25,
+        0,
+        2 * Math.PI
       );
-      root.style.setProperty(
-        "--current-row",
-        (
-          this.fitRowIndexToPOV(playingPieces[movingPieceIndex].row) *
-          squareSize
-        ).toString() + "px"
-      );
-      root.style.setProperty(
-        "--current-column",
-        (
-          this.fitColumnIndexToPOV(playingPieces[movingPieceIndex].column) *
-          squareSize
-        ).toString() + "px"
-      );
+      this.ctx.fillStyle = `rgba(0, 0, 0, ${MOVE_BUTTON_OPACITY})`;
+      this.ctx.fill();
+      this.ctx.closePath();
     }
-    this.movingPieceIndex = movingPieceIndex as any;
-    this.setState(() => {
-      return {
-        playingPieces: playingPieces,
-        availableMoves: availableMoves,
-        cooldownTimer: cooldownTimer,
-        remainingCooldown: remainingCooldown,
-        selectedMove: selectedMove,
-        respawnSquare: respawnSquare,
-        respawnPiece: respawnPiece,
-      };
+  }
+}
+
+class CanvasCooldownTimer {
+  remainingCooldown: number = 0;
+
+  constructor(
+    private ctx: any,
+    private x: number,
+    private y: number,
+    private radius: number,
+    private width: number,
+    private color: string,
+    private cooldownTimer: number
+  ) {
+    this.remainingCooldown = cooldownTimer;
+  }
+
+  draw() {
+    if (this.remainingCooldown > 0.01 && this.cooldownTimer > 0) {
+      this.ctx.beginPath();
+      this.ctx.arc(
+        this.x,
+        this.y,
+        this.radius,
+        -Math.PI * 0.5,
+        Math.PI * (1.5 - (2 * this.remainingCooldown) / this.cooldownTimer),
+        true
+      );
+      this.ctx.lineWidth = this.width;
+      this.ctx.strokeStyle = this.color;
+      this.ctx.lineCap = "round";
+      this.ctx.stroke();
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeStyle = "black";
+      this.ctx.lineCap = "butt";
+      this.ctx.closePath();
+    }
+  }
+}
+
+class BoardArea {
+  private povColor: PieceColor = PieceColor.white;
+  private squareSize;
+
+  private canvasPieces: CanvasPiece[] = [];
+  private canvasMoveButtons: CanvasMoveButton[] = [];
+  private selectedMove: CanvasMoveButton = null as any;
+  private cooldownTimer: CanvasCooldownTimer = null as any;
+  private respawnPreviewPiece: CanvasPiece = null as any;
+
+  private playerSquare: Square = null as any;
+  private availableMoves: Move[] = [];
+
+  constructor(private ctx: any, private props: ChessBoardProps) {
+    this.povColor = props.povColor;
+    this.squareSize = Math.floor(props.size / BOARD_SIZE);
+  }
+
+  setPovColor(povColor: PieceColor) {
+    this.povColor = povColor
+  }
+
+  setPlayerSquare(playerSquare: Square): void {
+    this.playerSquare = playerSquare;
+  }
+
+  setPieces(playingPieces: PlayingPiece[]): void {
+    this.canvasPieces = playingPieces.map((playingPiece: PlayingPiece) => {
+      if (playingPiece.piece == null) {
+        return null as any;
+      }
+      return new CanvasPiece(
+        this.ctx,
+        playingPiece.piece,
+        this.fitColumnIndexToPOV(playingPiece.column) * this.squareSize,
+        this.fitRowIndexToPOV(playingPiece.row) * this.squareSize,
+        this.squareSize
+      );
     });
+  }
+
+  setAvailableMoves(availableMoves: Move[]): void {
+    this.availableMoves = [...availableMoves];
+    this.canvasMoveButtons = availableMoves.map(
+      (availableMove: Move) =>
+        new CanvasMoveButton(
+          this.ctx,
+          this.fitColumnIndexToPOV(availableMove.column) * this.squareSize,
+          this.fitRowIndexToPOV(availableMove.row) * this.squareSize,
+          this.squareSize,
+          availableMove.isCapture,
+          false
+        )
+    );
+  }
+
+  setSelectedMove(selectedMove: Square): void {
+    this.selectedMove =
+      selectedMove == null
+        ? (null as any)
+        : new CanvasMoveButton(
+            this.ctx,
+            this.fitColumnIndexToPOV(selectedMove.column) * this.squareSize,
+            this.fitRowIndexToPOV(selectedMove.row) * this.squareSize,
+            this.squareSize,
+            false,
+            true
+          );
+  }
+
+  movePlayer(playerIndex: number, row: number, column: number): void {
+    let movingPiece: CanvasPiece = this.canvasPieces[playerIndex];
+    if (movingPiece != null) {
+      movingPiece.isMoving = true;
+      let destX: number = this.fitColumnIndexToPOV(column) * this.squareSize;
+      let destY: number = this.fitRowIndexToPOV(row) * this.squareSize;
+      let dx = (destX - movingPiece.x) / (PIECE_TRAVEL_TIME * FPS);
+      let dy = (destY - movingPiece.y) / (PIECE_TRAVEL_TIME * FPS);
+      let moveInterval = setInterval(() => {
+        movingPiece.x += dx;
+        movingPiece.y += dy;
+      }, 1000 / FPS);
+      setTimeout(() => {
+        clearInterval(moveInterval);
+        movingPiece.x = destX;
+        movingPiece.y = destY;
+        movingPiece.isMoving = false;
+      }, PIECE_TRAVEL_TIME * 1000);
+    }
+  }
+
+  startCooldownTimer(cooldown: number, color: PieceColor): void {
+    if (cooldown == null) {
+      this.cooldownTimer = null as any;
+    } else if (this.playerSquare != null) {
+      this.cooldownTimer = new CanvasCooldownTimer(
+        this.ctx,
+        (this.fitColumnIndexToPOV(this.playerSquare.column) + 0.8) *
+          this.squareSize,
+        (this.fitRowIndexToPOV(this.playerSquare.row) + 0.2) * this.squareSize,
+        this.squareSize * 0.12,
+        this.squareSize * 0.05,
+        color === PieceColor.white ? WHITE_TIMER_COLOR : BLACK_TIMER_COLOR,
+        cooldown
+      );
+      let cooldownTimer: CanvasCooldownTimer = this.cooldownTimer;
+      let moveInterval = setInterval(() => {
+        cooldownTimer.remainingCooldown -= 1 / FPS;
+      }, 1000 / FPS);
+      setTimeout(() => {
+        clearInterval(moveInterval);
+        if (this.cooldownTimer === cooldownTimer) {
+          this.cooldownTimer = null as any;
+        }
+      }, cooldown * 1000);
+    }
+  }
+
+  killPlayer(playerIndex: number): void {
+    let dyingPiece: CanvasPiece = this.canvasPieces[playerIndex];
+    if (dyingPiece != null) {
+      dyingPiece.isDying = true;
+      let deathElevation = this.squareSize * DEAD_PIECE_ELEVATION_FACTOR;
+      let dy = -deathElevation / (PIECE_DYING_TIME * FPS);
+      let dOpacity = -1 / (PIECE_DYING_TIME * FPS);
+      let deathInterval = setInterval(() => {
+        dyingPiece.y += dy;
+        dyingPiece.opacity += dOpacity;
+      }, 1000 / FPS);
+      setTimeout(() => {
+        clearInterval(deathInterval);
+        this.canvasPieces[playerIndex] = null as any;
+      }, PIECE_DYING_TIME * 1000);
+    }
+  }
+
+  setRespawnPreview(respawnPreviewSquare: Square, respawnPiece: Piece): void {
+    if (respawnPreviewSquare == null) {
+      this.respawnPreviewPiece = null as any;
+    } else {
+      let respawnPreviewPiece = new CanvasPiece(
+        this.ctx,
+        respawnPiece,
+        this.fitColumnIndexToPOV(respawnPreviewSquare.column) * this.squareSize,
+        this.fitRowIndexToPOV(respawnPreviewSquare.row) * this.squareSize,
+        this.squareSize
+      );
+      respawnPreviewPiece.opacity = 0.2;
+      this.respawnPreviewPiece = respawnPreviewPiece;
+    }
+  }
+
+  respawnPlayer(
+    playerIndex: number,
+    row: number,
+    column: number,
+    piece: Piece
+  ): void {
+    let destY: number = this.fitRowIndexToPOV(row) * this.squareSize;
+    let deathElevation = this.squareSize * DEAD_PIECE_ELEVATION_FACTOR;
+    this.canvasPieces[playerIndex] = new CanvasPiece(
+      this.ctx,
+      piece,
+      this.fitColumnIndexToPOV(column) * this.squareSize,
+      destY - deathElevation,
+      this.squareSize
+    );
+    let respawningPiece: CanvasPiece = this.canvasPieces[playerIndex];
+    respawningPiece.opacity = 0;
+    respawningPiece.isRespawning = true;
+    let dy = deathElevation / (PIECE_RESPAWNING_TIME * FPS);
+    let dOpacity = 1 / (PIECE_RESPAWNING_TIME * FPS);
+    let respawnInterval = setInterval(() => {
+      respawningPiece.y += dy;
+      respawningPiece.opacity += dOpacity;
+    }, 1000 / FPS);
+    setTimeout(() => {
+      clearInterval(respawnInterval);
+      respawningPiece.y = destY;
+      respawningPiece.opacity = 1;
+      respawningPiece.isRespawning = false;
+    }, PIECE_RESPAWNING_TIME * 1000);
+  }
+
+  promotePlayer(playerIndex: number, promotionPiece: Piece): void {
+    let previousCanvasPiece = this.canvasPieces[playerIndex];
+    if (!previousCanvasPiece.isMoving) {
+      this.canvasPieces[playerIndex] = new CanvasPiece(
+        this.ctx,
+        promotionPiece,
+        previousCanvasPiece.x,
+        previousCanvasPiece.y,
+        previousCanvasPiece.size,
+      )
+    } 
+  }
+
+  mouseClicked(x: number, y: number) {
+    if (this.selectedMove == null) {
+      for (let i = 0; i < this.availableMoves.length; i++) {
+        if (this.canvasMoveButtons[i].isPointInBounds(x, y)) {
+          this.props.clientFlowEngine.sendMove(this.availableMoves[i]);
+        }
+      }
+    } else {
+      if (!this.selectedMove.isPointInBounds(x, y)) {
+        this.props.clientFlowEngine.sendMove(null as any);
+
+      }
+    }
+  }
+
+  clear(): void {
+    this.ctx.clearRect(0, 0, this.props.size, this.props.size);
   }
 
   private fitRowIndexToPOV(rowIndex: number): number {
-    return this.state.povColor === PieceColor.white
+    return this.povColor === PieceColor.white
       ? BOARD_SIZE - 1 - rowIndex
       : rowIndex;
   }
 
   private fitColumnIndexToPOV(columnIndex: number): number {
-    return this.state.povColor === PieceColor.white
+    return this.povColor === PieceColor.white
       ? columnIndex
       : BOARD_SIZE - 1 - columnIndex;
   }
 
-  private sendMove(move: Move): void {
-    this.props.clientFlowEngine.sendMove(move);
+  // return wehther or not there's a need for an update
+  draw(): boolean {
+    let shouldUpdate: boolean = false;
+    let { size, lightColor, darkColor, povColor, clientFlowEngine } =
+      this.props;
+    let coordinateIndexFontSize: number = size * 0.035;
+    // squares
+    for (let i = 0; i < BOARD_SIZE; i++) {
+      for (let j = 0; j < BOARD_SIZE; j++) {
+        this.ctx.fillStyle = (i + j) % 2 === 0 ? lightColor : darkColor;
+        this.ctx.fillRect(
+          i * this.squareSize,
+          j * this.squareSize,
+          this.squareSize,
+          this.squareSize
+        );
+      }
+    }
+    // row indices
+    for (let i = 0; i < BOARD_SIZE; i++) {
+      this.ctx.font = `${coordinateIndexFontSize}px Arial`;
+      this.ctx.fillStyle =
+        this.fitRowIndexToPOV(i) % 2 === 0 ? darkColor : lightColor;
+      this.ctx.fillText(
+        (i + 1).toString(),
+        this.squareSize * 0.05,
+        (this.fitRowIndexToPOV(i) + 0.25) * this.squareSize
+      );
+    }
+    // column indices
+    for (let i = 0; i < BOARD_SIZE; i++) {
+      this.ctx.font = `${coordinateIndexFontSize}px Arial`;
+      this.ctx.fillStyle =
+        this.fitColumnIndexToPOV(i) % 2 === 0 ? lightColor : darkColor;
+      this.ctx.fillText(
+        String.fromCharCode("a".charCodeAt(0) + i),
+        (this.fitColumnIndexToPOV(i) + 0.75) * this.squareSize,
+        (BOARD_SIZE - 0.08) * this.squareSize
+      );
+    }
+    // player square highlight
+    if (this.playerSquare != null) {
+      this.ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      this.ctx.fillRect(
+        this.fitColumnIndexToPOV(this.playerSquare.column) * this.squareSize,
+        this.fitRowIndexToPOV(this.playerSquare.row) * this.squareSize,
+        this.squareSize,
+        this.squareSize
+      );
+    }
+    // dying pieces
+    for (let canvasPiece of this.canvasPieces) {
+      if (canvasPiece != null && canvasPiece.isDying) {
+        canvasPiece.draw();
+        shouldUpdate = true;
+      }
+    }
+    // non-moving pieces
+    for (let canvasPiece of this.canvasPieces) {
+      if (
+        canvasPiece != null &&
+        !canvasPiece.isMoving &&
+        !canvasPiece.isDying &&
+        !canvasPiece.isRespawning
+      ) {
+        canvasPiece.draw();
+      }
+    }
+    // respawning pieces
+    for (let canvasPiece of this.canvasPieces) {
+      if (
+        canvasPiece != null &&
+        canvasPiece.isRespawning &&
+        !canvasPiece.isDying
+      ) {
+        canvasPiece.draw();
+        shouldUpdate = true;
+      }
+    }
+    // moving pieces
+    for (let canvasPiece of this.canvasPieces) {
+      if (
+        canvasPiece != null &&
+        canvasPiece.isMoving &&
+        !canvasPiece.isDying &&
+        !canvasPiece.isRespawning
+      ) {
+        canvasPiece.draw();
+        shouldUpdate = true;
+      }
+    }
+    // respawn preview
+    if (this.respawnPreviewPiece != null) {
+      this.respawnPreviewPiece.draw();
+    }
+    // move buttons
+    if (this.selectedMove == null) {
+      for (let canvasMoveButton of this.canvasMoveButtons) {
+        canvasMoveButton.draw();
+      }
+    } else {
+      // selected move
+      this.selectedMove.draw();
+    }
+    // cooldown timer
+    if (this.cooldownTimer != null) {
+      this.cooldownTimer.draw();
+      shouldUpdate = true;
+    }
+    return shouldUpdate;
+  }
+}
+
+class ChessBoard
+  extends React.Component<ChessBoardProps, ChessBoardState>
+  implements ChessBoardComponent
+{
+  state = {};
+  canvasRef = null as any;
+  boardArea: BoardArea = null as any;
+  shouldUpdateBoard: boolean = false;
+
+  constructor(props: ChessBoardProps) {
+    super(props);
+    this.canvasRef = React.createRef();
+    props.clientFlowEngine.board = this;
   }
 
-  private openPromotionDialog(move: Move) {
-    this.promotionMoveToSend = move;
-    this.setState((state: BoardComponentState, props: BoardComponentProps) => {
-      return { isPromotionDialogOpen: true };
+  private renderFunction = () => {
+    if (this.shouldUpdateBoard) {
+      this.shouldUpdateBoard = false;
+      this.boardArea.clear();
+      this.shouldUpdateBoard = this.boardArea.draw();
+    }
+    requestAnimationFrame(this.renderFunction);
+  };
+
+  componentDidMount() {
+    const canvas = this.canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    this.boardArea = new BoardArea(ctx, this.props);
+    let rect = canvas.getBoundingClientRect();
+    canvas.addEventListener("mousedown", (event: any) => {
+      this.boardArea.mouseClicked(event.x - rect.left, event.y - rect.top);
     });
+    this.shouldUpdateBoard = true;
+    requestAnimationFrame(this.renderFunction);
   }
 
-  private closePromotionDialog(): void {
-    this.promotionMoveToSend = null as any;
-    this.setState((state: BoardComponentState, props: BoardComponentProps) => {
-      return { isPromotionDialogOpen: false };
-    });
+  setPovColor(povColor: PieceColor): void {
+    this.boardArea.setPovColor(povColor);
+    this.shouldUpdateBoard = true;
+  }
+
+  setPlayerSquare(playerSquare: Square): void {
+    this.boardArea.setPlayerSquare(playerSquare);
+    this.shouldUpdateBoard = true;
+  }
+
+  setPieces(playingPieces: PlayingPiece[]): void {
+    this.boardArea.setPieces(playingPieces);
+    this.shouldUpdateBoard = true;
+  }
+
+  setAvailableMoves(availableMoves: Move[]): void {
+    this.boardArea.setAvailableMoves(availableMoves);
+    this.shouldUpdateBoard = true;
+  }
+
+  setSelectedMove(selectedMove: Square): void {
+    this.boardArea.setSelectedMove(selectedMove);
+    this.shouldUpdateBoard = true;
+  }
+
+  movePlayer(playerIndex: number, row: number, column: number): void {
+    this.boardArea.movePlayer(playerIndex, row, column);
+    this.shouldUpdateBoard = true;
+  }
+
+  startCooldownTimer(cooldown: number, color: PieceColor): void {
+    this.boardArea.startCooldownTimer(cooldown, color);
+  }
+
+  killPlayer(playerIndex: number): void {
+    this.boardArea.killPlayer(playerIndex);
+    this.shouldUpdateBoard = true;
+  }
+
+  setRespawnPreview(respawnPreviewSquare: Square, respawnPiece: Piece): void {
+    this.boardArea.setRespawnPreview(respawnPreviewSquare, respawnPiece);
+    this.shouldUpdateBoard = true;
+  }
+
+  respawnPlayer(
+    playerIndex: number,
+    row: number,
+    column: number,
+    piece: Piece
+  ): void {
+    this.boardArea.respawnPlayer(playerIndex, row, column, piece);
+    this.shouldUpdateBoard = true;
+  }
+
+  promotePlayer(playerIndex: number, promotionPiece: Piece): void {
+    this.boardArea.promotePlayer(playerIndex, promotionPiece);
+    this.shouldUpdateBoard = true;
   }
 
   render() {
     let { size, lightColor, darkColor } = this.props;
-    let {
-      playerIndex,
-      povColor,
-      playingPieces,
-      availableMoves,
-      isPromotionDialogOpen,
-      cooldownTimer,
-      remainingCooldown,
-      selectedMove,
-      respawnSquare,
-      respawnPiece,
-    } = this.state;
-    if (respawnSquare != null) {
-      isPromotionDialogOpen = false;
-    }
-    let squareSize: number = size / BOARD_SIZE;
-    let coordinateIndexFontSize: number = size * 0.03;
-    let moveIndicatorSize: number = squareSize * 0.5;
-    let promotionDialogButtonSize: number = squareSize * 1.5;
-    let cooldownTimerSize: number = squareSize * 0.3;
     return (
-      <Box
-        sx={{
-          width: size,
-          height: size,
-        }}
-      >
-        {/* squares */}
-        <ul className="no-bullets">
-          {[...Array(BOARD_SIZE)].map((_, i) => (
-            <li key={Math.random()}>
-              <div className="row">
-                <ul className="row">
-                  {[...Array(BOARD_SIZE)].map((_, j) => {
-                    let isLight: boolean = (i + j) % 2 === 0;
-                    return (
-                      <li key={Math.random()}>
-                        <Box
-                          sx={{
-                            width: squareSize,
-                            height: squareSize,
-                            backgroundColor: isLight ? lightColor : darkColor,
-                          }}
-                        >
-                          {/* coordinate indicators */}
-                          <div style={{ position: "relative" }}>
-                            {j === 0 ? (
-                              <div
-                                style={{
-                                  fontSize: coordinateIndexFontSize,
-                                  position: "absolute" as any,
-                                  left: squareSize * 0.07,
-                                  top: squareSize * 0.02,
-                                  color: isLight ? darkColor : lightColor,
-                                }}
-                              >
-                                {povColor === PieceColor.white
-                                  ? BOARD_SIZE - i
-                                  : i + 1}
-                              </div>
-                            ) : (
-                              <div />
-                            )}
-                            {i === BOARD_SIZE - 1 ? (
-                              <div
-                                style={{
-                                  fontSize: coordinateIndexFontSize,
-                                  position: "absolute" as any,
-                                  left: squareSize * 0.8,
-                                  top: squareSize * 0.68,
-                                  color: isLight ? darkColor : lightColor,
-                                }}
-                              >
-                                {String.fromCharCode(
-                                  "a".charCodeAt(0) +
-                                    (povColor === PieceColor.white
-                                      ? j
-                                      : BOARD_SIZE - 1 - j)
-                                )}{" "}
-                              </div>
-                            ) : (
-                              <div />
-                            )}
-                          </div>
-                        </Box>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </li>
-          ))}
-        </ul>
-        {/* pieces */}
-        <ul className="no-bullets">
-          {[...Array(NUM_OF_PLAYERS)].map((_, i) => {
-            let playingPiece: PlayingPiece = playingPieces[i];
-            if (playingPiece.piece == null) {
-              return <li key={Math.random()}></li>;
-            }
-            // piece image
-            let pieceImage = (
-              <img
-                src={images.get(
-                  `${colorToString.get(
-                    playingPiece.piece.color
-                  )}_${typeToString.get(playingPiece.piece.type)}.png`
-                )}
-                height={squareSize}
-                width={squareSize}
-                alt=""
-              />
-            );
-            // moving piece
-            if (i === this.movingPieceIndex) {
-              this.movingPieceIndex = null as any;
-              return (
-                <li key={Math.random()}>
-                  <div className="moving-piece">{pieceImage}</div>
-                </li>
-              );
-            }
-            return (
-              <li key={Math.random()}>
-                {/* piece */}
-                <div
-                  style={{
-                    position: "absolute",
-                    left:
-                      this.fitColumnIndexToPOV(playingPiece.column) *
-                      squareSize,
-                    top: this.fitRowIndexToPOV(playingPiece.row) * squareSize,
-                    zIndex: 1,
-                  }}
-                >
-                  {pieceImage}
-                </div>
-                {/* player highlight */}
-                {i === playerIndex ? (
-                  <div
-                    style={{
-                      position: "absolute",
-                      left:
-                        this.fitColumnIndexToPOV(playingPiece.column) *
-                        squareSize,
-                      top: this.fitRowIndexToPOV(playingPiece.row) * squareSize,
-                      width: squareSize,
-                      height: squareSize,
-                      backgroundColor: "white",
-                      opacity: 0.3,
-                    }}
-                  />
-                ) : (
-                  <div />
-                )}
-                {/* cooldown timer*/}
-                {cooldownTimer != null && i === playerIndex ? (
-                  <div
-                    style={{
-                      position: "absolute",
-                      left:
-                        (this.fitColumnIndexToPOV(playingPiece.column) + 0.6) *
-                        squareSize,
-                      top:
-                        (this.fitRowIndexToPOV(playingPiece.row) + 0.05) *
-                        squareSize,
-                      zIndex: 2,
-                    }}
-                  >
-                    <CountdownCircleTimer
-                      isPlaying={true}
-                      duration={cooldownTimer}
-                      colors={
-                        playingPiece.piece.color === PieceColor.white
-                          ? "#eeeeee"
-                          : "#333333"
-                      }
-                      strokeWidth={5}
-                      trailColor="#ffffff00"
-                      size={cooldownTimerSize}
-                      initialRemainingTime={remainingCooldown}
-                    />
-                  </div>
-                ) : (
-                  <div />
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        {/* moves */}
-        {selectedMove == null ? (
-          <ul className="no-bullets">
-            {availableMoves.map((move) => (
-              <li key={Math.random()}>
-                <div
-                  style={{
-                    position: "absolute",
-                    left:
-                      this.fitColumnIndexToPOV((move as Move).column) *
-                      squareSize,
-                    top: this.fitRowIndexToPOV((move as Move).row) * squareSize,
-                    zIndex: 3,
-                  }}
-                >
-                  {/* standard moves*/}
-                  <button
-                    onClick={() => {
-                      if ((move as Move).isPromotion) {
-                        this.openPromotionDialog(move);
-                      } else {
-                        this.sendMove(move);
-                      }
-                    }}
-                    style={{
-                      width: squareSize,
-                      height: squareSize,
-                      zIndex: 3,
-                    }}
-                  >
-                    {/* capture moves*/}
-                    {(move as Move).isCapture ? (
-                      <div>
-                        <img
-                          src={captureIcon}
-                          height={squareSize}
-                          width={squareSize}
-                          style={{ opacity: 0.3, zIndex: 3 }}
-                          alt=""
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="move-indicator"
-                        style={{
-                          width: moveIndicatorSize,
-                          height: moveIndicatorSize,
-                          margin: 0.5 * (squareSize - moveIndicatorSize),
-                        }}
-                      />
-                    )}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div>
-            {/* premove indicator */}
-            <div
-              style={{
-                position: "absolute",
-                left:
-                  this.fitColumnIndexToPOV(selectedMove.column) * squareSize,
-                top: this.fitRowIndexToPOV(selectedMove.row) * squareSize,
-                width: squareSize,
-                height: squareSize,
-                backgroundColor: "black",
-                opacity: 0.4,
-              }}
-            />
-            <Dialog
-              open={true}
-              onClose={() => {
-                this.props.clientFlowEngine.sendMove(null as any);
-                this.setState(() => {
-                  return { selectedMove: null as any };
-                });
-              }}
-            >
-              <button></button>
-            </Dialog>
-          </div>
-        )}
-        {/* promotion dialog */}
-        <Dialog
-          open={isPromotionDialogOpen}
-          onClose={() => {
-            this.closePromotionDialog();
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              boxShadow: "0 0 0 100vmax rgba(0, 0, 0, 0.7)",
-              pointerEvents: "none",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              background: "white",
-              width: promotionDialogButtonSize,
-              height:
-                promotionDialogButtonSize * (PROMOTION_TYPES.length + 0.1),
-              borderRadius: promotionDialogButtonSize * 0.1,
-            }}
-          ></div>
-          <div className="centered">
-            <ul className="no-bullets">
-              {PROMOTION_TYPES.map((type) => {
-                return (
-                  <li key={Math.random()}>
-                    <div>
-                      <button
-                        onClick={() => {
-                          this.promotionMoveToSend.promotionType = type;
-                          this.sendMove(this.promotionMoveToSend);
-                          this.closePromotionDialog();
-                        }}
-                        style={{
-                          height: promotionDialogButtonSize,
-                          width: promotionDialogButtonSize,
-                        }}
-                      >
-                        <img
-                          src={images.get(
-                            `${colorToString.get(povColor)}_${typeToString.get(
-                              type
-                            )}.png`
-                          )}
-                          height={promotionDialogButtonSize}
-                          width={promotionDialogButtonSize}
-                          alt=""
-                        />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </Dialog>
-        {/* respawn location indicator*/}
-        {respawnSquare == null ? (
-          <div />
-        ) : (
-          <div
-            style={{
-              position: "absolute",
-              left: this.fitColumnIndexToPOV(respawnSquare.column) * squareSize,
-              top: this.fitRowIndexToPOV(respawnSquare.row) * squareSize,
-              opacity: 0.2,
-              zIndex: 1,
-            }}
-          >
-            <img
-                src={images.get(
-                  `${colorToString.get(
-                    respawnPiece.color
-                  )}_${typeToString.get(respawnPiece.type)}.png`
-                )}
-                height={squareSize}
-                width={squareSize}
-                alt=""
-              />
-          </div>
-        )}
-      </Box>
+      <div>
+        <canvas ref={this.canvasRef} width={size} height={size} />
+      </div>
     );
   }
 }
 
-export default BoardComponent;
+export default ChessBoard;
