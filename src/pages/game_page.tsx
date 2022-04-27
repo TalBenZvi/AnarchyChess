@@ -3,13 +3,12 @@ import GraveYard from "../components/graveyard";
 import DeathScreen from "../components/death_screen";
 import PromotionScreen from "../components/promotion_screen";
 
-import {
-  PieceColor,
-  NUM_OF_PLAYERS,
-} from "../game_flow_util/game_elements";
+import { PieceColor, NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import ChessBoard from "../components/chess_board";
+
+const PLAYER_ENGINE_INDEX: number = 11;
 
 function GamePage() {
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
@@ -33,12 +32,21 @@ function GamePage() {
           lightColor="#9999bb"
           darkColor="#454545"
           povColor={PieceColor.white}
-          clientFlowEngine={clientFlowEngines[0]}
+          clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]}
         />
       </div>
       {/* buttons */}
       <button
-        style={{ color: "white", margin: 20 }}
+        style={{
+          margin: 20,
+          background: "none",
+          color: "white",
+          border: "none",
+          padding: 0,
+          font: "inherit",
+          cursor: "pointer",
+          outline: "inherit",
+        }}
         onClick={() => {
           let gameID: string = Math.random().toString();
           serverFlowEngine.acceptConnections(gameID);
@@ -51,10 +59,19 @@ function GamePage() {
       </button>
       <div />
       <button
-        style={{ color: "white", margin: 20 }}
+        style={{
+          margin: 20,
+          background: "none",
+          color: "white",
+          border: "none",
+          padding: 0,
+          font: "inherit",
+          cursor: "pointer",
+          outline: "inherit",
+        }}
         onClick={async () => {
           for (let i = 0; i < clientFlowEngines.length; i++) {
-            if (i !== 0) {
+            if (i !== PLAYER_ENGINE_INDEX) {
               clientFlowEngines[i].runTest();
             }
           }
@@ -77,13 +94,13 @@ function GamePage() {
           backgroundColor="#454545"
           tileColor="#808080"
           povColor={PieceColor.white}
-          clientFlowEngine={clientFlowEngines[0]}
+          clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]}
         />
       </div>
       {/* death screen */}
-      <DeathScreen clientFlowEngine={clientFlowEngines[0]} />
+      <DeathScreen clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]} />
       {/* promotion screen */}
-      <PromotionScreen clientFlowEngine={clientFlowEngines[0]} />
+      <PromotionScreen clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]} />
     </div>
   );
 }

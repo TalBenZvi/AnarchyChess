@@ -790,6 +790,9 @@ export class Position {
 
   findAvaillableMovesForPlayer(playerIndex: number): Move[] {
     let square: Square = this.getPlayerLocation(playerIndex);
+    if (square != null && this.pieceAt(square.row, square.column) == null) {
+      let a = 1 / 0;
+    }
     if (square != null) {
       return this.pieceAt(square.row, square.column).findLegalMoves(
         this,
@@ -800,8 +803,16 @@ export class Position {
   }
 
   locateMoveForPlayer(playerIndex: number, move: Move): Move {
-    let square: Square = this.getPlayerLocation(playerIndex);
+    let square: Square = this._playerLocations[playerIndex];
     if (square != null) {
+      if (this.pieceAt(square.row, square.column) == null) {
+        console.log(playerIndex, square.row, square.column, JSON.stringify(move));
+      }
+      return this._boardArrangement[square.row][square.column].locateMove(
+        this,
+        square,
+        move
+      );
       return this.pieceAt(square.row, square.column).locateMove(
         this,
         square,

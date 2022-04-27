@@ -43,8 +43,7 @@ interface PromotionScreenState {
 
 class PromotionScreen
   extends React.Component<PromotionScreenProps, PromotionScreenState>
-  implements PromotionScreenComponent
-{
+  implements PromotionScreenComponent {
   state = { isActive: false, move: null as any, color: null as any };
   canBeClosed: boolean = false;
 
@@ -54,12 +53,11 @@ class PromotionScreen
   }
 
   show(move: Move, color: PieceColor): void {
-    console.log("here2");
     this.setState(() => {
       return { isActive: true, move: move, color: color };
     });
     setTimeout(() => {
-        this.canBeClosed = true;
+      this.canBeClosed = true;
     }, 100);
   }
 
@@ -111,6 +109,13 @@ class PromotionScreen
                       style={{
                         height: BUTTON_SIZE,
                         width: BUTTON_SIZE,
+                        background: "none",
+                        color: "white",
+                        border: "none",
+                        padding: 0,
+                        font: "inherit",
+                        cursor: "pointer",
+                        outline: "inherit",
                       }}
                     >
                       <img

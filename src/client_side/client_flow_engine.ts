@@ -35,15 +35,9 @@ export class ClientFlowEngine implements ClientObserver {
   private _deathScreen: DeathScreenComponent = null as any;
   private _promotionScreen: PromotionScreenComponent = null as any;
 
-  private isGameRunning: boolean = false;
   private playerIndex: number = null as any;
   private playerID: string;
 
-  // in seconds
-  //private cooldownTimer: number = null as any;
-  // in millis
-  //private cooldownCompletionTime: number = null as any;
-  // in millis
   private selectedMove: Square = null as any;
 
   constructor(playerID: string) {
@@ -68,8 +62,10 @@ export class ClientFlowEngine implements ClientObserver {
   }
 
   async attemptToConnect(ip: string, gameID: string) {
-    let connectionStatus: ConnectionStatus =
-      await this.gameClient.attemptToConnect(ip, gameID);
+    let connectionStatus: ConnectionStatus = await this.gameClient.attemptToConnect(
+      ip,
+      gameID
+    );
     console.log(`${this.playerID}: ${connectionStatus}`);
   }
 
@@ -85,7 +81,6 @@ export class ClientFlowEngine implements ClientObserver {
       this.gameClient.sendMove(move);
       this.selectedMove =
         move == null ? (null as any) : new Square(move.row, move.column);
-      //this.updateBoard(null as any);
       if (this._board != null) {
         this._board.setSelectedMove(this.selectedMove);
       }
@@ -126,12 +121,10 @@ export class ClientFlowEngine implements ClientObserver {
     switch (event.type) {
       // game started
       case EventType.gameStarted: {
-        let playerIndex: number = (
-          JSON.parse(
-            event.info.get(EventInfo.connectedPlayerIndices) as string,
-            reviver
-          ) as Map<string, number>
-        ).get(this.playerID) as number;
+        let playerIndex: number = (JSON.parse(
+          event.info.get(EventInfo.connectedPlayerIndices) as string,
+          reviver
+        ) as Map<string, number>).get(this.playerID) as number;
         let initialCooldown: number = JSON.parse(
           event.info.get(EventInfo.initialPlayerCooldowns) as string
         )[playerIndex];
@@ -174,8 +167,9 @@ export class ClientFlowEngine implements ClientObserver {
         let movingPlayerIndex: number = parseInt(
           event.info.get(EventInfo.playerIndex) as string
         );
-        let movingPlayerLocation: Square =
-          this.position.getPlayerLocation(movingPlayerIndex);
+        let movingPlayerLocation: Square = this.position.getPlayerLocation(
+          movingPlayerIndex
+        );
         // if move is valid
         if (move != null) {
           // isCapture
@@ -243,8 +237,9 @@ export class ClientFlowEngine implements ClientObserver {
           }
           // isCastle
           if (move.isCastle) {
-            let movingPiece: Piece =
-              this.position.getPieceByPlayer(movingPlayerIndex);
+            let movingPiece: Piece = this.position.getPieceByPlayer(
+              movingPlayerIndex
+            );
             let startRow: number =
               movingPiece.color === PieceColor.white ? 0 : 7;
             let startColumn: number =
@@ -257,10 +252,33 @@ export class ClientFlowEngine implements ClientObserver {
               this._board.movePlayer(movingRookIndex, startRow, destColumn);
             }
           }
+          // update board
           if (this._board != null) {
-            this._board.setAvailableMoves(
-              this.position.findAvaillableMovesForPlayer(this.playerIndex)
+            let availableMoves: Move[] = this.position.findAvaillableMovesForPlayer(
+              this.playerIndex
             );
+            this._board.setAvailableMoves(availableMoves);
+            if (this.selectedMove != null) {
+              let isSelectedMoveAvailable = false;
+              for (let availableMove of availableMoves) {
+                if (
+                  availableMove.row === this.selectedMove.row &&
+                  availableMove.column === this.selectedMove.column
+                ) {
+                  isSelectedMoveAvailable = true;
+                }
+              }
+              if (!isSelectedMoveAvailable) {
+                this.selectedMove = null as any;
+                this._board.setSelectedMove(null as any);
+              }
+            }
+            if (this.position.getPlayerLocation(this.playerIndex) == null) {
+              this._board.setRespawnPreview(
+                this.position.getRespawnSquareForPlayer(this.playerIndex),
+                Position.getStartPieceByPlayer(this.playerIndex)
+              );
+            }
           }
         }
         break;
@@ -287,7 +305,12 @@ export class ClientFlowEngine implements ClientObserver {
           this._board.setAvailableMoves(
             this.position.findAvaillableMovesForPlayer(this.playerIndex)
           );
-          if (respawningPlayerIndex === this.playerIndex) {
+          if (this.position.getPlayerLocation(this.playerIndex) == null) {
+            this._board.setRespawnPreview(
+              this.position.getRespawnSquareForPlayer(this.playerIndex),
+              Position.getStartPieceByPlayer(this.playerIndex)
+            );
+          } else {
             this._board.setRespawnPreview(null as any, null as any);
           }
         }
