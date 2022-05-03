@@ -1,8 +1,17 @@
+import { Piece, colorToString, typeToString } from "./game_elements";
+
+export interface Event {
+  index: number
+  type: EventType;
+  info: Map<EventInfo, string>;
+}
+
 export enum EventType {
   playerListUpdate,
   gameStarted,
   move,
   respawn,
+  hardUpadte,
 }
 
 export enum EventInfo {
@@ -18,13 +27,31 @@ export enum EventInfo {
   respawnTimer,
   enPassantRespawnTimer,
   // respawn
-  respawnSquare
+  respawnSquare,
+  // hardUpdate
+  position,
+  // debug
+  test,
 }
 
-export interface Event {
-  type: EventType;
-  info: Map<EventInfo, string>;
+
+export interface Request {
+  type: RequestType;
+  info: Map<RequestInfo, string>;
 }
+
+export enum RequestType {
+  move,
+  resendEvents,
+}
+
+export enum RequestInfo {
+  // move
+  move,
+  // resendEvents
+  missingEventIndices,
+}
+
 
 export enum GameStatus {
   inactive,
@@ -33,7 +60,15 @@ export enum GameStatus {
 }
 
 export function replacer(key: any, value: any) {
-  if (["isPromotion", "isCapture", "isEnPassant", "isCastle", "castleSide"].indexOf(key) > -1) {
+  if (
+    [
+      "isPromotion",
+      "isCapture",
+      "isEnPassant",
+      "isCastle",
+      "castleSide",
+    ].indexOf(key) > -1
+  ) {
     return undefined;
   }
   if (value instanceof Map) {
@@ -41,6 +76,10 @@ export function replacer(key: any, value: any) {
       dataType: "Map",
       value: Array.from(value.entries()),
     };
+  /*
+  } else if (value instanceof Piece) {
+    return `{${colorToString.get(value.color)} ${typeToString.get(value.type)}}`;
+    */
   } else {
     return value;
   }

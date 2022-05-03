@@ -15,6 +15,7 @@ function GamePage() {
   let clientFlowEngines: ClientFlowEngine[] = [...Array(NUM_OF_PLAYERS)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
+  let isRunning: boolean = true;
   return (
     /* background */
     <div
@@ -57,7 +58,7 @@ function GamePage() {
       >
         start
       </button>
-      <div />
+      <br/>
       <button
         style={{
           margin: 20,
@@ -70,14 +71,38 @@ function GamePage() {
           outline: "inherit",
         }}
         onClick={async () => {
-          for (let i = 0; i < clientFlowEngines.length; i++) {
+          let i: number = 0;
+          while (isRunning) {
             if (i !== PLAYER_ENGINE_INDEX) {
               clientFlowEngines[i].runTest();
+              if (clientFlowEngines[i].shouldStopSimulation) {
+                isRunning = false;
+              }
+              await new Promise((f) => setTimeout(f, 100));
             }
+            i = (i + 1) % NUM_OF_PLAYERS;
           }
         }}
       >
         test
+      </button>
+      <br/>
+      <button
+        style={{
+          margin: 20,
+          background: "none",
+          color: "white",
+          border: "none",
+          padding: 0,
+          font: "inherit",
+          cursor: "pointer",
+          outline: "inherit",
+        }}
+        onClick={() => {
+          isRunning = false;
+        }}
+      >
+        stop
       </button>
       {/* graveyard */}
       <div
@@ -100,7 +125,9 @@ function GamePage() {
       {/* death screen */}
       <DeathScreen clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]} />
       {/* promotion screen */}
-      <PromotionScreen clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]} />
+      <PromotionScreen
+        clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]}
+      />
     </div>
   );
 }

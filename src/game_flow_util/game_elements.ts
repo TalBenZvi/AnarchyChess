@@ -1,3 +1,5 @@
+import { replacer } from "./communication";
+
 export const BOARD_SIZE = 8;
 
 export const NUM_OF_PLAYERS = 32;
@@ -108,9 +110,9 @@ export class Move {
   ) {
     if (params != null) {
       this.isPromotion = Boolean(params.isPromotion);
-      this.promotionType = (
-        Boolean(params.promotionType) ? params.promotionType : null
-      ) as PieceType;
+      this.promotionType = (Boolean(params.promotionType)
+        ? params.promotionType
+        : null) as PieceType;
       this.isCapture = Boolean(params.isCapture);
       this.isEnPassant = Boolean(params.isEnPassant);
       this.isCastle = Boolean(params.isCastle);
@@ -623,6 +625,15 @@ export class Position {
     [PieceColor.black, [...Array(BOARD_SIZE)].map((_, i) => [false, false])],
   ]);
 
+  // debug
+  private id: string = null as any;
+
+  constructor(id?: string) {
+    if (typeof id !== "undefined") {
+      this.id = id;
+    }
+  }
+
   private static get startPlayerLocations(): Square[] {
     return [...Array(BOARD_SIZE)]
       .map((_, j) => new Square(0, j))
@@ -736,16 +747,69 @@ export class Position {
   }
 
   get playingPieces(): PlayingPiece[] {
-    return this.playerLocations.map((square: Square): PlayingPiece => {
-      if (square == null) {
-        return { piece: null as any, row: null as any, column: null as any };
+    return this.playerLocations.map(
+      (square: Square): PlayingPiece => {
+        if (square == null) {
+          return { piece: null as any, row: null as any, column: null as any };
+        }
+        return {
+          piece: this.pieceAt(square.row, square.column),
+          row: square.row,
+          column: square.column,
+        };
       }
-      return {
-        piece: this.pieceAt(square.row, square.column),
-        row: square.row,
-        column: square.column,
-      };
-    });
+    );
+  }
+
+  // debug
+  private areFieldsCoordinated(): boolean {
+    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+      for (let j = 0; j < NUM_OF_PLAYERS; j++) {
+        if (i !== j) {
+          let squareI = this._playerLocations[i];
+          let squareJ = this._playerLocations[j];
+          if (
+            squareI != null &&
+            squareJ != null &&
+            squareI.row === squareJ.row &&
+            squareI.column === squareJ.column
+          ) {
+            console.log(this.id);
+            console.log(
+              `players ${i} and ${j} are on location ${JSON.stringify(
+                squareI,
+                replacer
+              )}`
+            );
+            return false;
+          }
+        }
+      }
+    }
+    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+      let playerSquare: Square = this.getPlayerLocation(i);
+      if (
+        playerSquare != null &&
+        (this.playerAt(playerSquare.row, playerSquare.column) == null ||
+          this.pieceAt(playerSquare.row, playerSquare.column) == null)
+      ) {
+        console.log(this.id);
+        console.log("mismatched player", i);
+        console.log("perceived square", playerSquare);
+        if (playerSquare != null) {
+          console.log(
+            "perceived player",
+            this.playerAt(playerSquare.row, playerSquare.column)
+          );
+          console.log(
+            "perceived piece",
+            this.pieceAt(playerSquare.row, playerSquare.column)
+          );
+        }
+        return false;
+      }
+    }
+    return true;
   }
 
   setToStartingPosition() {
@@ -790,9 +854,6 @@ export class Position {
 
   findAvaillableMovesForPlayer(playerIndex: number): Move[] {
     let square: Square = this.getPlayerLocation(playerIndex);
-    if (square != null && this.pieceAt(square.row, square.column) == null) {
-      let a = 1 / 0;
-    }
     if (square != null) {
       return this.pieceAt(square.row, square.column).findLegalMoves(
         this,
@@ -805,9 +866,16 @@ export class Position {
   locateMoveForPlayer(playerIndex: number, move: Move): Move {
     let square: Square = this._playerLocations[playerIndex];
     if (square != null) {
+      /*
       if (this.pieceAt(square.row, square.column) == null) {
-        console.log(playerIndex, square.row, square.column, JSON.stringify(move));
+        console.log(
+          playerIndex,
+          square.row,
+          square.column,
+          JSON.stringify(move)
+        );
       }
+      */
       return this._boardArrangement[square.row][square.column].locateMove(
         this,
         square,
@@ -822,7 +890,7 @@ export class Position {
     return null as any;
   }
 
-  _updateCastleRights(changeRow: number, changeColumn: number) {
+  private _updateCastleRights(changeRow: number, changeColumn: number) {
     if (changeRow === 0) {
       if (changeColumn === 0) {
         this._castleRights
@@ -860,7 +928,7 @@ export class Position {
     }
   }
 
-  _setEnPassantRightsForColorAgainstColumn(
+  private _setEnPassantRightsForColorAgainstColumn(
     color: PieceColor,
     column: number,
     state: boolean
@@ -879,20 +947,25 @@ export class Position {
     }
   }
 
-  move(playerIndex: number, row: number, column: number) {
+  // debug: returns false if there was an error
+  move(playerIndex: number, row: number, column: number): boolean {
+    let areFieldsCoordinated: boolean = this.areFieldsCoordinated();
+    let startPositionDescription: string = JSON.stringify(this, replacer);
     let startSquare: Square = this._playerLocations[playerIndex];
     if (startSquare != null) {
       let startRow: number = startSquare.row;
       let startColumn: number = startSquare.column;
       if (row === startRow && column === startColumn) {
-        return;
+        return true;
       }
       this.killPlayerAt(row, column);
-      this._boardArrangement[row][column] =
-        this._boardArrangement[startRow][startColumn];
+      this._boardArrangement[row][column] = this._boardArrangement[startRow][
+        startColumn
+      ];
       this._boardArrangement[startRow][startColumn] = null as any;
-      this._playerArrangement[row][column] =
-        this._playerArrangement[startRow][startColumn];
+      this._playerArrangement[row][column] = this._playerArrangement[startRow][
+        startColumn
+      ];
       this._playerArrangement[startRow][startColumn] = null as any;
       this._playerLocations[playerIndex] = new Square(row, column);
       this._updateCastleRights(startRow, startColumn);
@@ -923,6 +996,14 @@ export class Position {
         }
       }
     }
+    if (areFieldsCoordinated && !this.areFieldsCoordinated()) {
+      console.log(this.id, "move");
+      console.log("start", startPositionDescription);
+      console.log(playerIndex, row, column);
+      console.log("end", JSON.stringify(this, replacer));
+      return false;
+    }
+    return true;
   }
 
   moveFrom(
@@ -945,6 +1026,8 @@ export class Position {
   }
 
   killPlayerAt(row: number, column: number) {
+    let areFieldsCoordinated: boolean = this.areFieldsCoordinated();
+    let startPositionDescription: string = JSON.stringify(this, replacer);
     // update en passant rights
     let dyingPiece: Piece = this._boardArrangement[row][column];
     if (
@@ -965,13 +1048,27 @@ export class Position {
     }
     this._playerArrangement[row][column] = null as any;
     this._updateCastleRights(row, column);
+    if (areFieldsCoordinated && !this.areFieldsCoordinated()) {
+      console.log(this.id, "killPlayerAt");
+      console.log("start", startPositionDescription);
+      console.log(playerIndex, row, column);
+      console.log("end", JSON.stringify(this, replacer));
+    }
   }
 
   promotePieceAt(row: number, column: number, promotionType: PieceType) {
+    let areFieldsCoordinated: boolean = this.areFieldsCoordinated();
+    let startPositionDescription: string = JSON.stringify(this, replacer);
     this._boardArrangement[row][column] = Piece.generate(
       promotionType,
       this._boardArrangement[row][column]!.color
     );
+    if (areFieldsCoordinated && !this.areFieldsCoordinated()) {
+      console.log(this.id, "promotePieceAt");
+      console.log("start", startPositionDescription);
+      console.log(row, column);
+      console.log("end", JSON.stringify(this, replacer));
+    }
   }
 
   getRespawnSquareForPlayer(playerIndex: number): Square {
@@ -987,12 +1084,22 @@ export class Position {
   }
 
   respawnPlayerAt(playerIndex: number, respawnSquare: Square) {
+    let areFieldsCoordinated: boolean = this.areFieldsCoordinated();
+    let startPositionDescription: string = JSON.stringify(this, replacer);
     if (respawnSquare != null) {
       this._playerLocations[playerIndex] = respawnSquare;
-      this._boardArrangement[respawnSquare.row][respawnSquare.column] =
-        Position.getStartPieceByPlayer(playerIndex);
-      this._playerArrangement[respawnSquare.row][respawnSquare.column] =
-        playerIndex;
+      this._boardArrangement[respawnSquare.row][
+        respawnSquare.column
+      ] = Position.getStartPieceByPlayer(playerIndex);
+      this._playerArrangement[respawnSquare.row][
+        respawnSquare.column
+      ] = playerIndex;
+    }
+    if (areFieldsCoordinated && !this.areFieldsCoordinated()) {
+      console.log(this.id, "respawnPlayerAt");
+      console.log("start", startPositionDescription);
+      console.log(playerIndex, respawnSquare.row, respawnSquare.column);
+      console.log("end", JSON.stringify(this, replacer));
     }
   }
 }
@@ -1016,7 +1123,12 @@ export interface ChessBoardComponent {
 
   setRespawnPreview(respawnPreviewSquare: Square, respawnPiece: Piece): void;
 
-  respawnPlayer(playerIndex: number, row: number, column: number, piece: Piece): void;
+  respawnPlayer(
+    playerIndex: number,
+    row: number,
+    column: number,
+    piece: Piece
+  ): void;
 
   promotePlayer(playerIndex: number, promotionPiece: Piece): void;
 }

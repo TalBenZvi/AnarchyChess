@@ -19,13 +19,17 @@ import {
   EventType,
   EventInfo,
   replacer,
+  Request,
+  RequestType,
+  RequestInfo,
+  reviver,
 } from "../game_flow_util/communication";
 
 const COOLDOWN_VARIANCE = 0.2;
 
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
-  private position: Position = new Position();
+  private position: Position = new Position("server");
   private isGameRunning: boolean = false;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
@@ -44,15 +48,17 @@ export class ServerFlowEngine implements ServerObserver {
     this.isGameRunning = true;
     let initialPlayerCooldowns: number[] = [];
     for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-      initialPlayerCooldowns.push(this.putPlayerOnCooldown(i, new Date().getTime()));
+      initialPlayerCooldowns.push(
+        this.putPlayerOnCooldown(i, new Date().getTime())
+      );
     }
     this.gameServer.startGame(initialPlayerCooldowns);
   }
 
   private killPlayer(playerIndex: number): number {
     this.isAlive[playerIndex] = false;
-    let respawnTimer: number =
-      Position.getStartPieceByPlayer(playerIndex).respawnTimer;
+    let respawnTimer: number = Position.getStartPieceByPlayer(playerIndex)
+      .respawnTimer;
     this.position.killPlayer(playerIndex);
     this.isOnCooldown[playerIndex] = false;
     this.moveRequests[playerIndex] = null as any;
@@ -63,11 +69,13 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   private respawnPlayer(playerIndex: number) {
-    let respawnSquare: Square =
-      this.position.getRespawnSquareForPlayer(playerIndex);
+    let respawnSquare: Square = this.position.getRespawnSquareForPlayer(
+      playerIndex
+    );
     this.position.respawnPlayerAt(playerIndex, respawnSquare);
     this.isAlive[playerIndex] = true;
     this.gameServer.broadcastEvent({
+      index: null as any,
       type: EventType.respawn,
       info: new Map<EventInfo, string>([
         [EventInfo.playerIndex, playerIndex.toString()],
@@ -119,6 +127,7 @@ export class ServerFlowEngine implements ServerObserver {
       // move is valid
       if (move != null) {
         let event: Event = {
+          index: null as any,
           type: EventType.move,
           info: new Map<EventInfo, string>([
             [EventInfo.playerIndex, playerIndex.toString()],
@@ -128,7 +137,10 @@ export class ServerFlowEngine implements ServerObserver {
         if (move.isCapture) {
           let dyingPlayerIndex = this.position.playerAt(move.row, move.column);
           // temp
-          if (this.position.getPieceByPlayer(dyingPlayerIndex).type === PieceType.king) {
+          if (
+            this.position.getPieceByPlayer(dyingPlayerIndex).type ===
+            PieceType.king
+          ) {
             return;
           }
           let respawnTimer: number = this.killPlayer(dyingPlayerIndex);
@@ -167,24 +179,11 @@ export class ServerFlowEngine implements ServerObserver {
             move.castleSide === CastleSide.kingSide ? 5 : 3;
           this.position.moveFrom(startRow, startColumn, startRow, destColumn);
         }
-        // cooldown
-        /*
-        this.isOnCooldown[playerIndex] = true;
         this.moveRequests[playerIndex] = null as any;
-        let cooldown: number = movingPiece.cooldown;
-        setTimeout(() => {
-          this.isOnCooldown[playerIndex] = false;
-          if (this.moveRequests[playerIndex] != null) {
-            this.registerMove(
-              playerIndex,
-              this.moveRequests[playerIndex],
-              new Date().getTime()
-            );
-          }
-        }, cooldown * 1000 - (new Date().getTime() - moveArrivalTime));
-        */
-        this.moveRequests[playerIndex] = null as any;
-        let cooldown: number = this.putPlayerOnCooldown(playerIndex, moveArrivalTime);
+        let cooldown: number = this.putPlayerOnCooldown(
+          playerIndex,
+          moveArrivalTime
+        );
         event.info.set(EventInfo.cooldown, cooldown.toString());
         this.gameServer.broadcastEvent(event);
       }
@@ -202,18 +201,30 @@ export class ServerFlowEngine implements ServerObserver {
         this.startGame();
         break;
       }
-      case ServerNotificationType.receivedMove: {
-        let moveArrivalTime: number = new Date().getTime();
-        if (this.isGameRunning) {
-          let playerIndex: number = notificationInfo.get(
-            ServerNotificationInfo.playerIndex
-          );
-          let moveRequest: Move = notificationInfo.get(
-            ServerNotificationInfo.move
-          );
-          this.moveRequests[playerIndex] = moveRequest;
-          if (!this.isOnCooldown[playerIndex] && this.isAlive[playerIndex]) {
-            this.registerMove(playerIndex, moveRequest, moveArrivalTime);
+      case ServerNotificationType.receivedRequest: {
+        let requestArrivalTime: number = new Date().getTime();
+        let request: Request = notificationInfo.get(
+          ServerNotificationInfo.request
+        );
+        switch (request.type) {
+          case RequestType.move: {
+            if (this.isGameRunning) {
+              let playerIndex: number = notificationInfo.get(
+                ServerNotificationInfo.playerIndex
+              );
+              let moveRequest: Move = JSON.parse(
+                request.info.get(RequestInfo.move) as string,
+                reviver
+              );
+              this.moveRequests[playerIndex] = moveRequest;
+              if (
+                !this.isOnCooldown[playerIndex] &&
+                this.isAlive[playerIndex]
+              ) {
+                this.registerMove(playerIndex, moveRequest, requestArrivalTime);
+              }
+            }
+            break;
           }
         }
         break;
