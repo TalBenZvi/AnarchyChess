@@ -191,6 +191,7 @@ export class GameServer {
 
   broadcastEvent(event: Event): void {
     event.index = this.eventLog.length;
+    console.log(`broadcasting event ${event.index}`);
     this.eventLog.push(event);
     this.gun
       .get(`${this.gameID}_events`)
