@@ -48,9 +48,10 @@ function GamePage() {
           cursor: "pointer",
           outline: "inherit",
         }}
-        onClick={() => {
+        onClick={async () => {
           let gameID: string = Math.random().toString();
           serverFlowEngine.acceptConnections(gameID);
+          await new Promise((f) => setTimeout(f, 3000));
           for (let clientFlowEngine of clientFlowEngines) {
             clientFlowEngine.attemptToConnect("localhost", gameID);
           }
@@ -58,7 +59,7 @@ function GamePage() {
       >
         start
       </button>
-      <br/>
+      <br />
       <button
         style={{
           margin: 20,
@@ -71,8 +72,8 @@ function GamePage() {
           outline: "inherit",
         }}
         onClick={async () => {
-          let i: number = 0;
           while (isRunning) {
+            let i = Math.floor(Math.random() * NUM_OF_PLAYERS);
             if (i !== PLAYER_ENGINE_INDEX) {
               clientFlowEngines[i].runTest();
               if (clientFlowEngines[i].shouldStopSimulation) {
@@ -80,13 +81,12 @@ function GamePage() {
               }
               await new Promise((f) => setTimeout(f, 100));
             }
-            i = (i + 1) % NUM_OF_PLAYERS;
           }
         }}
       >
         test
       </button>
-      <br/>
+      <br />
       <button
         style={{
           margin: 20,

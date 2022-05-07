@@ -197,7 +197,7 @@ class BoardArea {
   }
 
   setPovColor(povColor: PieceColor) {
-    this.povColor = povColor
+    this.povColor = povColor;
   }
 
   setPlayerSquare(playerSquare: Square): void {
@@ -269,8 +269,8 @@ class BoardArea {
     }
   }
 
-  startCooldownTimer(cooldown: number, color: PieceColor): void {
-    if (cooldown == null) {
+  startCooldownTimer(cooldownCompletionTime: number, color: PieceColor): void {
+    if (cooldownCompletionTime == null) {
       this.cooldownTimer = null as any;
     } else if (this.playerSquare != null) {
       this.cooldownTimer = new CanvasCooldownTimer(
@@ -281,18 +281,19 @@ class BoardArea {
         this.squareSize * 0.12,
         this.squareSize * 0.05,
         color === PieceColor.white ? WHITE_TIMER_COLOR : BLACK_TIMER_COLOR,
-        cooldown
+        (cooldownCompletionTime - new Date().getTime()) / 1000
       );
       let cooldownTimer: CanvasCooldownTimer = this.cooldownTimer;
       let moveInterval = setInterval(() => {
-        cooldownTimer.remainingCooldown -= 1 / FPS;
-      }, 1000 / FPS);
+        cooldownTimer.remainingCooldown =
+          (cooldownCompletionTime - new Date().getTime()) / 1000;
+      }, 1000 / FPS / 4);
       setTimeout(() => {
         clearInterval(moveInterval);
         if (this.cooldownTimer === cooldownTimer) {
           this.cooldownTimer = null as any;
         }
-      }, cooldown * 1000);
+      }, cooldownCompletionTime - new Date().getTime());
     }
   }
 
@@ -370,9 +371,9 @@ class BoardArea {
         promotionPiece,
         previousCanvasPiece.x,
         previousCanvasPiece.y,
-        previousCanvasPiece.size,
-      )
-    } 
+        previousCanvasPiece.size
+      );
+    }
   }
 
   mouseClicked(x: number, y: number) {
@@ -385,7 +386,6 @@ class BoardArea {
     } else {
       if (!this.selectedMove.isPointInBounds(x, y)) {
         this.props.clientFlowEngine.sendMove(null as any);
-
       }
     }
   }
@@ -409,8 +409,13 @@ class BoardArea {
   // return wehther or not there's a need for an update
   draw(): boolean {
     let shouldUpdate: boolean = false;
-    let { size, lightColor, darkColor, povColor, clientFlowEngine } =
-      this.props;
+    let {
+      size,
+      lightColor,
+      darkColor,
+      povColor,
+      clientFlowEngine,
+    } = this.props;
     let coordinateIndexFontSize: number = size * 0.035;
     // squares
     for (let i = 0; i < BOARD_SIZE; i++) {
@@ -521,8 +526,7 @@ class BoardArea {
 
 class ChessBoard
   extends React.Component<ChessBoardProps, ChessBoardState>
-  implements ChessBoardComponent
-{
+  implements ChessBoardComponent {
   state = {};
   canvasRef = null as any;
   boardArea: BoardArea = null as any;
@@ -586,8 +590,8 @@ class ChessBoard
     this.shouldUpdateBoard = true;
   }
 
-  startCooldownTimer(cooldown: number, color: PieceColor): void {
-    this.boardArea.startCooldownTimer(cooldown, color);
+  startCooldownTimer(cooldownCompletionTime: number, color: PieceColor): void {
+    this.boardArea.startCooldownTimer(cooldownCompletionTime, color);
   }
 
   killPlayer(playerIndex: number): void {

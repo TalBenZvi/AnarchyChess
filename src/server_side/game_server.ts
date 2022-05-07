@@ -10,9 +10,9 @@ import {
   RequestType,
   RequestInfo,
 } from "../game_flow_util/communication";
-import Gun from "gun";
+import Peer from "peerjs";
 
-const GUN_SERVER_PORT = 3030;
+const PEER_JS_SERVER_PORT = 3030;
 
 export enum ServerNotificationType {
   filledServer,
@@ -32,21 +32,24 @@ export interface ServerObserver {
 }
 
 export class GameServer {
-  private gun: any = null;
-  private gameID: string = null as any;
-  private playerIDs: string[] = [];
+  private serverPeers: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
+  private clients: any[] = [];
+  private isClientConnectedArray: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(
+    false
+  );
   private gameStatus: GameStatus = GameStatus.inactive;
-  private eventLog: Event[] = [];
-  private recentlyResentEventIndices: number[] = [];
+  private broadcastedEventsLog: Event[] = [];
 
   constructor(private observer: ServerObserver) {}
 
   // debug
+  /*
   private fillWithDummies(numOfDummies: number) {
     this.playerIDs = [...Array(numOfDummies)].map(
       (_, i) => `id${i + NUM_OF_PLAYERS - numOfDummies}`
     );
   }
+  */
 
   // debug
   private assignCustomIndices(customIndices: number[]): Map<string, number> {
@@ -63,47 +66,51 @@ export class GameServer {
     return playerIndices;
   }
 
-  acceptConnections(gameID: string): void {
+  acceptConnections(): void {
     //this.fillWithDummies(NUM_OF_PLAYERS - 16);
     if (this.gameStatus === GameStatus.inactive) {
-      this.eventLog = [];
+      this.broadcastedEventsLog = [];
       this.gameStatus = GameStatus.waitingForPlayers;
-      this.gameID = gameID;
-      this.gun = Gun({
-        peers: [`http://localhost:${GUN_SERVER_PORT}/gun`],
-      });
-      this.gun
-        .get(`${this.gameID}_connectionRequest`)
-        .map()
-        .once((request: any) => {
-          if (request !== undefined) {
-            let playerID: string = request.data;
-            if (
-              this.playerIDs.indexOf(playerID) === -1 &&
-              this.playerIDs.length < NUM_OF_PLAYERS
-            ) {
-              this.playerIDs.push(playerID);
-              this.gun
-                .get(`${this.gameID}_conenctedPlayers`)
-                .set({ data: JSON.stringify(this.playerIDs) });
-              if (this.playerIDs.length >= NUM_OF_PLAYERS) {
+      for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+        this.serverPeers[i] = new Peer(`server_${i}`, {
+          host: "localhost",
+          port: PEER_JS_SERVER_PORT,
+          path: "/myapp",
+        });
+        this.serverPeers[i].on("connection", (client: any) => {
+          this.clients[i] = client;
+          client.on("data", (requestData: any) => {
+            if (requestData.toString() === "connected") {
+              this.isClientConnectedArray[i] = true;
+              let areAllClientsConnected = true;
+              for (let isClientConnected of this.isClientConnectedArray) {
+                if (!isClientConnected) {
+                  areAllClientsConnected = false;
+                }
+              }
+              if (areAllClientsConnected) {
                 this.observer.notify(
                   ServerNotificationType.filledServer,
                   new Map<ServerNotificationInfo, any>()
                 );
               }
+            } else {
+              let request: Request = JSON.parse(
+                requestData.toString(),
+                reviver
+              );
+              this.observer.notify(
+                ServerNotificationType.receivedRequest,
+                new Map<ServerNotificationInfo, any>([
+                  [ServerNotificationInfo.playerIndex, i],
+                  [ServerNotificationInfo.request, request],
+                ])
+              );
             }
-          }
+          });
         });
-    }
-  }
-
-  private rebroadcastEvents(eventIndices: number[]): void {
-    for (let eventIndex of eventIndices) {
-      console.log(`resending event ${eventIndex}`);
-      this.gun
-        .get(`${this.gameID}_events`)
-        .set({ data: JSON.stringify(this.eventLog[eventIndex], replacer) });
+      }
+      console.log("all servers connected");
     }
   }
 
@@ -111,90 +118,37 @@ export class GameServer {
     if (this.gameStatus === GameStatus.waitingForPlayers) {
       this.gameStatus = GameStatus.running;
       console.log("game started");
-      if (this.playerIDs.length >= NUM_OF_PLAYERS) {
-        this.playerIDs = this.playerIDs.slice(0, NUM_OF_PLAYERS);
-        for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-          this.gun
-            .get(`${this.gameID}_requests_${i}`)
-            .map()
-            .once((requestData: any) => {
-              if (requestData !== undefined) {
-                let request: Request = JSON.parse(requestData.data, reviver);
-                if (request.type === RequestType.resendEvents) {
-                  let missingEventIndices: number[] = JSON.parse(
-                    request.info.get(RequestInfo.missingEventIndices) as string,
-                    reviver
-                  );
-                  console.log(`client ${i} requested ${missingEventIndices}`);
-                  let eventIndicesToResend: number[] = [];
-                  for (let missingEventIndex of missingEventIndices) {
-                    if (
-                      this.recentlyResentEventIndices.indexOf(
-                        missingEventIndex
-                      ) === -1
-                    ) {
-                      this.recentlyResentEventIndices.push(missingEventIndex);
-                      eventIndicesToResend.push(missingEventIndex);
-                      setTimeout(() => {
-                        let locationInRecentlyResentList: number = this.recentlyResentEventIndices.indexOf(
-                          missingEventIndex
-                        );
-                        if (locationInRecentlyResentList > -1) {
-                          this.recentlyResentEventIndices.splice(
-                            locationInRecentlyResentList
-                          );
-                        }
-                      }, 100);
-                    }
-                  }
-                  this.rebroadcastEvents(eventIndicesToResend);
-                } else {
-                  this.observer.notify(
-                    ServerNotificationType.receivedRequest,
-                    new Map<ServerNotificationInfo, any>([
-                      [ServerNotificationInfo.playerIndex, i],
-                      [ServerNotificationInfo.request, request],
-                    ])
-                  );
-                }
-              }
-            });
+      if (this.clients.length >= NUM_OF_PLAYERS) {
+        this.clients = this.clients.slice(0, NUM_OF_PLAYERS);
+        for (let i = 0; i < this.clients.length; i++) {
+          this.sendEvent(
+            {
+              index: null as any,
+              type: EventType.gameStarted,
+              info: new Map<EventInfo, string>([
+                [EventInfo.playerIndex, JSON.stringify(i, replacer)],
+                [
+                  EventInfo.initialCooldown,
+                  JSON.stringify(initialPlayerCooldowns[i], replacer),
+                ],
+              ]),
+            },
+            i
+          );
         }
-        /*
-        let playerIndices: Map<string, number> = this.assignCustomIndices([
-          1, 17,
-        ]);
-        */
-
-        let playerIndices: Map<string, number> = new Map();
-        for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-          playerIndices.set(this.playerIDs[i], i);
-        }
-
-        this.broadcastEvent({
-          index: null as any,
-          type: EventType.gameStarted,
-          info: new Map<EventInfo, string>([
-            [
-              EventInfo.connectedPlayerIndices,
-              JSON.stringify(playerIndices, replacer),
-            ],
-            [
-              EventInfo.initialPlayerCooldowns,
-              JSON.stringify(initialPlayerCooldowns),
-            ],
-          ]),
-        });
       }
     }
   }
 
+  sendEvent(event: Event, playerIndex: number) {
+    this.clients[playerIndex].send(JSON.stringify(event, replacer));
+  }
+
   broadcastEvent(event: Event): void {
-    event.index = this.eventLog.length;
-    console.log(`broadcasting event ${event.index}`);
-    this.eventLog.push(event);
-    this.gun
-      .get(`${this.gameID}_events`)
-      .set({ data: JSON.stringify(event, replacer) });
+    event.index = this.broadcastedEventsLog.length;
+    this.broadcastedEventsLog.push(event);
+    for (let i = 0; i < this.clients.length; i++) {
+      this.sendEvent(event, i);
+    }
   }
 }

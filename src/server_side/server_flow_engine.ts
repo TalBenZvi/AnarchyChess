@@ -40,7 +40,7 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   acceptConnections(gameID: string): void {
-    this.gameServer.acceptConnections(gameID);
+    this.gameServer.acceptConnections();
   }
 
   private startGame(): void {
@@ -197,7 +197,7 @@ export class ServerFlowEngine implements ServerObserver {
     switch (notification) {
       case ServerNotificationType.filledServer: {
         console.log("server full");
-        await new Promise((f) => setTimeout(f, 3000));
+        await new Promise((f) => setTimeout(f, 1000));
         this.startGame();
         break;
       }

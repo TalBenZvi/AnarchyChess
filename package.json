@@ -24,6 +24,7 @@
     "mongodb": "^4.5.0",
     "net": "^1.0.2",
     "npm-run-all": "^4.1.5",
+    "peerjs": "^1.3.2",
     "react": "^17.0.2",
     "react-bootstrap": "^2.2.2",
     "react-color-square": "^1.0.1",
@@ -41,7 +42,8 @@
   "scripts": {
     "start-js": "react-scripts start",
     "backend-start": "NODE_ENV=production node server/index.js",
-    "start": "npm-run-all -p backend-start start-js",
+    "peer-js-start": "peerjs --port 3030 --key peerjs --path /myapp",
+    "start": "npm-run-all -p start-js peer-js-start",
     "build": "npm-run-all build-css && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

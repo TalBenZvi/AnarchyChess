@@ -1117,7 +1117,7 @@ export interface ChessBoardComponent {
 
   movePlayer(playerIndex: number, row: number, column: number): void;
 
-  startCooldownTimer(cooldown: number, color: PieceColor): void;
+  startCooldownTimer(cooldownCompletionTime: number, color: PieceColor): void;
 
   killPlayer(playerIndex: number): void;
 
