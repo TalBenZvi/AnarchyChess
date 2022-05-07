@@ -38,6 +38,7 @@ const CAPTURE_ICON: any = new Image();
 CAPTURE_ICON.src = require(`../assets/action_icons/capture_icon.png`);
 
 const MOVE_BUTTON_OPACITY: number = 0.2;
+const PLAYER_SQUARE_BRIGHTNESS: number = 0.4;
 const FPS: number = 60;
 // in seconds
 const PIECE_TRAVEL_TIME: number = 0.1;
@@ -453,7 +454,7 @@ class BoardArea {
     }
     // player square highlight
     if (this.playerSquare != null) {
-      this.ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${PLAYER_SQUARE_BRIGHTNESS})`;
       this.ctx.fillRect(
         this.fitColumnIndexToPOV(this.playerSquare.column) * this.squareSize,
         this.fitRowIndexToPOV(this.playerSquare.row) * this.squareSize,
