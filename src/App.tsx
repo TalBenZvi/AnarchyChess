@@ -6,7 +6,7 @@ import TestPage from "./pages/test_page";
 
 
 function App() {
-  return <GamePage/>;
+  return <HomePage/>;
 }
 
 export default App;
