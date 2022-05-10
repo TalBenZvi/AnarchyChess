@@ -167,6 +167,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
               }}
             />
           </div>
+          {/* form */}
           {viewMode === ViewMode.login ? <LoginForm/> : <RegisterForm/>}
         </div>
       </div>

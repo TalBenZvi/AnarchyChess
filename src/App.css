@@ -1,5 +1,3 @@
-/* general */
-
 .row {
   display: flex;
   flex-direction: row;
@@ -56,3 +54,47 @@ ul.row {
 	cursor: pointer;
 	outline: inherit;
 }
+
+.text-input {
+  border-radius: 5px;
+  background: #ccc;
+  color: #000;
+	border: none;
+	padding: 3;
+	font: inherit;
+  outline: inherit;
+}
+
+.clear-text-input {
+  background: none;
+	color: #ccc;
+	border: none;
+	padding: 0;
+	font: inherit;
+	outline: inherit;
+}
+
+.app-button {
+	color: inherit;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+  background: #505050;
+  border: 3px solid #ed1b24;
+  border-radius: 10px;
+}
+
+.app-button:hover {
+  background: #606060;
+}
+
+.app-button:active {
+  background: #505050;
+}
+
+.app-button:disabled {
+  background: #505050;
+  filter: contrast(50%);
+}
+ 
