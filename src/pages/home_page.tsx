@@ -2,6 +2,8 @@ import React from "react";
 import whiteWallpaperImage from "../assets/page_design/home_wallpaper_image (white).png";
 import blackWallpaperImage from "../assets/page_design/home_wallpaper_image (black).png";
 import homeTitle from "../assets/page_design/home_title.png";
+import LoginForm from "../components/login_form";
+import RegisterForm from "../components/register_form";
 
 enum ViewMode {
   login,
@@ -18,7 +20,7 @@ interface HomePageState {
 
 class HomePage extends React.Component<HomePageProps, HomePageState> {
   state = {
-    viewMode: ViewMode.login,
+    viewMode: ViewMode.register,
     hoveredMode: null as any,
   };
 
@@ -26,6 +28,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
     let { viewMode, hoveredMode } = this.state;
     document.body.style.overflow = "hidden";
     return (
+      /* background */
       <div
         style={{
           position: "absolute",
@@ -35,6 +38,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
           height: "100%",
         }}
       >
+        {/* title */}
         <img
           style={{
             position: "absolute",
@@ -45,6 +49,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
           }}
           src={homeTitle}
         />
+        {/* wallpaper images */}
         <img
           style={{
             position: "absolute",
@@ -65,6 +70,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
           }}
           src={blackWallpaperImage}
         />
+        {/* menu */}
         <div
           className="highlighted-area"
           style={{
@@ -76,7 +82,9 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
             transform: "translate(-50%, 0%)",
           }}
         >
+          {/* tabs */}
           <div className="row">
+            {/* login tab */}
             <button
               onMouseEnter={() =>
                 this.setState(() => {
@@ -107,6 +115,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
             >
               Login
             </button>
+            {/* register tab */}
             <button
               onMouseEnter={() =>
                 this.setState(() => {
@@ -139,20 +148,26 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
               Register
             </button>
           </div>
+          {/* divider */}
           <div className="row">
             <hr
               style={{
                 width: 225,
-                border: `1px solid ${viewMode === ViewMode.login ? "#bb0000" : "#808080"}`,
+                border: `1px solid ${
+                  viewMode === ViewMode.login ? "#bb0000" : "#808080"
+                }`,
               }}
             />
             <hr
               style={{
                 width: 225,
-                border: `1px solid ${viewMode === ViewMode.register ? "#bb0000" : "#808080"}`,
+                border: `1px solid ${
+                  viewMode === ViewMode.register ? "#bb0000" : "#808080"
+                }`,
               }}
             />
           </div>
+          {viewMode === ViewMode.login ? <LoginForm/> : <RegisterForm/>}
         </div>
       </div>
     );
