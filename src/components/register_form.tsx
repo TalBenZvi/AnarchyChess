@@ -1,7 +1,14 @@
 import * as React from "react";
+import LoadingSpin from "react-loading-spin";
+import toast, { Toaster } from "react-hot-toast";
+
+import { Authentication } from "../database/authentication";
+import { User, RegisterStatus } from "../database/database_util";
+
 import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
+import { stringify } from "querystring";
 
 const USERNAME_REGEX: RegExp = new RegExp("^[a-zA-Z0-9_\\-\\*]{3,20}$", "i");
 const EMAIL_REGEX: RegExp = new RegExp(
@@ -19,6 +26,7 @@ interface RegisterFormState {
   confirmPassword: string;
   shownRulesPopup: string;
   shownPassword: string;
+  isWaitingForResponse: boolean;
 }
 
 class RegisterForm extends React.Component<
@@ -32,19 +40,21 @@ class RegisterForm extends React.Component<
     confirmPassword: "",
     shownRulesPopup: null as any,
     shownPassword: null as any,
+    isWaitingForResponse: false,
   };
 
   private setUsername = (event: any) => {
+    let username: string = event.target.value;
     if (
       this.state.shownRulesPopup === "Username" &&
-      this.checkUsernameValidity(event.target.value)
+      this.checkUsernameValidity(username)
     ) {
       this.setState({
-        username: event.target.value,
+        username: username,
         shownRulesPopup: null as any,
       });
     } else {
-      this.setState({ username: event.target.value });
+      this.setState({ username: username });
     }
   };
 
@@ -76,8 +86,50 @@ class RegisterForm extends React.Component<
     return confirmPassword === this.state.password;
   }
 
-  private handleSubmit = (event: any) => {
-    alert("A name was submitted: " + this.state.username);
+  private submit = (event: any) => {
+    this.setState(() => {
+      return { isWaitingForResponse: true };
+    });
+    Authentication.register(
+      {
+        username: this.state.username,
+        email: this.state.email,
+        password: this.state.password,
+      },
+      (isSuccessfull: boolean, status: RegisterStatus) => {
+        switch (status) {
+          case RegisterStatus.success:
+            {
+              alert("transfer");
+            }
+            break;
+          case RegisterStatus.usernameTaken:
+            {
+              toast("This username is already taken");
+              this.setState(() => {
+                return { isWaitingForResponse: false };
+              });
+            }
+            break;
+          case RegisterStatus.emailRegistered:
+            {
+              toast("A user is already registered with this email address");
+              this.setState(() => {
+                return { isWaitingForResponse: false };
+              });
+            }
+            break;
+          case RegisterStatus.connectionError:
+            {
+              toast("There has been a connection error");
+              this.setState(() => {
+                return { isWaitingForResponse: false };
+              });
+            }
+            break;
+        }
+      }
+    );
     event.preventDefault();
   };
 
@@ -208,6 +260,7 @@ class RegisterForm extends React.Component<
       password,
       confirmPassword,
       shownRulesPopup,
+      isWaitingForResponse,
     } = this.state;
     let isUsernameValid = this.checkUsernameValidity(username);
     let isEmailValid = this.checkEmailValidity(email);
@@ -215,16 +268,19 @@ class RegisterForm extends React.Component<
     let isConfirmPasswordValid = this.checkConfirmPasswordValidity(
       confirmPassword
     );
+    // close popup if field becomes valid
     if (
-      (isUsernameValid && shownRulesPopup == "Username") ||
-      (isEmailValid && shownRulesPopup == "Email") ||
-      (isPasswordValid && shownRulesPopup == "Password") ||
-      (isConfirmPasswordValid && shownRulesPopup == "Confirm Password")
+      ((isUsernameValid || username === "") && shownRulesPopup == "Username") ||
+      ((isEmailValid || email === "") && shownRulesPopup == "Email") ||
+      ((isPasswordValid || password === "") && shownRulesPopup == "Password") ||
+      ((isConfirmPasswordValid || confirmPassword === "") &&
+        shownRulesPopup == "Confirm Password")
     ) {
       this.setState(() => {
         return { shownRulesPopup: null as any };
       });
     }
+
     return (
       <div
         style={{
@@ -243,7 +299,7 @@ class RegisterForm extends React.Component<
         >
           Register
         </p>
-        <form onSubmit={this.handleSubmit} spellCheck={false}>
+        <form onSubmit={this.submit} spellCheck={false}>
           {/* username */}
           {this.textInputField(
             "Username",
@@ -280,10 +336,12 @@ class RegisterForm extends React.Component<
             isConfirmPasswordValid,
             "Must match password"
           )}
+          {/* submit button */}
           <input
             type="submit"
             value="Submit"
             disabled={
+              isWaitingForResponse ||
               !(
                 isUsernameValid &&
                 isEmailValid &&
@@ -303,6 +361,43 @@ class RegisterForm extends React.Component<
             }}
           />
         </form>
+        {/* loading icon */}
+        {isWaitingForResponse ? (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 25,
+              right: 165,
+            }}
+          >
+            <LoadingSpin
+              size="25px"
+              width="4px"
+              primaryColor="#ed1b24"
+              secondaryColor="ccc"
+            />
+          </div>
+        ) : (
+          <div />
+        )}
+        {/* toaster */}
+        <div>
+          <Toaster
+            toastOptions={{
+              className: "",
+              style: {
+                background: "#000",
+                color: "#ccc",
+              },
+            }}
+            containerStyle={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
+          />
+        </div>
       </div>
     );
   }
