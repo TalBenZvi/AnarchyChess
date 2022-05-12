@@ -1,4 +1,4 @@
-import { User, RegisterStatus } from "./database_util";
+import { User, RegisterStatus, LoginStatus } from "./database_util";
 import { MongodbClient  } from "../database/mongodb_client";
 
 export class Authentication {
@@ -14,6 +14,23 @@ export class Authentication {
       (isSuccessfullClient: boolean, status: RegisterStatus) => {
         if (isSuccessfullClient) {
           Authentication.currentUser = user;
+        }
+        callback(isSuccessfullClient, status);
+      }
+    );
+  }
+
+  static login(
+    usernameOrEmail: string,
+    password: string,
+    callback: (isSuccessfull: boolean, status: LoginStatus) => void
+  ) {
+    Authentication.mongodbClient.login(
+      usernameOrEmail,
+      password,
+      (isSuccessfullClient: boolean, status: LoginStatus) => {
+        if (isSuccessfullClient) {
+          Authentication.currentUser = {username: "lorem ipsum", email: "dolor sit amet"};
         }
         callback(isSuccessfullClient, status);
       }

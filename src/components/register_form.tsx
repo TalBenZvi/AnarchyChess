@@ -8,7 +8,6 @@ import { User, RegisterStatus } from "../database/database_util";
 import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
-import { stringify } from "querystring";
 
 const USERNAME_REGEX: RegExp = new RegExp("^[a-zA-Z0-9_\\-\\*]{3,20}$", "i");
 const EMAIL_REGEX: RegExp = new RegExp(

@@ -1,3 +1,9 @@
+export enum LoginStatus {
+  success,
+  failure,
+  connectionError,
+}
+
 export enum RegisterStatus {
   success,
   usernameTaken,

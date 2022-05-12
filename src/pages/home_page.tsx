@@ -20,7 +20,7 @@ interface HomePageState {
 
 class HomePage extends React.Component<HomePageProps, HomePageState> {
   state = {
-    viewMode: ViewMode.register,
+    viewMode: ViewMode.login,
     hoveredMode: null as any,
   };
 
