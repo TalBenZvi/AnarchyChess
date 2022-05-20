@@ -40,7 +40,7 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   acceptConnections(gameID: string): void {
-    this.gameServer.acceptConnections();
+    this.gameServer.acceptConnections(gameID);
   }
 
   private startGame(): void {

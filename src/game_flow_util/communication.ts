@@ -1,4 +1,5 @@
-import { Piece, colorToString, typeToString } from "./game_elements";
+export const PEERJS_SERVER_IP: string = "127.0.0.1";
+export const PEER_JS_SERVER_PORT = 3030;
 
 export interface Event {
   index: number

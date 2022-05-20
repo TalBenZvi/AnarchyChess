@@ -16,7 +16,9 @@ const EMAIL_REGEX: RegExp = new RegExp(
 );
 const PASSWORD_REGEX: RegExp = new RegExp("^[a-zA-Z0-9_\\-\\*]{8,}$", "i");
 
-interface RegisterFormProps {}
+interface RegisterFormProps {
+  onSuccess: () => void;
+}
 
 interface RegisterFormState {
   username: string;
@@ -99,7 +101,7 @@ class RegisterForm extends React.Component<
         switch (status) {
           case RegisterStatus.success:
             {
-              alert("transfer");
+              this.props.onSuccess();
             }
             break;
           case RegisterStatus.usernameTaken:

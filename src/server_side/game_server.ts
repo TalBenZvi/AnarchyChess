@@ -7,12 +7,10 @@ import {
   replacer,
   reviver,
   Request,
-  RequestType,
-  RequestInfo,
+  PEERJS_SERVER_IP,
+  PEER_JS_SERVER_PORT,
 } from "../game_flow_util/communication";
 import Peer from "peerjs";
-
-const PEER_JS_SERVER_PORT = 3030;
 
 export enum ServerNotificationType {
   filledServer,
@@ -42,38 +40,14 @@ export class GameServer {
 
   constructor(private observer: ServerObserver) {}
 
-  // debug
-  /*
-  private fillWithDummies(numOfDummies: number) {
-    this.playerIDs = [...Array(numOfDummies)].map(
-      (_, i) => `id${i + NUM_OF_PLAYERS - numOfDummies}`
-    );
-  }
-  */
-
-  // debug
-  private assignCustomIndices(customIndices: number[]): Map<string, number> {
-    let leftoverIndices: number[] = Array.from(
-      Array(NUM_OF_PLAYERS).keys()
-    ).filter((i) => customIndices.indexOf(i) <= -1);
-    let playerIndices: Map<string, number> = new Map<string, number>();
-    for (let i = 0; i < customIndices.length; i++) {
-      playerIndices.set(`id${i}`, customIndices[i]);
-    }
-    for (let i = 0; i < leftoverIndices.length; i++) {
-      playerIndices.set(`id${i + customIndices.length}`, leftoverIndices[i]);
-    }
-    return playerIndices;
-  }
-
-  acceptConnections(): void {
+  acceptConnections(gameID: string): void {
     //this.fillWithDummies(NUM_OF_PLAYERS - 16);
     if (this.gameStatus === GameStatus.inactive) {
       this.broadcastedEventsLog = [];
       this.gameStatus = GameStatus.waitingForPlayers;
       for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-        this.serverPeers[i] = new Peer(`server_${i}`, {
-          host: "localhost",
+        this.serverPeers[i] = new Peer(`${gameID}_server_${i}`, {
+          host: PEERJS_SERVER_IP,
           port: PEER_JS_SERVER_PORT,
           path: "/myapp",
         });

@@ -30,6 +30,19 @@ ul.row {
   opacity: 0.3;
 }
 
+.background {
+  position: absolute;
+  background: linear-gradient(
+    0deg,
+    rgba(16, 16, 16, 1) 0%,
+    rgba(34, 34, 34, 1) 12%,
+    rgba(34, 34, 34, 1) 75%,
+    rgba(16, 16, 16, 1) 100%
+  );
+  width: 100%;
+  height: 100%;
+}
+
 .centered-title {
   position: fixed;
   left: 50%;
@@ -42,47 +55,50 @@ ul.row {
   border-radius: 10px;
   background: #333;
   font-family: "MS PGothic";
-  color: #ccc
+  color: #ccc;
 }
 
 .clear-button {
   background: none;
-	color: inherit;
-	border: none;
-	padding: 0;
-	font: inherit;
-	cursor: pointer;
-	outline: inherit;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
 }
 
 .text-input {
   border-radius: 5px;
   background: #ccc;
   color: #000;
-	border: none;
-	padding: 3;
-	font: inherit;
+  border: none;
+  padding: 3;
+  font: inherit;
   outline: inherit;
 }
 
 .clear-text-input {
   background: none;
-	color: #ccc;
-	border: none;
-	padding: 0;
-	font: inherit;
-	outline: inherit;
+  color: #ccc;
+  border: none;
+  padding: 0;
+  font: inherit;
+  outline: inherit;
 }
 
 .app-button {
-	color: inherit;
-	padding: 0;
-	font: inherit;
-	cursor: pointer;
-	outline: inherit;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
   background: #505050;
   border: 3px solid #ed1b24;
   border-radius: 10px;
+  font-family: "MS PGothic";
+  color: #ccc;
+  font-weight: bold;
 }
 
 .app-button:hover {
@@ -97,4 +113,11 @@ ul.row {
   background: #505050;
   filter: contrast(50%);
 }
- 
+
+.dialog {
+  position: absolute;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.7);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

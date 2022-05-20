@@ -1,63 +1,56 @@
 import * as React from "react";
 import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
-import { Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
-import { User, LoginStatus } from "../database/database_util";
+import { LobbyParams, LobbyCreationStatus } from "../database/database_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 
-interface LoginFormProps {
+interface LobbyCreationFormProps {
   onSuccess: () => void;
 }
 
-interface LoginFormState {
-  usernameOrEmail: string;
-  password: string;
-  isPasswordShown: boolean;
+interface LobbyCreationFormState {
+  name: string;
   isWaitingForResponse: boolean;
 }
 
-class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
+class LobbyCreationForm extends React.Component<
+  LobbyCreationFormProps,
+  LobbyCreationFormState
+> {
   state = {
-    usernameOrEmail: "fff",
-    password: "qwerqwer",
-    isPasswordShown: false,
+    name: "",
     isWaitingForResponse: false,
   };
 
-  private setUsernameOrEmail = (event: any) => {
-    this.setState({ usernameOrEmail: event.target.value });
+  private setName = (event: any) => {
+    this.setState({ name: event.target.value });
   };
 
-  private setPassword = (event: any) => {
-    this.setState({ password: event.target.value });
-  };
-
-  private submit = (event: any) => {
+  private createLobby = (event: any) => {
     this.setState(() => {
       return { isWaitingForResponse: true };
     });
-    Authentication.login(
-      this.state.usernameOrEmail,
-      this.state.password,
-      (isSuccessfull: boolean, status: LoginStatus) => {
+    Authentication.createLobby(
+      { creatorID: Authentication.currentUserID, name: this.state.name },
+      (isSuccessfull: boolean, status: LobbyCreationStatus) => {
         switch (status) {
-          case LoginStatus.success:
+          case LobbyCreationStatus.success:
             {
               this.props.onSuccess();
             }
             break;
-          case LoginStatus.failure:
+          case LobbyCreationStatus.nameTaken:
             {
-              toast("Username or password is incorrect");
+              toast("A lobby already exists with this name");
               this.setState(() => {
                 return { isWaitingForResponse: false };
               });
             }
             break;
-          case LoginStatus.connectionError:
+          case LobbyCreationStatus.connectionError:
             {
               toast("There has been a connection error");
               this.setState(() => {
@@ -77,12 +70,11 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     setFunction: (event: any) => void,
     top: number
   ): any {
-    let isPassword: boolean = fieldName === "Password";
     return (
       <label>
         {/* text input*/}
         <input
-          type={isPassword && !this.state.isPasswordShown ? "password" : "text"}
+          type="text"
           placeholder={fieldName}
           value={value}
           onChange={setFunction}
@@ -96,38 +88,13 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
             lineHeight: 20,
           }}
         />
-        {/* reveal password icon */}
-        {isPassword ? (
-          <img
-            style={{
-              position: "absolute",
-              left: 390,
-              top: top + 15,
-              width: 30,
-              filter: "contrast(70%)",
-            }}
-            src={revealPasswordIcon}
-            onMouseOver={() => {
-              this.setState(() => {
-                return { isPasswordShown: true };
-              });
-            }}
-            onMouseOut={() => {
-              this.setState(() => {
-                return { isPasswordShown: false };
-              });
-            }}
-          />
-        ) : (
-          <div />
-        )}
         <hr
           style={{
             position: "absolute",
             left: "50%",
             transform: "translate(-50%, 0%)",
             top: top + 40,
-            width: 385,
+            width: 440,
           }}
         />
       </label>
@@ -135,18 +102,13 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
   }
 
   render() {
-    let { usernameOrEmail, password, isWaitingForResponse } = this.state;
+    let { name, isWaitingForResponse } = this.state;
     return (
       <div
         style={{
           padding: 30,
         }}
       >
-        {Authentication.currentUserID == null ? (
-          <div />
-        ) : (
-          <Redirect push to="/game" />
-        )}
         {/* title */}
         <p
           style={{
@@ -154,32 +116,27 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
             position: "absolute",
             left: "50%",
             transform: "translate(-50%, 0%)",
-            top: 40,
+            top: 10,
+            width: 400,
+            textAlign: "center",
           }}
         >
-          Login
+          Create New Lobby
         </p>
-        <form onSubmit={this.submit} spellCheck={false}>
-          {/* username or email */}
-          {this.textInputField(
-            "Username or Email",
-            usernameOrEmail,
-            this.setUsernameOrEmail,
-            170
-          )}
-          {/* password */}
-          {this.textInputField("Password", password, this.setPassword, 250)}
-          {/* submit button */}
+        <form onSubmit={this.createLobby} spellCheck={false}>
+          {/* name */}
+          {this.textInputField("Name", name, this.setName, 150)}
+          {/* create button */}
           <input
             type="submit"
-            value="Submit"
+            value="Create Lobby"
             disabled={isWaitingForResponse}
             className="app-button"
             style={{
               position: "absolute",
               bottom: 25,
               right: 25,
-              width: 130,
+              width: 160,
               height: 40,
               fontSize: 20,
             }}
@@ -191,7 +148,7 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
             style={{
               position: "absolute",
               bottom: 25,
-              right: 165,
+              right: 195,
             }}
           >
             <LoadingSpin
@@ -229,4 +186,4 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
   }
 }
 
-export default LoginForm;
+export default LobbyCreationForm;

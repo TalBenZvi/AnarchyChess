@@ -2,8 +2,10 @@ import React from "react";
 import whiteWallpaperImage from "../assets/page_design/home_wallpaper_image (white).png";
 import blackWallpaperImage from "../assets/page_design/home_wallpaper_image (black).png";
 import homeTitle from "../assets/page_design/home_title.png";
+import AuthenticatedHomePage from "./authenticated_home_page";
 import LoginForm from "../components/login_form";
 import RegisterForm from "../components/register_form";
+import { Authentication } from "../database/authentication";
 
 enum ViewMode {
   login,
@@ -20,24 +22,21 @@ interface HomePageState {
 
 class HomePage extends React.Component<HomePageProps, HomePageState> {
   state = {
-    viewMode: ViewMode.login,
+    viewMode:
+      Authentication.currentUserID == null
+        ? ViewMode.login
+        : ViewMode.authenticated,
     hoveredMode: null as any,
   };
 
   render() {
     let { viewMode, hoveredMode } = this.state;
     document.body.style.overflow = "hidden";
-    return (
+    return viewMode === ViewMode.authenticated ? (
+      <AuthenticatedHomePage />
+    ) : (
       /* background */
-      <div
-        style={{
-          position: "absolute",
-          background:
-            "linear-gradient(0deg, rgba(16,16,16,1) 0%, rgba(34,34,34,1) 12%, rgba(34,34,34,1) 75%, rgba(16,16,16,1) 100%)",
-          width: "100%",
-          height: "100%",
-        }}
-      >
+      <div className="background">
         {/* title */}
         <img
           style={{
@@ -168,7 +167,19 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
             />
           </div>
           {/* form */}
-          {viewMode === ViewMode.login ? <LoginForm/> : <RegisterForm/>}
+          {viewMode === ViewMode.login ? (
+            <LoginForm
+              onSuccess={() =>
+                this.setState({ viewMode: ViewMode.authenticated })
+              }
+            />
+          ) : (
+            <RegisterForm
+              onSuccess={() =>
+                this.setState({ viewMode: ViewMode.authenticated })
+              }
+            />
+          )}
         </div>
       </div>
     );

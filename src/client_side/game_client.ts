@@ -9,10 +9,11 @@ import {
   RequestType,
   RequestInfo,
   EventType,
+  PEERJS_SERVER_IP,
+  PEER_JS_SERVER_PORT,
 } from "../game_flow_util/communication";
 import Peer from "peerjs";
 
-const PEER_JS_SERVER_PORT = 3030;
 const MAX_CONNECTION_TRIES = 20;
 
 export enum ClientNotificationType {
@@ -44,10 +45,10 @@ export class GameClient {
 
   constructor(private observer: ClientObserver, private playerID: string) {}
 
-  async attemptToConnect(ip: string): Promise<ConnectionStatus> {
+  async attemptToConnect(gameID: string): Promise<ConnectionStatus> {
     if (this.gameStatus === GameStatus.inactive) {
       this.clientPeer = new Peer(this.playerID, {
-        host: ip,
+        host: PEERJS_SERVER_IP,
         port: PEER_JS_SERVER_PORT,
         path: "/myapp",
       });
@@ -55,7 +56,7 @@ export class GameClient {
       let clientIndex: number = parseInt(this.playerID.slice(2));
       for (let i = 0; i < MAX_CONNECTION_TRIES; i++) {
         this.serverConnection = this.clientPeer.connect(
-          `server_${clientIndex}`
+          `${gameID}_server_${clientIndex}`
         );
         if (this.serverConnection != undefined) {
           this.serverConnection.on("open", () => {

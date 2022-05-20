@@ -1,5 +1,4 @@
 import React from "react";
-import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import {
   PromotionScreenComponent,
   Move,
