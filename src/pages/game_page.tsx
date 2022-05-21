@@ -30,8 +30,10 @@ function GamePage() {
       <div className="centered">
         <ChessBoard
           size={850}
-          lightColor="#9999bb"
-          darkColor="#454545"
+          //lightColor="#ccc"
+          //darkColor="#ff5555"
+          lightColor="#ff6666"
+          darkColor="#353535"
           povColor={PieceColor.white}
           clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]}
         />
@@ -53,7 +55,7 @@ function GamePage() {
           serverFlowEngine.acceptConnections(gameID);
           await new Promise((f) => setTimeout(f, 3000));
           for (let clientFlowEngine of clientFlowEngines) {
-            clientFlowEngine.attemptToConnect("localhost", gameID);
+            clientFlowEngine.attemptToConnect(gameID);
           }
         }}
       >

@@ -34,7 +34,7 @@ class LobbyCreationForm extends React.Component<
       return { isWaitingForResponse: true };
     });
     Authentication.createLobby(
-      { creatorID: Authentication.currentUserID, name: this.state.name },
+      { creatorID: Authentication.currentUser.id, name: this.state.name },
       (isSuccessfull: boolean, status: LobbyCreationStatus) => {
         switch (status) {
           case LobbyCreationStatus.success:

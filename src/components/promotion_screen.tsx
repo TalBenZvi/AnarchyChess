@@ -1,12 +1,12 @@
 import React from "react";
 import {
-  PromotionScreenComponent,
   Move,
   PieceType,
   PieceColor,
   colorToString,
   typeToString,
 } from "../game_flow_util/game_elements";
+import { PromotionScreenComponent } from "../components/game_component_interfaces"
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { Dialog } from "@headlessui/react";
 
@@ -48,7 +48,9 @@ class PromotionScreen
 
   constructor(props: PromotionScreenProps) {
     super(props);
-    props.clientFlowEngine.promotionScreen = this;
+    if (props.clientFlowEngine != null) {
+      props.clientFlowEngine.promotionScreen = this;
+    }
   }
 
   show(move: Move, color: PieceColor): void {

@@ -23,7 +23,7 @@ interface HomePageState {
 class HomePage extends React.Component<HomePageProps, HomePageState> {
   state = {
     viewMode:
-      Authentication.currentUserID == null
+      Authentication.currentUser == null
         ? ViewMode.login
         : ViewMode.authenticated,
     hoveredMode: null as any,

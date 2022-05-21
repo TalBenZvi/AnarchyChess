@@ -1,5 +1,6 @@
 import {
   User,
+  RegisterParams,
   RegisterStatus,
   LoginStatus,
   LoginResponse,
@@ -11,11 +12,11 @@ import {
 
 export class MongodbClient {
   register(
-    user: User,
+    user: RegisterParams,
     callback: (
       isSuccessfull: boolean,
       status: RegisterStatus,
-      userID: string
+      user: User
     ) => void
   ): void {
     const request = new XMLHttpRequest();
@@ -28,7 +29,7 @@ export class MongodbClient {
         let response: RegisterResponse = JSON.parse(
           JSON.parse(request.responseText)
         );
-        callback(request.status === 200, response.status, response.userID);
+        callback(request.status === 200, response.status, response.user);
       }
     };
   }
@@ -39,7 +40,7 @@ export class MongodbClient {
     callback: (
       isSuccessfull: boolean,
       status: LoginStatus,
-      userID: string
+      user: User
     ) => void
   ): void {
     const request = new XMLHttpRequest();
@@ -54,7 +55,7 @@ export class MongodbClient {
         let response: LoginResponse = JSON.parse(
           JSON.parse(request.responseText)
         );
-        callback(request.status === 200, response.status, response.userID);
+        callback(request.status === 200, response.status, response.user);
       }
     };
   }
@@ -64,6 +65,7 @@ export class MongodbClient {
     callback: (
       isSuccessfull: boolean,
       status: LobbyCreationStatus,
+      gameID: string,
     ) => void
   ): void {
     const request = new XMLHttpRequest();
@@ -76,7 +78,7 @@ export class MongodbClient {
         let response: LobbyCreationResponse = JSON.parse(
           JSON.parse(request.responseText)
         );
-        callback(request.status === 200, response.status);
+        callback(request.status === 200, response.status, response.gameID);
       }
     };
   }

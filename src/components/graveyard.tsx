@@ -2,11 +2,11 @@ import * as React from "react";
 import {
   PieceColor,
   reverseColor,
-  GraveYardComponent,
   Piece,
   colorToString,
   typeToString,
 } from "../game_flow_util/game_elements";
+import { GraveYardComponent } from "../components/game_component_interfaces"
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
@@ -57,7 +57,9 @@ class GraveYard
 
   constructor(props: GraveYardProps) {
     super(props);
-    props.clientFlowEngine.graveYard = this;
+    if (props.clientFlowEngine != null) {
+      props.clientFlowEngine.graveYard = this;
+    }
   }
 
   private tile(

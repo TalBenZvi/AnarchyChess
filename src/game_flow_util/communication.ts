@@ -1,5 +1,5 @@
 export const PEERJS_SERVER_IP: string = "127.0.0.1";
-export const PEER_JS_SERVER_PORT = 3030;
+export const PEERJS_SERVER_PORT: number = 3030;
 
 export interface Event {
   index: number
@@ -30,24 +30,22 @@ export enum EventInfo {
   respawnSquare,
 }
 
+export enum RequestType {
+  connection,
+  move,
+}
+
+export enum RequestInfo {
+  // connection
+  user,
+  // move
+  move,
+}
 
 export interface Request {
   type: RequestType;
   info: Map<RequestInfo, string>;
 }
-
-export enum RequestType {
-  move,
-  resendEvents,
-}
-
-export enum RequestInfo {
-  // move
-  move,
-  // resendEvents
-  missingEventIndices,
-}
-
 
 export enum GameStatus {
   inactive,

@@ -8,17 +8,20 @@ import {
   reviver,
   Request,
   PEERJS_SERVER_IP,
-  PEER_JS_SERVER_PORT,
+  PEERJS_SERVER_PORT,
 } from "../game_flow_util/communication";
 import Peer from "peerjs";
 
 export enum ServerNotificationType {
+  playerConnected,
   filledServer,
   receivedRequest,
 }
 
 export enum ServerNotificationInfo {
+  // general
   playerIndex,
+  // receivedRequest
   request,
 }
 
@@ -48,13 +51,19 @@ export class GameServer {
       for (let i = 0; i < NUM_OF_PLAYERS; i++) {
         this.serverPeers[i] = new Peer(`${gameID}_server_${i}`, {
           host: PEERJS_SERVER_IP,
-          port: PEER_JS_SERVER_PORT,
+          port: PEERJS_SERVER_PORT,
           path: "/myapp",
         });
         this.serverPeers[i].on("connection", (client: any) => {
           this.clients[i] = client;
+          /*
+          this.observer.notify(ServerNotificationType.playerConnected, new Map<ServerNotificationInfo, any>([[
+            ServerNotificationInfo.playerIndex
+          ]]));
+          */
           client.on("data", (requestData: any) => {
             if (requestData.toString() === "connected") {
+              /*
               this.isClientConnectedArray[i] = true;
               let areAllClientsConnected = true;
               for (let isClientConnected of this.isClientConnectedArray) {
@@ -68,6 +77,7 @@ export class GameServer {
                   new Map<ServerNotificationInfo, any>()
                 );
               }
+              */
             } else {
               let request: Request = JSON.parse(
                 requestData.toString(),

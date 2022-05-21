@@ -10,11 +10,14 @@ import {
   RequestInfo,
   EventType,
   PEERJS_SERVER_IP,
-  PEER_JS_SERVER_PORT,
+  PEERJS_SERVER_PORT,
 } from "../game_flow_util/communication";
 import Peer from "peerjs";
+import { Authentication } from "../database/authentication";
 
 const MAX_CONNECTION_TRIES = 20;
+// in millis
+const DELAY_BETWEEN_TRIES = 500;
 
 export enum ClientNotificationType {
   disconnectedFromServer,
@@ -45,27 +48,29 @@ export class GameClient {
 
   constructor(private observer: ClientObserver, private playerID: string) {}
 
-  async attemptToConnect(gameID: string): Promise<ConnectionStatus> {
+  async attemptToConnect(
+    gameID: string,
+    serverIndex: number
+  ): Promise<ConnectionStatus> {
     if (this.gameStatus === GameStatus.inactive) {
       this.clientPeer = new Peer(this.playerID, {
         host: PEERJS_SERVER_IP,
-        port: PEER_JS_SERVER_PORT,
+        port: PEERJS_SERVER_PORT,
         path: "/myapp",
       });
       let didConnect: boolean = false;
-      let clientIndex: number = parseInt(this.playerID.slice(2));
       for (let i = 0; i < MAX_CONNECTION_TRIES; i++) {
         this.serverConnection = this.clientPeer.connect(
-          `${gameID}_server_${clientIndex}`
+          `${gameID}_server_${serverIndex}`
         );
         if (this.serverConnection != undefined) {
           this.serverConnection.on("open", () => {
             didConnect = true;
-            this.serverConnection.send("connected");
           });
         }
-        await new Promise((f) => setTimeout(f, 500));
+        await new Promise((f) => setTimeout(f, DELAY_BETWEEN_TRIES));
         if (didConnect) {
+          // subscribe for events
           this.serverConnection.on("data", (eventData: any) => {
             let event: Event = JSON.parse(eventData.toString(), reviver);
             this.observer.notify(
@@ -75,6 +80,17 @@ export class GameClient {
               ])
             );
           });
+          this.serverConnection.send(
+            JSON.stringify({
+              type: RequestType.connection,
+              info: new Map<RequestInfo, string>([
+                [
+                  RequestInfo.user,
+                  JSON.stringify(Authentication.currentUser),
+                ],
+              ]),
+            }, replacer)
+          );
           return ConnectionStatus.success;
         }
       }

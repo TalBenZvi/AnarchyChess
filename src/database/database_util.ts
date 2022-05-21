@@ -1,7 +1,14 @@
 export interface User {
+  id: string;
+  username?: string;
+  email?: string;
+  password?: string;
+}
+
+export interface RegisterParams {
   username: string;
   email: string;
-  password?: string;
+  password: string;
 }
 
 export enum RegisterStatus {
@@ -13,7 +20,7 @@ export enum RegisterStatus {
 
 export interface RegisterResponse {
   status: RegisterStatus;
-  userID: string;
+  user: User;
 }
 
 export enum LoginStatus {
@@ -24,7 +31,7 @@ export enum LoginStatus {
 
 export interface LoginResponse {
   status: LoginStatus;
-  userID: string;
+  user: User;
 }
 
 export interface LobbyParams {
@@ -40,4 +47,5 @@ export enum LobbyCreationStatus {
 
 export interface LobbyCreationResponse {
   status: LobbyCreationStatus;
+  gameID: string;
 }

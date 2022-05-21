@@ -2,7 +2,6 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import { Dialog } from "@headlessui/react";
 import {
-  ChessBoardComponent,
   BOARD_SIZE,
   NUM_OF_PLAYERS,
   PlayingPiece,
@@ -15,6 +14,7 @@ import {
   Piece,
   Knight,
 } from "../game_flow_util/game_elements";
+import { ChessBoardComponent } from "../components/game_component_interfaces"
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
 const PIECE_IMAGES: Map<PieceColor, Map<PieceType, any>> = new Map();
@@ -536,7 +536,9 @@ class ChessBoard
   constructor(props: ChessBoardProps) {
     super(props);
     this.canvasRef = React.createRef();
-    props.clientFlowEngine.board = this;
+    if (props.clientFlowEngine != null) {
+      props.clientFlowEngine.board = this;
+    }
   }
 
   private renderFunction = () => {

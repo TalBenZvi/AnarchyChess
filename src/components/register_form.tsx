@@ -3,7 +3,7 @@ import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 
 import { Authentication } from "../database/authentication";
-import { User, RegisterStatus } from "../database/database_util";
+import { RegisterParams, RegisterStatus } from "../database/database_util";
 
 import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";

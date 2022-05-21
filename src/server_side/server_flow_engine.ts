@@ -24,11 +24,14 @@ import {
   RequestInfo,
   reviver,
 } from "../game_flow_util/communication";
+import { User } from "../database/database_util";
 
 const COOLDOWN_VARIANCE = 0.2;
 
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
+  private _gameID: string = null as any;
+  private players: User[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private position: Position = new Position("server");
   private isGameRunning: boolean = false;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
@@ -39,7 +42,12 @@ export class ServerFlowEngine implements ServerObserver {
     this.gameServer = new GameServer(this);
   }
 
+  get gameID(): string {
+    return this._gameID;
+  }
+
   acceptConnections(gameID: string): void {
+    this._gameID = gameID;
     this.gameServer.acceptConnections(gameID);
   }
 
@@ -190,6 +198,64 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
+  private async handleConnection(playerIndex: number, user: User) {
+    this.players[playerIndex] = user;
+    console.log("here3");
+    this.gameServer.broadcastEvent({
+      index: null as any,
+      type: EventType.playerListUpdate,
+      info: new Map<EventInfo, string>([
+        [
+          EventInfo.connectedPlayers,
+          JSON.stringify(this.players.filter((player: User) => player != null)),
+        ],
+      ]),
+    });
+    let isServerFull: boolean = true;
+    for (let player of this.players) {
+      if (player == null) {
+        isServerFull = false;
+      }
+    }
+    if (isServerFull) {
+      await new Promise((f) => setTimeout(f, 1000));
+      this.startGame();
+    }
+  }
+
+  private async handleRequest(
+    playerIndex: number,
+    request: Request,
+    requestArrivalTime: number
+  ) {
+    switch (request.type) {
+      // connection
+      case RequestType.connection: {
+        if (!this.isGameRunning) {
+          let user: User = JSON.parse(
+            request.info.get(RequestInfo.user) as string,
+            reviver
+          );
+          this.handleConnection(playerIndex, user);
+        }
+        break;
+      }
+      case RequestType.move: {
+        if (this.isGameRunning) {
+          let moveRequest: Move = JSON.parse(
+            request.info.get(RequestInfo.move) as string,
+            reviver
+          );
+          this.moveRequests[playerIndex] = moveRequest;
+          if (!this.isOnCooldown[playerIndex] && this.isAlive[playerIndex]) {
+            this.registerMove(playerIndex, moveRequest, requestArrivalTime);
+          }
+        }
+        break;
+      }
+    }
+  }
+
   async notify(
     notification: ServerNotificationType,
     notificationInfo: Map<ServerNotificationInfo, any>
@@ -206,27 +272,11 @@ export class ServerFlowEngine implements ServerObserver {
         let request: Request = notificationInfo.get(
           ServerNotificationInfo.request
         );
-        switch (request.type) {
-          case RequestType.move: {
-            if (this.isGameRunning) {
-              let playerIndex: number = notificationInfo.get(
-                ServerNotificationInfo.playerIndex
-              );
-              let moveRequest: Move = JSON.parse(
-                request.info.get(RequestInfo.move) as string,
-                reviver
-              );
-              this.moveRequests[playerIndex] = moveRequest;
-              if (
-                !this.isOnCooldown[playerIndex] &&
-                this.isAlive[playerIndex]
-              ) {
-                this.registerMove(playerIndex, moveRequest, requestArrivalTime);
-              }
-            }
-            break;
-          }
-        }
+        this.handleRequest(
+          notificationInfo.get(ServerNotificationInfo.playerIndex),
+          request,
+          requestArrivalTime
+        );
         break;
       }
     }

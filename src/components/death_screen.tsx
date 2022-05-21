@@ -1,6 +1,7 @@
 import React from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
-import { DeathScreenComponent } from "../game_flow_util/game_elements";
+import { DeathScreenComponent } from "../components/game_component_interfaces"
+
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
 const FONT_COLOR: string = "#900000";
@@ -21,7 +22,9 @@ class DeathScreen
 
   constructor(props: DeathScreenProps) {
     super(props);
-    props.clientFlowEngine.deathScreen = this;
+    if (props.clientFlowEngine != null) {
+      props.clientFlowEngine.deathScreen = this;
+    }
   }
 
   show(respawnTimer: number): void {
@@ -32,7 +35,7 @@ class DeathScreen
 
   hide(): void {
     this.setState(() => {
-      return { isActive: false};
+      return { isActive: false };
     });
   }
 
@@ -52,7 +55,8 @@ class DeathScreen
             top: 0,
             fontSize: 100,
             color: FONT_COLOR,
-            textShadow: "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
+            textShadow:
+              "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
             zIndex: 3,
           }}
         >
@@ -64,7 +68,8 @@ class DeathScreen
             top: 320,
             fontSize: 30,
             color: FONT_COLOR,
-            textShadow: "-0.5px -0.5px 0 #000, 0.5px -0.5px 0 #000, -0.5px 0.5px 0 #000, 0.5px 0.5px 0 #000",
+            textShadow:
+              "-0.5px -0.5px 0 #000, 0.5px -0.5px 0 #000, -0.5px 0.5px 0 #000, 0.5px 0.5px 0 #000",
             zIndex: 3,
           }}
         >
@@ -76,7 +81,8 @@ class DeathScreen
             top: 330,
             fontSize: 60,
             color: FONT_COLOR,
-            textShadow: "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
+            textShadow:
+              "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
             zIndex: 3,
           }}
         >

@@ -1,11 +1,14 @@
 import * as React from "react";
 import NavBar from "../components/navbar";
 import LobbyCreationForm from "../components/lobby_creation_form";
+import { Redirect } from "react-router";
+import { Authentication } from "../database/authentication";
 
 interface AuthenticatedHomePageProps {}
 
 interface AuthenticatedHomePageState {
   isLobbyCreationFormOpen: boolean;
+  shouldRedirectToGame: boolean;
 }
 
 class AuthenticatedHomePage extends React.Component<
@@ -13,16 +16,25 @@ class AuthenticatedHomePage extends React.Component<
   AuthenticatedHomePageState
 > {
   state = {
-    isLobbyCreationFormOpen: true,
+    isLobbyCreationFormOpen: false,
+    shouldRedirectToGame: false,
   };
 
   createALobby = () => {};
 
   render() {
-    let { isLobbyCreationFormOpen } = this.state;
+    let { isLobbyCreationFormOpen, shouldRedirectToGame } = this.state;
+    if (shouldRedirectToGame) {
+      return (
+        <Redirect
+          push
+          to={`/lobby/${Authentication.serverFlowEngine.gameID}`}
+        />
+      );
+    }
     return (
       <div className="background">
-        <NavBar />
+        <NavBar currentRoute="/" />
         {/* 'create lobby' button */}
         <button
           className="app-button"
@@ -71,9 +83,11 @@ class AuthenticatedHomePage extends React.Component<
                 }}
               >
                 {/* form */}
-                <LobbyCreationForm onSuccess={() => {
-                  alert("lobby created");
-                }} />
+                <LobbyCreationForm
+                  onSuccess={() => {
+                    this.setState({ shouldRedirectToGame: true });
+                  }}
+                />
                 {/* cancel button */}
                 <button
                   className="app-button"

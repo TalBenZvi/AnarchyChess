@@ -1,13 +1,17 @@
-import { User, RegisterStatus, LoginStatus, LobbyParams, LobbyCreationStatus } from "./database_util";
+import { User, RegisterParams, RegisterStatus, LoginStatus, LobbyParams, LobbyCreationStatus } from "./database_util";
 import { MongodbClient } from "../database/mongodb_client";
+import { ServerFlowEngine } from "../server_side/server_flow_engine"
+import { ClientFlowEngine } from "../client_side/client_flow_engine"
 
 export class Authentication {
-  //static currentUserID: string = null as any;
-  static currentUserID: string = "627c0e2c5573d5400492587f";
+  static currentUser: User = null as any;
+  //static currentUser: User = 
   static mongodbClient: MongodbClient = new MongodbClient();
+  static serverFlowEngine: ServerFlowEngine;
+  static clientFlowEngine: ClientFlowEngine;
 
   static register(
-    user: User,
+    user: RegisterParams,
     callback: (isSuccessfull: boolean, status: RegisterStatus) => void
   ) {
     Authentication.mongodbClient.register(
@@ -15,10 +19,10 @@ export class Authentication {
       (
         isSuccessfullClient: boolean,
         status: RegisterStatus,
-        userID: string
+        user: User
       ) => {
         if (status === RegisterStatus.success) {
-          Authentication.currentUserID = userID;
+          Authentication.currentUser = user;
         }
         callback(isSuccessfullClient, status);
       }
@@ -33,9 +37,9 @@ export class Authentication {
     Authentication.mongodbClient.login(
       usernameOrEmail,
       password,
-      (isSuccessfullClient: boolean, status: LoginStatus, userID) => {
+      (isSuccessfullClient: boolean, status: LoginStatus, user: User) => {
         if (status === LoginStatus.success) {
-          Authentication.currentUserID = userID;
+          Authentication.currentUser = user;
         }
         callback(isSuccessfullClient, status);
       }
@@ -51,7 +55,14 @@ export class Authentication {
       (
         isSuccessfullClient: boolean,
         status: LobbyCreationStatus,
+        gameID: string,
       ) => {
+        if (status === LobbyCreationStatus.success) {
+          Authentication.serverFlowEngine = new ServerFlowEngine();
+          Authentication.serverFlowEngine.acceptConnections(gameID);
+          Authentication.clientFlowEngine = new ClientFlowEngine(Authentication.currentUser.id);
+          Authentication.clientFlowEngine.targetServerIndex = 0;
+        }
         callback(isSuccessfullClient, status);
       }
     );

@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
-import { User, LoginStatus } from "../database/database_util";
+import { RegisterParams, LoginStatus } from "../database/database_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 
@@ -142,7 +142,7 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
           padding: 30,
         }}
       >
-        {Authentication.currentUserID == null ? (
+        {Authentication.currentUser == null ? (
           <div />
         ) : (
           <Redirect push to="/game" />
