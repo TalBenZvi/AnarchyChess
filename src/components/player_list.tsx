@@ -36,7 +36,6 @@ class PlayerList
   }
 
   setPlayers(players: User[]): void {
-    console.log("here6");
     this.setState({connectedPlayers: players});
   }
 

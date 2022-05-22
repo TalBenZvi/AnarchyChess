@@ -200,7 +200,6 @@ export class ServerFlowEngine implements ServerObserver {
 
   private async handleConnection(playerIndex: number, user: User) {
     this.players[playerIndex] = user;
-    console.log("here3");
     this.gameServer.broadcastEvent({
       index: null as any,
       type: EventType.playerListUpdate,

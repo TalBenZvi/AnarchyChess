@@ -136,7 +136,6 @@ export class ClientFlowEngine implements ClientObserver {
 
   private updatePlayerList(connectedPlayers: User[]): void {
     if (this._playerList != null) {
-      console.log("here5");
       this._playerList.setPlayers([...connectedPlayers]);
     }
   }
@@ -210,7 +209,6 @@ export class ClientFlowEngine implements ClientObserver {
     switch (event.type) {
       // player list update
       case EventType.playerListUpdate: {
-        console.log("here4");
         let connectedPlayers: User[] = JSON.parse(
           event.info.get(EventInfo.connectedPlayers) as string,
           reviver

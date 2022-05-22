@@ -13,7 +13,6 @@ class LobbyPage extends React.Component<any, any> {
   state = {};
 
   componentDidMount() {
-    console.log("here2");
     if (Authentication.clientFlowEngine != null) {
       Authentication.clientFlowEngine.attemptToConnect(
         this.props.match.params.id
@@ -22,7 +21,6 @@ class LobbyPage extends React.Component<any, any> {
   }
 
   render() {
-    console.log("here1");
     return (
       <div className="background">
         <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
