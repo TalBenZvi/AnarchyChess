@@ -17,9 +17,10 @@ interface PlayerListState {
 
 class PlayerList
   extends React.Component<PlayerListProps, PlayerListState>
-  implements PlayerListComponent {
+  implements PlayerListComponent
+{
   state = {
-    connectedPlayers: []
+    connectedPlayers: [],
     /*
     connectedPlayers: [...Array(20)].map((_, i) => ({
       id: i.toString(),
@@ -36,7 +37,7 @@ class PlayerList
   }
 
   setPlayers(players: User[]): void {
-    this.setState({connectedPlayers: players});
+    this.setState({ connectedPlayers: players });
   }
 
   private tileList(
@@ -91,47 +92,45 @@ class PlayerList
       ...Array(NUM_OF_PLAYERS - connectedPlayers.length).fill(null),
     ];
     return (
-      <div>
+      <div
+        className="highlighted-area"
+        style={{
+          position: "fixed",
+          zIndex: 0,
+          width: width,
+          height: height,
+          border: "3px solid #555",
+        }}
+      >
+        {this.tileList(
+          playerList.slice(0, NUM_OF_PLAYERS / 2),
+          tileWidth,
+          tileHeight,
+          fontSize
+        )}
         <div
-          className="highlighted-area"
           style={{
-            position: "fixed",
-            zIndex: 0,
-            width: width,
-            height: height,
-            border: "3px solid #555",
+            position: "absolute",
+            left: tileWidth,
           }}
         >
           {this.tileList(
-            playerList.slice(0, NUM_OF_PLAYERS / 2),
+            playerList.slice(NUM_OF_PLAYERS / 2),
             tileWidth,
             tileHeight,
             fontSize
           )}
-          <div
-            style={{
-              position: "absolute",
-              left: tileWidth,
-            }}
-          >
-            {this.tileList(
-              playerList.slice(NUM_OF_PLAYERS / 2),
-              tileWidth,
-              tileHeight,
-              fontSize
-            )}
-          </div>
-          <div
-            style={{
-              position: "relative",
-              left: tileWidth,
-              top: verticalLineMargin,
-              height: verticalLineHeight,
-              borderLeft: "2px solid #555",
-              zIndex: 2,
-            }}
-          />
         </div>
+        <div
+          style={{
+            position: "relative",
+            left: tileWidth,
+            top: verticalLineMargin,
+            height: verticalLineHeight,
+            borderLeft: "2px solid #555",
+            zIndex: 2,
+          }}
+        />
       </div>
     );
   }

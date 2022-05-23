@@ -1,6 +1,7 @@
 import * as React from "react";
 import NavBar from "../components/navbar";
 import LobbyCreationForm from "../components/lobby_creation_form";
+import LobbyList from "../components/lobby_list";
 import { Redirect } from "react-router";
 import { Authentication } from "../database/authentication";
 
@@ -42,7 +43,7 @@ class AuthenticatedHomePage extends React.Component<
           style={{
             position: "absolute",
             left: 1200,
-            top: 200,
+            top: 180,
             width: 200,
             height: 50,
             fontSize: 20,
@@ -112,6 +113,18 @@ class AuthenticatedHomePage extends React.Component<
         ) : (
           <div />
         )}
+        {/* lobby list */}
+        <div
+          style={{
+            position: "fixed",
+            top: 250,
+            left: "50%",
+            transform: "translate(-50%, 0%)",
+          }}
+        >
+          <LobbyList width={900} height={600} lobbies={[]} />
+        </div>
+        
       </div>
     );
   }

@@ -5,6 +5,12 @@ export interface User {
   password?: string;
 }
 
+export interface Lobby {
+  id: string;
+  name: string;
+  memberIDs: string[];
+}
+
 export interface RegisterParams {
   username: string;
   email: string;
