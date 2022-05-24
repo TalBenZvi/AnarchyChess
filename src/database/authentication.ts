@@ -1,11 +1,23 @@
-import { User, RegisterParams, RegisterStatus, LoginStatus, LobbyParams, LobbyCreationStatus } from "./database_util";
+import {
+  User,
+  Lobby,
+  RegisterParams,
+  RegisterStatus,
+  LoginStatus,
+  LobbyParams,
+  LobbyCreationStatus,
+} from "./database_util";
 import { MongodbClient } from "../database/mongodb_client";
-import { ServerFlowEngine } from "../server_side/server_flow_engine"
-import { ClientFlowEngine } from "../client_side/client_flow_engine"
+import { ServerFlowEngine } from "../server_side/server_flow_engine";
+import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
 export class Authentication {
   //static currentUser: User = null as any;
-  static currentUser: User = {id: "627c0e2c5573d5400492587f", username: "admin", email: "talbz03@gmail.com"}
+  static currentUser: User = {
+    id: "627c0e2c5573d5400492587f",
+    username: "admin",
+    email: "talbz03@gmail.com",
+  };
   static mongodbClient: MongodbClient = new MongodbClient();
   static serverFlowEngine: ServerFlowEngine;
   static clientFlowEngine: ClientFlowEngine;
@@ -16,11 +28,7 @@ export class Authentication {
   ) {
     Authentication.mongodbClient.register(
       user,
-      (
-        isSuccessfullClient: boolean,
-        status: RegisterStatus,
-        user: User
-      ) => {
+      (isSuccessfullClient: boolean, status: RegisterStatus, user: User) => {
         if (status === RegisterStatus.success) {
           Authentication.currentUser = user;
         }
@@ -55,16 +63,22 @@ export class Authentication {
       (
         isSuccessfullClient: boolean,
         status: LobbyCreationStatus,
-        gameID: string,
+        gameID: string
       ) => {
         if (status === LobbyCreationStatus.success) {
           Authentication.serverFlowEngine = new ServerFlowEngine();
           Authentication.serverFlowEngine.acceptConnections(gameID);
-          Authentication.clientFlowEngine = new ClientFlowEngine(Authentication.currentUser.id);
+          Authentication.clientFlowEngine = new ClientFlowEngine(
+            Authentication.currentUser.id
+          );
           Authentication.clientFlowEngine.targetServerIndex = 0;
         }
         callback(isSuccessfullClient, status);
       }
     );
+  }
+
+  static getLobbies(callback: (lobbies: Lobby[]) => void) {
+    Authentication.mongodbClient.getLobbies(callback);
   }
 }

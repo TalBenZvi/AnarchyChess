@@ -1,4 +1,5 @@
 import React from "react";
+
 import whiteWallpaperImage from "../assets/page_design/home_wallpaper_image (white).png";
 import blackWallpaperImage from "../assets/page_design/home_wallpaper_image (black).png";
 import homeTitle from "../assets/page_design/home_title.png";

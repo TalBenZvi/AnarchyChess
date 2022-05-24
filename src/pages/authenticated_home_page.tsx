@@ -36,23 +36,6 @@ class AuthenticatedHomePage extends React.Component<
     return (
       <div className="background">
         <NavBar currentRoute="/" />
-        {/* 'create lobby' button */}
-        <button
-          className="app-button"
-          disabled={isLobbyCreationFormOpen}
-          style={{
-            position: "absolute",
-            left: 1200,
-            top: 190,
-            width: 200,
-            height: 50,
-            fontSize: 20,
-            zIndex: 1,
-          }}
-          onClick={() => this.setState({ isLobbyCreationFormOpen: true })}
-        >
-          Create a Lobby
-        </button>
         {/* lobby creation form */}
         {isLobbyCreationFormOpen ? (
           <div>
@@ -115,7 +98,7 @@ class AuthenticatedHomePage extends React.Component<
         )}
         {/* lobby list */}
         <div
-        className="centered"
+          className="centered"
           style={{
             position: "absolute",
             top: 180,
@@ -123,9 +106,14 @@ class AuthenticatedHomePage extends React.Component<
             transform: "translate(-50%, 0%)",
           }}
         >
-          <LobbyList width={900} height={600} lobbies={[]} />
+          <LobbyList
+            width={900}
+            height={600}
+            onLobbyCreationSelection={() =>
+              this.setState({ isLobbyCreationFormOpen: true })
+            }
+          />
         </div>
-        
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import {
   User,
+  Lobby,
   RegisterParams,
   RegisterStatus,
   LoginStatus,
@@ -37,11 +38,7 @@ export class MongodbClient {
   login(
     usernameOrEmail: string,
     password: string,
-    callback: (
-      isSuccessfull: boolean,
-      status: LoginStatus,
-      user: User
-    ) => void
+    callback: (isSuccessfull: boolean, status: LoginStatus, user: User) => void
   ): void {
     const request = new XMLHttpRequest();
     const url =
@@ -65,7 +62,7 @@ export class MongodbClient {
     callback: (
       isSuccessfull: boolean,
       status: LobbyCreationStatus,
-      gameID: string,
+      gameID: string
     ) => void
   ): void {
     const request = new XMLHttpRequest();
@@ -79,6 +76,29 @@ export class MongodbClient {
           JSON.parse(request.responseText)
         );
         callback(request.status === 200, response.status, response.gameID);
+      }
+    };
+  }
+
+  getLobbies(callback: (lobbies: Lobby[]) => void): void {
+    const request = new XMLHttpRequest();
+    const url =
+      "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/getLobbies";
+    request.open("POST", url);
+    request.send();
+    request.onreadystatechange = (e) => {
+      if (request.readyState === 4) {
+        callback(
+          JSON.parse(request.responseText).map(
+            (databaseLobby: any, _: number) => {
+              return {
+                id: databaseLobby["_id"],
+                name: databaseLobby["name"],
+                memberIDs: databaseLobby["memberIDs"],
+              };
+            }
+          )
+        );
       }
     };
   }
