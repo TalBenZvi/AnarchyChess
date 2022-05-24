@@ -43,11 +43,11 @@ class AuthenticatedHomePage extends React.Component<
           style={{
             position: "absolute",
             left: 1200,
-            top: 180,
+            top: 190,
             width: 200,
             height: 50,
             fontSize: 20,
-            zIndex: 0,
+            zIndex: 1,
           }}
           onClick={() => this.setState({ isLobbyCreationFormOpen: true })}
         >
@@ -115,9 +115,10 @@ class AuthenticatedHomePage extends React.Component<
         )}
         {/* lobby list */}
         <div
+        className="centered"
           style={{
-            position: "fixed",
-            top: 250,
+            position: "absolute",
+            top: 180,
             left: "50%",
             transform: "translate(-50%, 0%)",
           }}

@@ -120,4 +120,18 @@ ul.row {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.image-button {
+  /*cursor: pointer;*/
+  filter: contrast(50%);
+}
+
+.image-button:hover {
+  filter: contrast(20%);
+}
+
+.image-button:active {
+  filter: contrast(50%);
 }
