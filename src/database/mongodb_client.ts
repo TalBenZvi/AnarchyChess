@@ -9,6 +9,8 @@ import {
   LobbyParams,
   LobbyCreationResponse,
   LobbyCreationStatus,
+  LobbyJoiningStatus,
+  LobbyJoiningResponse,
 } from "./database_util";
 
 export class MongodbClient {
@@ -99,6 +101,30 @@ export class MongodbClient {
             }
           )
         );
+      }
+    };
+  }
+
+  joinLobby(
+    userID: string,
+    lobbyName: string,
+    callback: (
+      isSuccessfull: boolean,
+      status: LobbyJoiningStatus,
+      serverIndex: number
+    ) => void
+  ): void {
+    const request = new XMLHttpRequest();
+    const url =
+      "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/joinLobby";
+    request.open("POST", url);
+    request.send(JSON.stringify({userID: userID, lobbyName: lobbyName}));
+    request.onreadystatechange = (e) => {
+      if (request.readyState === 4) {
+        let response: LobbyJoiningResponse = JSON.parse(
+          JSON.parse(request.responseText)
+        );
+        callback(request.status === 200, response.status, response.serverIndex);
       }
     };
   }

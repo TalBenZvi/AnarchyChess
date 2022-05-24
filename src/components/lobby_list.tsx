@@ -1,7 +1,9 @@
 import * as React from "react";
 import LoadingSpin from "react-loading-spin";
+import toast, { Toaster } from "react-hot-toast";
+import { Redirect } from "react-router";
 
-import { Lobby } from "../database/database_util";
+import { Lobby, LobbyJoiningStatus } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import rightArrow from "../assets/page_design/right_arrow.png";
 import { Authentication } from "../database/authentication";
@@ -19,33 +21,42 @@ interface LobbyListState {
   lobbies: Lobby[];
   page: number;
   isWaitingForResponse: boolean;
+  selectedLobbyIndex: number;
+  targetLobbyID: string;
 }
 
 class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   state = {
     lobbies: [],
-    /*
-    lobbies: [...Array(25)].map((_, i) => {
-      return {
-        id: (i + 1).toString(),
-        name: `lobby ${i + 1}`,
-        memberIDs: [...Array(i)].fill("id"),
-      };
-    }),
-    */
     page: 0,
     isWaitingForResponse: true,
+    selectedLobbyIndex: null as any,
+    targetLobbyID: null as any,
   };
 
   componentDidMount() {
     Authentication.getLobbies((lobbies: Lobby[]) => {
-      this.setState({isWaitingForResponse: false, lobbies: lobbies});
+      this.setState({ isWaitingForResponse: false, lobbies: lobbies });
     });
   }
 
   render() {
     let { width, height, onLobbyCreationSelection } = this.props;
-    let { lobbies, page, isWaitingForResponse } = this.state;
+    let {
+      lobbies,
+      page,
+      isWaitingForResponse,
+      selectedLobbyIndex,
+      targetLobbyID
+    } = this.state;
+    if (targetLobbyID != null) {
+      return (
+        <Redirect
+          push
+          to={`/lobby/${targetLobbyID}`}
+        />
+      );
+    }
     let displayedLobbies: Lobby[] = lobbies.slice(
       page * LOBBIES_IN_A_PAGE,
       (page + 1) * LOBBIES_IN_A_PAGE
@@ -96,7 +107,6 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
         >
           Create a Lobby
         </button>
-
         {isWaitingForResponse ? (
           <div>
             {/* loading title */}
@@ -214,7 +224,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             </button>
             {/* lobbies */}
             <ul className="no-bullets">
-              {displayedLobbies.map((lobby: Lobby, _) => (
+              {displayedLobbies.map((lobby: Lobby, i: number) => (
                 <li
                   key={Math.random()}
                   style={{
@@ -246,28 +256,116 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                       left: "50%",
                       transform: "translate(-50%, 0%)",
                     }}
-                  >{`${lobby.memberIDs.length} / ${NUM_OF_PLAYERS}`}</div>
+                  >{`${
+                    lobby.memberIDs.filter((id: string) => id !== "").length
+                  } / ${NUM_OF_PLAYERS}`}</div>
                   {/* join button */}
                   <button
                     className="app-button"
+                    disabled={
+                      selectedLobbyIndex != null && selectedLobbyIndex !== i
+                    }
                     style={{
                       position: "relative",
                       float: "right",
                       marginRight: fontPadding,
                       top: "50%",
                       transform: "translate(0%, -50%)",
-                      width: 100,
+                      width: width * 0.1,
                       height: buttonHeight,
                       lineHeight: `${buttonHeight * 0.8}px`,
                     }}
+                    onClick={() => {
+                      if (selectedLobbyIndex === i) {
+                        this.setState({ selectedLobbyIndex: null as any });
+                      } else {
+                        Authentication.joinLobby(
+                          lobby.name,
+                          (
+                            isSuccessfull: boolean,
+                            status: LobbyJoiningStatus
+                          ) => {
+                            switch (status) {
+                              case LobbyJoiningStatus.success:
+                                {
+                                  this.setState(() => {
+                                    return { targetLobbyID: lobby.id };
+                                  });
+                                }
+                                break;
+                              case LobbyJoiningStatus.failure:
+                                {
+                                  toast("Error joining lobby");
+                                  this.setState(() => {
+                                    return { selectedLobbyIndex: null as any };
+                                  });
+                                }
+                                break;
+                              case LobbyJoiningStatus.connectionError:
+                                {
+                                  toast("There has been a connection error");
+                                  this.setState(() => {
+                                    return { selectedLobbyIndex: null as any };
+                                  });
+                                }
+                                break;
+                            }
+                          }
+                        );
+                        this.setState({ selectedLobbyIndex: i });
+                      }
+                    }}
                   >
-                    Join
+                    {selectedLobbyIndex === i ? "Cancel" : "Join"}
                   </button>
+                  {/* join lobby loading spinner */}
+                  {selectedLobbyIndex === i ? (
+                    <div
+                      style={{
+                        position: "relative",
+                        float: "right",
+                        top: "50%",
+                        marginRight: width * 0.015,
+                        transform: "translate(0%, -50%)",
+                        display: "flex",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <LoadingSpin
+                        size={`${tileHeight * 0.5}px`}
+                        width="4px"
+                        primaryColor="#ed1b24"
+                        secondaryColor="ccc"
+                      />
+                    </div>
+                  ) : (
+                    <div />
+                  )}
                 </li>
               ))}
             </ul>
           </div>
         )}
+        {/* toaster */}
+        <div>
+          <Toaster
+            toastOptions={{
+              className: "",
+              style: {
+                background: "#000",
+                color: "#ccc",
+                width: 300,
+              },
+            }}
+            containerStyle={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 300,
+            }}
+          />
+        </div>
       </div>
     );
   }

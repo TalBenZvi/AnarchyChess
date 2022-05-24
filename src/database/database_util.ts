@@ -55,3 +55,14 @@ export interface LobbyCreationResponse {
   status: LobbyCreationStatus;
   gameID: string;
 }
+
+export enum LobbyJoiningStatus {
+  success,
+  failure,
+  connectionError,
+}
+
+export interface LobbyJoiningResponse {
+  status: LobbyJoiningStatus;
+  serverIndex: number;
+}
