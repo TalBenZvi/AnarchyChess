@@ -5,9 +5,9 @@ import { Redirect } from "react-router";
 
 import { Lobby, LobbyJoiningStatus } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
-import rightArrow from "../assets/page_design/right_arrow.png";
 import { Authentication } from "../database/authentication";
-import LobbyCreationForm from "./lobby_creation_form";
+import rightArrow from "../assets/page_design/right_arrow.png";
+import refreshIcon from "../assets/page_design/refresh_icon.png";
 
 const LOBBIES_IN_A_PAGE: number = 10;
 
@@ -34,10 +34,15 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     targetLobbyID: null as any,
   };
 
-  componentDidMount() {
+  private loadLobbiesFromDatabase = () => {
     Authentication.getLobbies((lobbies: Lobby[]) => {
       this.setState({ isWaitingForResponse: false, lobbies: lobbies });
     });
+    this.setState({ isWaitingForResponse: true });
+  };
+
+  componentDidMount() {
+    this.loadLobbiesFromDatabase();
   }
 
   render() {
@@ -47,15 +52,10 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
       page,
       isWaitingForResponse,
       selectedLobbyIndex,
-      targetLobbyID
+      targetLobbyID,
     } = this.state;
     if (targetLobbyID != null) {
-      return (
-        <Redirect
-          push
-          to={`/lobby/${targetLobbyID}`}
-        />
-      );
+      return <Redirect push to={`/lobby/${targetLobbyID}`} />;
     }
     let displayedLobbies: Lobby[] = lobbies.slice(
       page * LOBBIES_IN_A_PAGE,
@@ -91,15 +91,41 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
         >
           Lobbies
         </div>
+        {/* refresh button */}
+        <button
+          className="app-button"
+          disabled={isWaitingForResponse}
+          style={{
+            position: "fixed",
+            right: "25%",
+            top: margin * 0.5,
+            width: height * 0.08,
+            height: height * 0.08,
+            fontSize: fontSize,
+            zIndex: 1,
+          }}
+          onClick={this.loadLobbiesFromDatabase}
+        >
+          <img
+            src={refreshIcon}
+            style={{
+              position: "fixed",
+              transform: "translate(-50%, -50%)",
+              width: height * 0.07,
+              height: height * 0.07,
+              filter: "contrast(0.5) brightness(3)",
+              }}
+          />
+        </button>
         {/* 'create lobby' button */}
         <button
           className="app-button"
           style={{
             position: "fixed",
-            right: margin,
+            right: "2%",
             top: margin * 0.5,
-            width: 200,
-            height: 50,
+            width: width * 0.2,
+            height: height * 0.08,
             fontSize: fontSize,
             zIndex: 1,
           }}
