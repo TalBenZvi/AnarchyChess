@@ -80,6 +80,7 @@ export class GameClient {
               ])
             );
           });
+          // request connection
           this.serverConnection.send(
             JSON.stringify(
               {
@@ -94,6 +95,13 @@ export class GameClient {
               replacer
             )
           );
+          // when disconnected from server
+          this.serverConnection.on("close", () => {
+            this.observer.notify(
+              ClientNotificationType.disconnectedFromServer,
+              new Map<ClientNotificationInfo, any>()
+            );
+          });
           return ConnectionStatus.success;
         }
       }

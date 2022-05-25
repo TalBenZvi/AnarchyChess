@@ -63,7 +63,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     );
     let tileWidth: number = width * 0.95;
     let tileHeight: number = (height / LOBBIES_IN_A_PAGE) * 0.75;
-    let tileMargin: number = (height / LOBBIES_IN_A_PAGE) * 0.1;
+    let tileMargin: number = (height / LOBBIES_IN_A_PAGE) * 0.08;
     let titleFontSize: number = tileHeight;
     let fontSize: number = tileHeight * 0.45;
     let fontPadding: number = tileHeight * 0.4;

@@ -50,6 +50,7 @@ class AuthenticatedHomePage extends React.Component<
                 position: "fixed",
                 opacity: 1,
                 zIndex: 2,
+                color: "#ccc",
               }}
             >
               {/* form area */}

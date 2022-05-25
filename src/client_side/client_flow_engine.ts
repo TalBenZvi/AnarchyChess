@@ -21,6 +21,7 @@ import {
   DeathScreenComponent,
   PromotionScreenComponent,
   PlayerListComponent,
+  ClientPageComponent,
 } from "../components/game_component_interfaces";
 import {
   Event,
@@ -36,6 +37,7 @@ export class ClientFlowEngine implements ClientObserver {
 
   private gameClient: GameClient;
   private position: Position = null as any;
+  private _clientPage: ClientPageComponent = null as any;
   private _board: ChessBoardComponent = null as any;
   private _graveYard: GraveYardComponent = null as any;
   private _deathScreen: DeathScreenComponent = null as any;
@@ -54,6 +56,10 @@ export class ClientFlowEngine implements ClientObserver {
   constructor(playerID: string) {
     this.playerID = playerID;
     this.gameClient = new GameClient(this, playerID);
+  }
+
+  set clientPage(clientPage: ClientPageComponent) {
+    this._clientPage = clientPage;
   }
 
   set board(board: ChessBoardComponent) {
@@ -384,6 +390,9 @@ export class ClientFlowEngine implements ClientObserver {
   ): void {
     switch (notification) {
       case ClientNotificationType.disconnectedFromServer: {
+        if (this._clientPage != null) {
+          this._clientPage.disconnect();
+        }
         break;
       }
       case ClientNotificationType.receivedEvent: {

@@ -1,6 +1,12 @@
 import {PieceColor, Piece, Move, Square, PlayingPiece} from "../game_flow_util/game_elements"
 import {User} from "../database/database_util"
 
+
+export interface ClientPageComponent {
+  disconnect(): void;
+}
+
+
 export interface ChessBoardComponent {
   setPovColor(povColor: PieceColor): void;
 

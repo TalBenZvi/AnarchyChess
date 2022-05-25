@@ -1,32 +1,22 @@
 import * as React from "react";
-import { withRouter, Redirect } from "react-router";
+import { withRouter } from "react-router";
 
-
-import { Authentication } from "../database/authentication";
 import NavBar from "../components/navbar";
 import PlayerList from "../components/player_list";
+import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
-interface LobbyPageProps {}
+interface LobbyPageProps {
+  clientFlowEngine: ClientFlowEngine;
+}
 
 interface LobbyPageState {}
 
 class LobbyPage extends React.Component<any, any> {
   state = {};
 
-  componentDidMount() {
-    /*
-    if (Authentication.clientFlowEngine != null) {
-      Authentication.clientFlowEngine.attemptToConnect(
-        this.props.match.params.id
-      );
-    }
-    */
-  }
-
+  
   render() {
-    if (Authentication.currentUser == null) {
-      return <Redirect push to="/" />;
-    }
+    let { clientFlowEngine } = this.props;
     return (
       <div className="background">
         <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
@@ -40,7 +30,7 @@ class LobbyPage extends React.Component<any, any> {
           <PlayerList
             width={500}
             height={750}
-            clientFlowEngine={Authentication.clientFlowEngine}
+            clientFlowEngine={clientFlowEngine}
           />
         </div>
       </div>

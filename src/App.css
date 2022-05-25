@@ -24,10 +24,11 @@ ul.row {
 }
 
 .dialog {
+  position: absolute;
+  z-index: 1;
   height: 100%;
   width: 100%;
-  background-color: black;
-  opacity: 0.3;
+  background-color: #00000030;
 }
 
 .background {
@@ -49,6 +50,8 @@ ul.row {
   transform: translate(-50%, 0%);
   overflow: hidden;
   white-space: nowrap;
+  color: #ccc;
+  font-family: "MS PGothic";
 }
 
 .highlighted-area {
@@ -114,14 +117,7 @@ ul.row {
   filter: contrast(50%);
 }
 
-.dialog {
-  position: absolute;
-  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.7);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-}
+
 
 .image-button {
   /*cursor: pointer;*/

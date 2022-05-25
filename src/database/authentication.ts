@@ -105,7 +105,7 @@ export class Authentication {
     Authentication.mongodbClient.joinLobby(
       Authentication.currentUser.id,
       lobbyID,
-      (
+      async (
         isSuccessfullClient: boolean,
         status: LobbyJoiningStatus,
         serverIndex: number
@@ -115,6 +115,7 @@ export class Authentication {
             Authentication.currentUser.id
           );
           Authentication.clientFlowEngine.targetServerIndex = serverIndex;
+          await Authentication.clientFlowEngine.attemptToConnect(lobbyID);
         }
         callback(isSuccessfullClient, status);
       }
