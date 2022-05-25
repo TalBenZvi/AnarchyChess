@@ -86,6 +86,12 @@ export class ClientFlowEngine implements ClientObserver {
     }
   }
 
+  destroyConnection(): void {
+    if (this.gameClient != null) {
+      this.gameClient.destroyConenction();
+    }
+  }
+
   sendMove(move: Move): void {
     if (move != null && move.isPromotion && move.promotionType == null) {
       if (this._promotionScreen != null) {

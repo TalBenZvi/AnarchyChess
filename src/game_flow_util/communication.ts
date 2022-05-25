@@ -32,6 +32,7 @@ export enum EventInfo {
 
 export enum RequestType {
   connection,
+  disconnection,
   move,
 }
 

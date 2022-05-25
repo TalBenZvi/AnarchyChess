@@ -14,6 +14,7 @@ import Peer from "peerjs";
 
 export enum ServerNotificationType {
   playerConnected,
+  playerDisconnected,
   filledServer,
   receivedRequest,
 }
@@ -35,9 +36,6 @@ export interface ServerObserver {
 export class GameServer {
   private serverPeers: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private clients: any[] = [];
-  private isClientConnectedArray: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(
-    false
-  );
   private gameStatus: GameStatus = GameStatus.inactive;
   private broadcastedEventsLog: Event[] = [];
 
@@ -56,41 +54,24 @@ export class GameServer {
         });
         this.serverPeers[i].on("connection", (client: any) => {
           this.clients[i] = client;
-          /*
-          this.observer.notify(ServerNotificationType.playerConnected, new Map<ServerNotificationInfo, any>([[
-            ServerNotificationInfo.playerIndex
-          ]]));
-          */
           client.on("data", (requestData: any) => {
-            if (requestData.toString() === "connected") {
-              /*
-              this.isClientConnectedArray[i] = true;
-              let areAllClientsConnected = true;
-              for (let isClientConnected of this.isClientConnectedArray) {
-                if (!isClientConnected) {
-                  areAllClientsConnected = false;
-                }
-              }
-              if (areAllClientsConnected) {
-                this.observer.notify(
-                  ServerNotificationType.filledServer,
-                  new Map<ServerNotificationInfo, any>()
-                );
-              }
-              */
-            } else {
-              let request: Request = JSON.parse(
-                requestData.toString(),
-                reviver
-              );
-              this.observer.notify(
-                ServerNotificationType.receivedRequest,
-                new Map<ServerNotificationInfo, any>([
-                  [ServerNotificationInfo.playerIndex, i],
-                  [ServerNotificationInfo.request, request],
-                ])
-              );
-            }
+            let request: Request = JSON.parse(requestData.toString(), reviver);
+            this.observer.notify(
+              ServerNotificationType.receivedRequest,
+              new Map<ServerNotificationInfo, any>([
+                [ServerNotificationInfo.playerIndex, i],
+                [ServerNotificationInfo.request, request],
+              ])
+            );
+          });
+          // when client disconnects
+          client.on("close", () => {
+            this.observer.notify(
+              ServerNotificationType.playerDisconnected,
+              new Map<ServerNotificationInfo, any>([
+                [ServerNotificationInfo.playerIndex, i],
+              ])
+            );
           });
         });
       }

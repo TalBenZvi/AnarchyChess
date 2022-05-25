@@ -53,7 +53,7 @@ export class GameClient {
     serverIndex: number
   ): Promise<ConnectionStatus> {
     if (this.gameStatus === GameStatus.inactive) {
-      this.clientPeer = new Peer(this.playerID, {
+      this.clientPeer = new Peer(`${gameID}_client_${this.playerID}`, {
         host: PEERJS_SERVER_IP,
         port: PEERJS_SERVER_PORT,
         path: "/myapp",
@@ -70,7 +70,7 @@ export class GameClient {
         }
         await new Promise((f) => setTimeout(f, DELAY_BETWEEN_TRIES));
         if (didConnect) {
-          // subscribe for events
+          // listen for events
           this.serverConnection.on("data", (eventData: any) => {
             let event: Event = JSON.parse(eventData.toString(), reviver);
             this.observer.notify(
@@ -81,21 +81,30 @@ export class GameClient {
             );
           });
           this.serverConnection.send(
-            JSON.stringify({
-              type: RequestType.connection,
-              info: new Map<RequestInfo, string>([
-                [
-                  RequestInfo.user,
-                  JSON.stringify(Authentication.currentUser),
-                ],
-              ]),
-            }, replacer)
+            JSON.stringify(
+              {
+                type: RequestType.connection,
+                info: new Map<RequestInfo, string>([
+                  [
+                    RequestInfo.user,
+                    JSON.stringify(Authentication.currentUser),
+                  ],
+                ]),
+              },
+              replacer
+            )
           );
           return ConnectionStatus.success;
         }
       }
     }
     return ConnectionStatus.failure;
+  }
+
+  destroyConenction(): void {
+    if (this.clientPeer != null) {
+      this.clientPeer.destroy();
+    }
   }
 
   private sendRequest(request: Request): void {

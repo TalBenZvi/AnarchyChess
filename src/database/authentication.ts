@@ -26,6 +26,11 @@ export class Authentication {
   static clientFlowEngine: ClientFlowEngine;
 
   static logout() {
+    if (Authentication.clientFlowEngine != null) {
+      Authentication.clientFlowEngine.destroyConnection();
+    }
+    Authentication.clientFlowEngine = null as any;
+    Authentication.serverFlowEngine = null as any;
     Authentication.currentUser = null as any;
   }
 

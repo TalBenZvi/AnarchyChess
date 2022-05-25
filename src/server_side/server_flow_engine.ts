@@ -229,6 +229,26 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
+  private handleDisconnection(playerIndex: number) {
+    this.players[playerIndex] = null as any;
+    this.gameServer.broadcastEvent({
+      index: null as any,
+      type: EventType.playerListUpdate,
+      info: new Map<EventInfo, string>([
+        [
+          EventInfo.connectedPlayers,
+          JSON.stringify(this.players.filter((player: User) => player != null)),
+        ],
+      ]),
+    });
+    Authentication.updateLobbyMembers(
+      this._gameID,
+      this.players.map((player: User) =>
+        player == null ? (null as any) : player.id
+      )
+    );
+  }
+
   private async handleRequest(
     playerIndex: number,
     request: Request,
@@ -237,15 +257,19 @@ export class ServerFlowEngine implements ServerObserver {
     switch (request.type) {
       // connection
       case RequestType.connection: {
-        if (!this.isGameRunning) {
-          let user: User = JSON.parse(
-            request.info.get(RequestInfo.user) as string,
-            reviver
-          );
-          this.handleConnection(playerIndex, user);
-        }
+        let user: User = JSON.parse(
+          request.info.get(RequestInfo.user) as string,
+          reviver
+        );
+        this.handleConnection(playerIndex, user);
         break;
       }
+      // disconnection
+      case RequestType.disconnection: {
+        this.handleDisconnection(playerIndex);
+        break;
+      }
+      // move
       case RequestType.move: {
         if (this.isGameRunning) {
           let moveRequest: Move = JSON.parse(
@@ -267,6 +291,13 @@ export class ServerFlowEngine implements ServerObserver {
     notificationInfo: Map<ServerNotificationInfo, any>
   ) {
     switch (notification) {
+      case ServerNotificationType.playerDisconnected: {
+        let playerIndex: number = notificationInfo.get(
+          ServerNotificationInfo.playerIndex
+        );
+        this.handleDisconnection(playerIndex);
+        break;
+      }
       case ServerNotificationType.filledServer: {
         console.log("server full");
         await new Promise((f) => setTimeout(f, 1000));
