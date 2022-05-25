@@ -25,6 +25,7 @@ import {
   reviver,
 } from "../game_flow_util/communication";
 import { User } from "../database/database_util";
+import { Authentication } from "../database/authentication";
 
 const COOLDOWN_VARIANCE = 0.2;
 
@@ -210,6 +211,12 @@ export class ServerFlowEngine implements ServerObserver {
         ],
       ]),
     });
+    Authentication.updateLobbyMembers(
+      this._gameID,
+      this.players.map((player: User) =>
+        player == null ? (null as any) : player.id
+      )
+    );
     let isServerFull: boolean = true;
     for (let player of this.players) {
       if (player == null) {

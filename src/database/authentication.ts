@@ -86,12 +86,12 @@ export class Authentication {
   }
 
   static joinLobby(
-    lobbyName: string,
+    lobbyID: string,
     callback: (isSuccessfull: boolean, status: LobbyJoiningStatus) => void
   ) {
     Authentication.mongodbClient.joinLobby(
       Authentication.currentUser.id,
-      lobbyName,
+      lobbyID,
       (
         isSuccessfullClient: boolean,
         status: LobbyJoiningStatus,
@@ -106,5 +106,9 @@ export class Authentication {
         callback(isSuccessfullClient, status);
       }
     );
+  }
+
+  static updateLobbyMembers(lobbyID: string, memberIDs: string[]) {
+    Authentication.mongodbClient.updateLobbyMembers(lobbyID, memberIDs);
   }
 }
