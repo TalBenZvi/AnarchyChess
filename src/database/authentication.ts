@@ -25,6 +25,10 @@ export class Authentication {
   static serverFlowEngine: ServerFlowEngine;
   static clientFlowEngine: ClientFlowEngine;
 
+  static logout() {
+    Authentication.currentUser = null as any;
+  }
+
   static register(
     user: RegisterParams,
     callback: (isSuccessfull: boolean, status: RegisterStatus) => void

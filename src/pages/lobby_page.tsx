@@ -1,5 +1,5 @@
 import * as React from "react";
-import { withRouter } from "react-router";
+import { withRouter, Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
 import NavBar from "../components/navbar";
@@ -21,6 +21,9 @@ class LobbyPage extends React.Component<any, any> {
   }
 
   render() {
+    if (Authentication.currentUser == null) {
+      return <Redirect push to="/" />;
+    }
     return (
       <div className="background">
         <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />

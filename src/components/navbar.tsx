@@ -2,21 +2,22 @@ import * as React from "react";
 import { Redirect } from "react-router";
 
 import homeTitle from "../assets/page_design/home_title.png";
+import { Authentication } from "../database/authentication";
 
 interface NavBarProps {
   currentRoute: string;
 }
 
 interface NavBarState {
-  redirectAddress: string
+  redirectAddress: string;
 }
 
 class NavBar extends React.Component<NavBarProps, NavBarState> {
-  state = {redirectAddress: null as any}
+  state = { redirectAddress: null as any };
 
   render() {
-    let {redirectAddress} = this.state;
-    let {currentRoute} = this.props;
+    let { redirectAddress } = this.state;
+    let { currentRoute } = this.props;
     if (redirectAddress != null && redirectAddress != currentRoute) {
       return <Redirect push to={redirectAddress} />;
     }
@@ -31,6 +32,7 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
           zIndex: 0,
         }}
       >
+        {/* logo */}
         <img
           style={{
             position: "absolute",
@@ -39,10 +41,32 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
             cursor: "pointer",
           }}
           src={homeTitle}
-          onClick = {() => {
-            this.setState({redirectAddress: "/"})
+          onClick={() => {
+            this.setState({ redirectAddress: "/" });
           }}
         />
+        {/* username */}
+        <div
+          className="navbar-title"
+          style={{
+            right: "3%",
+          }}
+        >
+          {Authentication.currentUser.username}
+        </div>
+        {/* logout button */}
+        <button
+          className="navbar-button"
+          style={{
+            right: "9%",
+          }}
+          onClick = {() => {
+            Authentication.logout();
+            window.location.reload();
+          }}
+        >
+          Log out
+        </button>
       </div>
     );
   }

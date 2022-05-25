@@ -135,3 +135,33 @@ ul.row {
 .image-button:active {
   filter: contrast(50%);
 }
+
+.navbar-title {
+  position: absolute;
+  height: 80;
+  color: #ccc;
+  font-size: 20px;
+  line-height: 80px;
+}
+
+.navbar-button {
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  position: absolute;
+  height: 80;
+  color: #ed1b24;
+  font-size: 20px;
+  line-height: 80px;
+  
+}
+
+.navbar-button:hover {
+  background: #252525;
+}
+
+.navbar-button:active {
+  background: none;
+}
