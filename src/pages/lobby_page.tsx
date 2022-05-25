@@ -1,6 +1,7 @@
 import * as React from "react";
 import { withRouter, Redirect } from "react-router";
 
+
 import { Authentication } from "../database/authentication";
 import NavBar from "../components/navbar";
 import PlayerList from "../components/player_list";
@@ -13,11 +14,13 @@ class LobbyPage extends React.Component<any, any> {
   state = {};
 
   componentDidMount() {
+    /*
     if (Authentication.clientFlowEngine != null) {
       Authentication.clientFlowEngine.attemptToConnect(
         this.props.match.params.id
       );
     }
+    */
   }
 
   render() {

@@ -52,6 +52,12 @@ export class ServerFlowEngine implements ServerObserver {
     this.gameServer.acceptConnections(gameID);
   }
 
+  destroyConnections(): void {
+    if (this.gameServer != null) {
+      this.gameServer.destroyConenctions();
+    }
+  }
+
   private startGame(): void {
     this.position.setToStartingPosition();
     this.isGameRunning = true;

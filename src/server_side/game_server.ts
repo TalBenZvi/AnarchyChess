@@ -52,6 +52,7 @@ export class GameServer {
           port: PEERJS_SERVER_PORT,
           path: "/myapp",
         });
+        // listen for connections
         this.serverPeers[i].on("connection", (client: any) => {
           this.clients[i] = client;
           client.on("data", (requestData: any) => {
@@ -74,8 +75,23 @@ export class GameServer {
             );
           });
         });
+        this.serverPeers[i].on("close", () => {
+          const request = new XMLHttpRequest();
+          const url =
+            "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/destroyLobby";
+          request.open("POST", url);
+          request.send();
+        });
       }
       console.log("all servers connected");
+    }
+  }
+
+  destroyConenctions(): void {
+    for (let serverPeer of this.serverPeers) {
+      if (serverPeer != null) {
+        serverPeer.destroy();
+      }
     }
   }
 

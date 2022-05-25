@@ -30,6 +30,9 @@ export class Authentication {
       Authentication.clientFlowEngine.destroyConnection();
     }
     Authentication.clientFlowEngine = null as any;
+    if (Authentication.serverFlowEngine != null) {
+      Authentication.serverFlowEngine.destroyConnections();
+    }
     Authentication.serverFlowEngine = null as any;
     Authentication.currentUser = null as any;
   }
@@ -72,7 +75,7 @@ export class Authentication {
   ) {
     Authentication.mongodbClient.createLobby(
       lobbyParams,
-      (
+      async (
         isSuccessfullClient: boolean,
         status: LobbyCreationStatus,
         gameID: string
@@ -84,6 +87,7 @@ export class Authentication {
             Authentication.currentUser.id
           );
           Authentication.clientFlowEngine.targetServerIndex = 0;
+          await Authentication.clientFlowEngine.attemptToConnect(gameID);
         }
         callback(isSuccessfullClient, status);
       }
@@ -115,6 +119,13 @@ export class Authentication {
         callback(isSuccessfullClient, status);
       }
     );
+  }
+
+  static leaveLobby() {
+    if (Authentication.clientFlowEngine != null) {
+      Authentication.clientFlowEngine.destroyConnection();
+    }
+    Authentication.clientFlowEngine = null as any;
   }
 
   static updateLobbyMembers(lobbyID: string, memberIDs: string[]) {

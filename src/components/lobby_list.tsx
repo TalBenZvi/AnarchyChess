@@ -114,7 +114,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               width: height * 0.07,
               height: height * 0.07,
               filter: "contrast(0.5) brightness(3)",
-              }}
+            }}
           />
         </button>
         {/* 'create lobby' button */}
