@@ -95,7 +95,9 @@ export class Authentication {
   }
 
   static getLobbies(callback: (lobbies: Lobby[]) => void) {
-    Authentication.mongodbClient.getLobbies(callback);
+    if (Authentication.currentUser != null) {
+      Authentication.mongodbClient.getLobbies(Authentication.currentUser.id, callback);
+    }
   }
 
   static joinLobby(

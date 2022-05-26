@@ -82,12 +82,12 @@ export class MongodbClient {
     };
   }
 
-  getLobbies(callback: (lobbies: Lobby[]) => void): void {
+  getLobbies(userID: string, callback: (lobbies: Lobby[]) => void): void {
     const request = new XMLHttpRequest();
     const url =
       "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/getLobbies";
     request.open("POST", url);
-    request.send();
+    request.send(JSON.stringify({ userID: userID }));
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
         callback(
@@ -118,7 +118,7 @@ export class MongodbClient {
     const url =
       "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/joinLobby";
     request.open("POST", url);
-    request.send(JSON.stringify({userID: userID, lobbyID: lobbyID}));
+    request.send(JSON.stringify({ userID: userID, lobbyID: lobbyID }));
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
         let response: LobbyJoiningResponse = JSON.parse(
@@ -129,14 +129,11 @@ export class MongodbClient {
     };
   }
 
-  updateLobbyMembers(
-    lobbyID: string,
-    memberIDs: string[],
-  ): void {
+  updateLobbyMembers(lobbyID: string, memberIDs: string[]): void {
     const request = new XMLHttpRequest();
     const url =
       "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/updateLobbyMembers";
     request.open("POST", url);
-    request.send(JSON.stringify({lobbyID: lobbyID, memberIDs: memberIDs}));
+    request.send(JSON.stringify({ lobbyID: lobbyID, memberIDs: memberIDs }));
   }
 }
