@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
+import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { PlayerListComponent } from "./game_component_interfaces";
@@ -20,13 +21,18 @@ class PlayerList
   implements PlayerListComponent
 {
   state = {
-    connectedPlayers: [],
-    /*
-    connectedPlayers: [...Array(20)].map((_, i) => ({
-      id: i.toString(),
-      username: `player ${i}`,
-    })),
-    */
+    //connectedPlayers: [],
+
+    connectedPlayers: [
+      {
+        id: "testID",
+        username: "admin",
+      },
+      ...[...Array(20)].map((_, i) => ({
+        id: i.toString(),
+        username: `player ${i}`,
+      })),
+    ],
   };
 
   constructor(props: PlayerListProps) {
@@ -69,6 +75,11 @@ class PlayerList
                   borderBottom:
                     i === NUM_OF_PLAYERS / 2 - 1 ? "" : "2px solid #555",
                   fontSize: fontSize,
+                  fontWeight:
+                    player != null &&
+                    player.username === Authentication.currentUser.username
+                      ? "bold"
+                      : "normal",
                 }}
               >
                 {player == null ? "" : player.username}
@@ -102,12 +113,14 @@ class PlayerList
           border: "3px solid #555",
         }}
       >
+        {/* left row */}
         {this.tileList(
           playerList.slice(0, NUM_OF_PLAYERS / 2),
           tileWidth,
           tileHeight,
           fontSize
         )}
+        {/* right row */}
         <div
           style={{
             position: "absolute",
@@ -121,6 +134,7 @@ class PlayerList
             fontSize
           )}
         </div>
+        {/* horizontal line */}
         <div
           style={{
             position: "relative",
