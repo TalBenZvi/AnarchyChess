@@ -69,7 +69,7 @@ class GraveYard
     }
   }
 
-  addPiece(piece: Piece, respawnCompletionTime: number): void {
+  private addPiece(piece: Piece, respawnCompletionTime: number): void {
     this.setState(() => {
       let newGraveYardItems: Map<PieceColor, GraveYardItem[]> = new Map<
         PieceColor,

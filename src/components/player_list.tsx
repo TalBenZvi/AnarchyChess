@@ -47,7 +47,7 @@ class PlayerList
     }
   }
 
-  setPlayers(players: User[]): void {
+  private setPlayers(players: User[]): void {
     this.setState({ connectedPlayers: players });
   }
 

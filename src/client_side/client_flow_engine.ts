@@ -13,11 +13,7 @@ import {
   PieceColor,
   CastleSide,
   PieceType,
-  PlayingPiece,
 } from "../game_flow_util/game_elements";
-import {
-  ClientPageComponent,
-} from "../components/game_component_interfaces";
 import {
   Event,
   EventInfo,
@@ -74,8 +70,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   private position: Position = null as any;
 
-  private _clientPage: ClientPageComponent = null as any;
-
   private observers: ClientFlowEngineObserver[] = [];
 
   // debug
@@ -85,10 +79,6 @@ export class ClientFlowEngine implements GameClientObserver {
   constructor(playerID: string) {
     this.playerID = playerID;
     this.gameClient = new GameClient(this, playerID);
-  }
-
-  set clientPage(clientPage: ClientPageComponent) {
-    this._clientPage = clientPage;
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -329,9 +319,10 @@ export class ClientFlowEngine implements GameClientObserver {
   ): void {
     switch (notification) {
       case ClientNotificationType.disconnectedFromServer: {
-        if (this._clientPage != null) {
-          this._clientPage.disconnect();
-        }
+        this.notifyObservers(
+          ClientEventType.disconnection,
+          new Map<ClientEventInfo, any>()
+        );
         break;
       }
       case ClientNotificationType.receivedEvent: {

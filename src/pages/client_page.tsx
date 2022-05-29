@@ -3,9 +3,11 @@ import { withRouter, Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
 import LobbyPage from "./lobby_page";
-import NavBar from "../components/navbar";
-import PlayerList from "../components/player_list";
-import { ClientPageComponent } from "../components/game_component_interfaces";
+import {
+  ClientFlowEngineObserver,
+  ClientEventType,
+  ClientEventInfo,
+} from "../client_side/client_flow_engine";
 
 enum LobbyState {
   open,
@@ -22,14 +24,15 @@ interface ClientPageState {
 
 class ClientPage
   extends React.Component<ClientPageProps, ClientPageState>
-  implements ClientPageComponent {
+  implements ClientFlowEngineObserver
+{
   state = {
     lobbyState: LobbyState.open,
   };
 
   componentDidMount() {
     if (Authentication.clientFlowEngine != null) {
-      Authentication.clientFlowEngine.clientPage = this;
+      Authentication.clientFlowEngine.addObserver(this);
     }
   }
 
@@ -38,6 +41,12 @@ class ClientPage
       this.setState({ lobbyState: LobbyState.closed });
     }, 4000);
     this.setState({ lobbyState: LobbyState.closing });
+  }
+
+  notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
+    if (eventType === ClientEventType.disconnection) {
+      this.disconnect();
+    }
   }
 
   render() {
