@@ -1,11 +1,15 @@
-import {PieceColor, Piece, Move, Square, PlayingPiece} from "../game_flow_util/game_elements"
-import {User} from "../database/database_util"
-
+import {
+  PieceColor,
+  Piece,
+  Move,
+  Square,
+  PlayingPiece,
+} from "../game_flow_util/game_elements";
+import { User } from "../database/database_util";
 
 export interface ClientPageComponent {
   disconnect(): void;
 }
-
 
 export interface ChessBoardComponent {
   setPovColor(povColor: PieceColor): void;
@@ -36,7 +40,6 @@ export interface ChessBoardComponent {
   promotePlayer(playerIndex: number, promotionPiece: Piece): void;
 }
 
-
 export interface GraveYardComponent {
   addPiece(piece: Piece, respawnCompletionTime: number): void;
 
@@ -45,20 +48,17 @@ export interface GraveYardComponent {
   clear(): void;
 }
 
-
 export interface DeathScreenComponent {
   show(respawnTimer: number): void;
 
   hide(): void;
 }
 
-
 export interface PromotionScreenComponent {
   show(move: Move, color: PieceColor): void;
 
   hide(): void;
 }
-
 
 export interface PlayerListComponent {
   setPlayers(players: User[]): void;

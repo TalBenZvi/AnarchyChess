@@ -12,11 +12,17 @@ import {
   PieceType,
   Square,
   Piece,
-  Knight,
+  Position,
 } from "../game_flow_util/game_elements";
-import { ChessBoardComponent } from "../components/game_component_interfaces"
-import { ClientFlowEngine } from "../client_side/client_flow_engine";
+import { ChessBoardComponent } from "../components/game_component_interfaces";
+import {
+  ClientFlowEngine,
+  ClientFlowEngineObserver,
+  ClientEventType,
+  ClientEventInfo,
+} from "../client_side/client_flow_engine";
 
+// load piece images
 const PIECE_IMAGES: Map<PieceColor, Map<PieceType, any>> = new Map();
 for (const color in PieceColor) {
   if (!isNaN(Number(color))) {
@@ -47,23 +53,6 @@ const PIECE_RESPAWNING_TIME: number = 0.15;
 const DEAD_PIECE_ELEVATION_FACTOR: number = 1;
 const WHITE_TIMER_COLOR: string = "#eeeeee";
 const BLACK_TIMER_COLOR: string = "#333333";
-
-const PROMOTION_TYPES: PieceType[] = [
-  PieceType.knight,
-  PieceType.bishop,
-  PieceType.rook,
-  PieceType.queen,
-];
-
-interface ChessBoardProps {
-  size: number;
-  lightColor: string;
-  darkColor: string;
-  povColor: PieceColor;
-  clientFlowEngine: ClientFlowEngine;
-}
-
-interface ChessBoardState {}
 
 class CanvasPiece {
   private image: any;
@@ -270,7 +259,7 @@ class BoardArea {
     }
   }
 
-  startCooldownTimer(cooldownCompletionTime: number, color: PieceColor): void {
+  startCooldownTimer(cooldownCompletionTime: number): void {
     if (cooldownCompletionTime == null) {
       this.cooldownTimer = null as any;
     } else if (this.playerSquare != null) {
@@ -281,7 +270,9 @@ class BoardArea {
         (this.fitRowIndexToPOV(this.playerSquare.row) + 0.2) * this.squareSize,
         this.squareSize * 0.12,
         this.squareSize * 0.05,
-        color === PieceColor.white ? WHITE_TIMER_COLOR : BLACK_TIMER_COLOR,
+        this.povColor === PieceColor.white
+          ? WHITE_TIMER_COLOR
+          : BLACK_TIMER_COLOR,
         (cooldownCompletionTime - new Date().getTime()) / 1000
       );
       let cooldownTimer: CanvasCooldownTimer = this.cooldownTimer;
@@ -410,13 +401,8 @@ class BoardArea {
   // return wehther or not there's a need for an update
   draw(): boolean {
     let shouldUpdate: boolean = false;
-    let {
-      size,
-      lightColor,
-      darkColor,
-      povColor,
-      clientFlowEngine,
-    } = this.props;
+    let { size, lightColor, darkColor, povColor, clientFlowEngine } =
+      this.props;
     let coordinateIndexFontSize: number = size * 0.035;
     // squares
     for (let i = 0; i < BOARD_SIZE; i++) {
@@ -525,10 +511,22 @@ class BoardArea {
   }
 }
 
+interface ChessBoardProps {
+  size: number;
+  lightColor: string;
+  darkColor: string;
+  povColor: PieceColor;
+  clientFlowEngine: ClientFlowEngine;
+}
+
+interface ChessBoardState {}
+
 class ChessBoard
   extends React.Component<ChessBoardProps, ChessBoardState>
-  implements ChessBoardComponent {
+  implements ChessBoardComponent, ClientFlowEngineObserver
+{
   state = {};
+  playerIndex: number = null as any;
   canvasRef = null as any;
   boardArea: BoardArea = null as any;
   shouldUpdateBoard: boolean = false;
@@ -594,7 +592,7 @@ class ChessBoard
   }
 
   startCooldownTimer(cooldownCompletionTime: number, color: PieceColor): void {
-    this.boardArea.startCooldownTimer(cooldownCompletionTime, color);
+    this.boardArea.startCooldownTimer(cooldownCompletionTime);
   }
 
   killPlayer(playerIndex: number): void {
@@ -622,8 +620,59 @@ class ChessBoard
     this.shouldUpdateBoard = true;
   }
 
+  private startGame(playerIndex: number, initialCooldown: number): void {
+    this.playerIndex = playerIndex;
+    let position: Position = this.props.clientFlowEngine.getPosition();
+    let povColor: PieceColor = position.getPieceByPlayer(playerIndex).color;
+    this.setPovColor(povColor);
+    this.setPlayerSquare(position.getPlayerLocation(playerIndex));
+    this.setPieces(position.playingPieces);
+    this.setAvailableMoves(position.findAvaillableMovesForPlayer(playerIndex));
+    this.startCooldownTimer(initialCooldown, povColor);
+  }
+
+  private move(
+    movingPlayerIndex: number,
+    move: Move,
+    cooldown: number,
+    respawnPreviewSquare: Square,
+    respawnPreviewPiece: Piece
+  ): void {
+    if (movingPlayerIndex === this.playerIndex) {
+      this.setSelectedMove(null as any);
+      this.setPlayerSquare(new Square(move.row, move.column));
+      //change
+      this.startCooldownTimer(new Date().getTime() + cooldown * 1000, PieceColor.white);
+      this.movePlayer(movingPlayerIndex, move.row, move.column);
+    }
+  }
+
+  notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
+    switch (eventType) {
+      case ClientEventType.gameStarted: {
+        this.startGame(
+          info.get(ClientEventInfo.playerIndex),
+          info.get(ClientEventInfo.initialCooldown)
+        );
+        break;
+      }
+      case ClientEventType.move: {
+        break;
+      }
+      case ClientEventType.death: {
+        break;
+      }
+      case ClientEventType.respawn: {
+        break;
+      }
+      case ClientEventType.moveSent: {
+        break;
+      }
+    }
+  }
+
   render() {
-    let { size, lightColor, darkColor } = this.props;
+    let { size } = this.props;
     return (
       <div>
         <canvas ref={this.canvasRef} width={size} height={size} />

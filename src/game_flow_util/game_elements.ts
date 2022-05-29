@@ -737,9 +737,23 @@ export class Position {
     ]);
   }
 
+  static getStartSquareByPlayer(playerIndex: number): Square {
+    return Position.startPlayerLocations[playerIndex];
+  }
+
   static getStartPieceByPlayer(playerIndex: number): Piece {
     let startSquare = Position.startPlayerLocations[playerIndex];
     return Position.startBoardArrangement[startSquare.row][startSquare.column];
+  }
+
+  static getStartPlayingPieces(): PlayingPiece[] {
+    return [...Array(NUM_OF_PLAYERS)].map((i) => {
+      return {
+        piece: Position.getStartPieceByPlayer(i),
+        row: Position.startPlayerLocations[i].row,
+        column: Position.startPlayerLocations[i].column,
+      }
+    })
   }
 
   get playerLocations(): Square[] {

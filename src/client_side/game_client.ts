@@ -28,7 +28,7 @@ export enum ClientNotificationInfo {
   event,
 }
 
-export interface ClientObserver {
+export interface GameClientObserver {
   notify(
     notification: ClientNotificationType,
     notificationInfo: Map<ClientNotificationInfo, any>
@@ -46,7 +46,7 @@ export class GameClient {
   gameStatus: GameStatus = GameStatus.inactive;
   playerIndex: number = null as any;
 
-  constructor(private observer: ClientObserver, private playerID: string) {}
+  constructor(private observer: GameClientObserver, private playerID: string) {}
 
   async attemptToConnect(
     gameID: string,
