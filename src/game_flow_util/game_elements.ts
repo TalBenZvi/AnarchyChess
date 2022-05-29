@@ -961,6 +961,10 @@ export class Position {
     }
   }
 
+  isPlayerAlive(playerIndex: number) {
+    return this.playerLocations[playerIndex] != null;
+  }
+
   // debug: returns false if there was an error
   move(playerIndex: number, row: number, column: number): boolean {
     let areFieldsCoordinated: boolean = this.areFieldsCoordinated();
