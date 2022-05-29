@@ -1,8 +1,12 @@
 import React from "react";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
-import { DeathScreenComponent } from "../components/game_component_interfaces"
 
-import { ClientFlowEngine } from "../client_side/client_flow_engine";
+import {
+  ClientFlowEngine,
+  ClientFlowEngineObserver,
+  ClientEventType,
+  ClientEventInfo,
+} from "../client_side/client_flow_engine";
 
 const FONT_COLOR: string = "#900000";
 
@@ -17,26 +21,55 @@ interface DeathScreenState {
 
 class DeathScreen
   extends React.Component<DeathScreenProps, DeathScreenState>
-  implements DeathScreenComponent {
+  implements ClientFlowEngineObserver
+{
   state = { isActive: false, respawnTimer: 0 };
+
+  playerIndex: number = null as any;
 
   constructor(props: DeathScreenProps) {
     super(props);
     if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.deathScreen = this;
+      props.clientFlowEngine.addObserver(this);
     }
   }
 
-  show(respawnTimer: number): void {
+  private show(respawnTimer: number): void {
     this.setState(() => {
       return { isActive: true, respawnTimer: respawnTimer };
     });
   }
 
-  hide(): void {
+  private hide(): void {
     this.setState(() => {
       return { isActive: false };
     });
+  }
+
+  notify(eventType: ClientEventType, eventInfo: Map<ClientEventInfo, any>) {
+    switch (eventType) {
+      case ClientEventType.gameStarted: {
+        this.playerIndex = eventInfo.get(ClientEventInfo.playerIndex);
+        break;
+      }
+      case ClientEventType.death: {
+        if (
+          eventInfo.get(ClientEventInfo.dyingPlayerIndex) === this.playerIndex
+        ) {
+          this.show(eventInfo.get(ClientEventInfo.deathTimer));
+        }
+        break;
+      }
+      case ClientEventType.respawn: {
+        if (
+          eventInfo.get(ClientEventInfo.respawningPlayerIndex) ===
+          this.playerIndex
+        ) {
+          this.hide();
+        }
+        break;
+      }
+    }
   }
 
   render() {

@@ -16,9 +16,7 @@ import {
   PlayingPiece,
 } from "../game_flow_util/game_elements";
 import {
-  ChessBoardComponent,
   GraveYardComponent,
-  DeathScreenComponent,
   PromotionScreenComponent,
   PlayerListComponent,
   ClientPageComponent,
@@ -81,7 +79,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   private _clientPage: ClientPageComponent = null as any;
   private _graveYard: GraveYardComponent = null as any;
-  private _deathScreen: DeathScreenComponent = null as any;
   private _promotionScreen: PromotionScreenComponent = null as any;
   private _playerList: PlayerListComponent = null as any;
 
@@ -102,10 +99,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   set graveYard(graveYard: GraveYardComponent) {
     this._graveYard = graveYard;
-  }
-
-  set deathScreen(deathScreen: DeathScreenComponent) {
-    this._deathScreen = deathScreen;
   }
 
   set promotionScreen(promotionScreen: PromotionScreenComponent) {
@@ -175,10 +168,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
     this.position.killPlayer(dyingPlayerIndex);
 
-    if (this._deathScreen != null && dyingPlayerIndex === this.playerIndex) {
-      this._deathScreen.show(deathTimer);
-    }
-
     if (
       this._promotionScreen != null &&
       dyingPlayerIndex === this.playerIndex
@@ -240,13 +229,6 @@ export class ClientFlowEngine implements GameClientObserver {
       respawningPlayerIndex,
       new Square(respawnSquare.row, respawnSquare.column)
     );
-
-    if (
-      this._deathScreen != null &&
-      respawningPlayerIndex === this.playerIndex
-    ) {
-      this._deathScreen.hide();
-    }
 
     this.notifyObservers(
       ClientEventType.respawn,
