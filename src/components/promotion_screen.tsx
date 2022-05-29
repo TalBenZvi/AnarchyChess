@@ -5,9 +5,14 @@ import {
   PieceColor,
   colorToString,
   typeToString,
+  Position,
 } from "../game_flow_util/game_elements";
-import { PromotionScreenComponent } from "../components/game_component_interfaces"
-import { ClientFlowEngine } from "../client_side/client_flow_engine";
+import {
+  ClientFlowEngine,
+  ClientFlowEngineObserver,
+  ClientEventType,
+  ClientEventInfo,
+} from "../client_side/client_flow_engine";
 import { Dialog } from "@headlessui/react";
 
 const PROMOTION_TYPES: PieceType[] = [
@@ -42,14 +47,17 @@ interface PromotionScreenState {
 
 class PromotionScreen
   extends React.Component<PromotionScreenProps, PromotionScreenState>
-  implements PromotionScreenComponent {
+  implements ClientFlowEngineObserver
+{
   state = { isActive: false, move: null as any, color: null as any };
+
+  playerIndex: number = null as any;
   canBeClosed: boolean = false;
 
   constructor(props: PromotionScreenProps) {
     super(props);
     if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.promotionScreen = this;
+      props.clientFlowEngine.addObserver(this);
     }
   }
 
@@ -67,6 +75,31 @@ class PromotionScreen
       return { isActive: false, move: null as any, color: null as any };
     });
     this.canBeClosed = false;
+  }
+
+  notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
+    switch (eventType) {
+      case ClientEventType.gameStarted: {
+        this.playerIndex = info.get(ClientEventInfo.playerIndex);
+        break;
+      }
+      case ClientEventType.moveSent: {
+        let move: Move = info.get(ClientEventInfo.sentMove);
+        if (move != null && move.isPromotion && move.promotionType == null) {
+          this.show(
+            move,
+            Position.getStartPieceByPlayer(this.playerIndex).color
+          );
+        }
+        break;
+      }
+      case ClientEventType.death: {
+        if (info.get(ClientEventInfo.dyingPlayerIndex) === this.playerIndex) {
+          this.hide();
+        }
+        break;
+      }
+    }
   }
 
   render() {

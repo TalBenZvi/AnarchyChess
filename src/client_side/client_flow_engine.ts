@@ -16,7 +16,6 @@ import {
   PlayingPiece,
 } from "../game_flow_util/game_elements";
 import {
-  PromotionScreenComponent,
   ClientPageComponent,
 } from "../components/game_component_interfaces";
 import {
@@ -76,7 +75,6 @@ export class ClientFlowEngine implements GameClientObserver {
   private position: Position = null as any;
 
   private _clientPage: ClientPageComponent = null as any;
-  private _promotionScreen: PromotionScreenComponent = null as any;
 
   private observers: ClientFlowEngineObserver[] = [];
 
@@ -91,10 +89,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   set clientPage(clientPage: ClientPageComponent) {
     this._clientPage = clientPage;
-  }
-
-  set promotionScreen(promotionScreen: PromotionScreenComponent) {
-    this._promotionScreen = promotionScreen;
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -129,17 +123,9 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   sendMove(move: Move): void {
-    if (move != null && move.isPromotion && move.promotionType == null) {
-      if (this._promotionScreen != null) {
-        this._promotionScreen.show(
-          move,
-          this.position.getPieceByPlayer(this.playerIndex).color
-        );
-      }
-    } else {
+    if (!(move != null && move.isPromotion && move.promotionType == null)) {
       this.gameClient.sendMove(move);
     }
-
     this.notifyObservers(
       ClientEventType.moveSent,
       new Map<ClientEventInfo, any>([[ClientEventInfo.sentMove, move]])
@@ -148,14 +134,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   private killPlayer(dyingPlayerIndex: number, deathTimer: number): void {
     this.position.killPlayer(dyingPlayerIndex);
-
-    if (
-      this._promotionScreen != null &&
-      dyingPlayerIndex === this.playerIndex
-    ) {
-      this._promotionScreen.hide();
-    }
-
     this.notifyObservers(
       ClientEventType.death,
       new Map<ClientEventInfo, any>([
