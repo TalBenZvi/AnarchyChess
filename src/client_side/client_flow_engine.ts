@@ -17,7 +17,6 @@ import {
 } from "../game_flow_util/game_elements";
 import {
   PromotionScreenComponent,
-  PlayerListComponent,
   ClientPageComponent,
 } from "../components/game_component_interfaces";
 import {
@@ -78,7 +77,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   private _clientPage: ClientPageComponent = null as any;
   private _promotionScreen: PromotionScreenComponent = null as any;
-  private _playerList: PlayerListComponent = null as any;
 
   private observers: ClientFlowEngineObserver[] = [];
 
@@ -97,10 +95,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   set promotionScreen(promotionScreen: PromotionScreenComponent) {
     this._promotionScreen = promotionScreen;
-  }
-
-  set playerList(playerList: PlayerListComponent) {
-    this._playerList = playerList;
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -172,10 +166,6 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   private updatePlayerList(connectedPlayers: User[]): void {
-    if (this._playerList != null) {
-      this._playerList.setPlayers([...connectedPlayers]);
-    }
-
     this.notifyObservers(
       ClientEventType.playerListUpdate,
       new Map<ClientEventInfo, any>([

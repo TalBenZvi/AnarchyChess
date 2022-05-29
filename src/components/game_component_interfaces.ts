@@ -16,7 +16,3 @@ export interface PromotionScreenComponent {
 
   hide(): void;
 }
-
-export interface PlayerListComponent {
-  setPlayers(players: User[]): void;
-}

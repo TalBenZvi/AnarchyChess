@@ -1,10 +1,14 @@
 import * as React from "react";
 
-import { ClientFlowEngine } from "../client_side/client_flow_engine";
+import {
+  ClientFlowEngine,
+  ClientFlowEngineObserver,
+  ClientEventType,
+  ClientEventInfo,
+} from "../client_side/client_flow_engine";
 import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
-import { PlayerListComponent } from "./game_component_interfaces";
 
 interface PlayerListProps {
   width: number;
@@ -18,11 +22,11 @@ interface PlayerListState {
 
 class PlayerList
   extends React.Component<PlayerListProps, PlayerListState>
-  implements PlayerListComponent
+  implements ClientFlowEngineObserver
 {
   state = {
-    //connectedPlayers: [],
-
+    connectedPlayers: [],
+    /*
     connectedPlayers: [
       {
         id: "testID",
@@ -33,17 +37,24 @@ class PlayerList
         username: `player ${i}`,
       })),
     ],
+    */
   };
 
   constructor(props: PlayerListProps) {
     super(props);
     if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.playerList = this;
+      props.clientFlowEngine.addObserver(this);
     }
   }
 
   setPlayers(players: User[]): void {
     this.setState({ connectedPlayers: players });
+  }
+
+  notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
+    if (eventType === ClientEventType.playerListUpdate) {
+      this.setPlayers(info.get(ClientEventInfo.playerList));
+    }
   }
 
   private tileList(
