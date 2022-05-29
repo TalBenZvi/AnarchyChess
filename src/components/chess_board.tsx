@@ -14,7 +14,6 @@ import {
   Piece,
   Position,
 } from "../game_flow_util/game_elements";
-import { ChessBoardComponent } from "../components/game_component_interfaces";
 import {
   ClientFlowEngine,
   ClientFlowEngineObserver,

@@ -97,7 +97,7 @@ class RegisterForm extends React.Component<
         email: this.state.email,
         password: this.state.password,
       },
-      (isSuccessfull: boolean, status: RegisterStatus) => {
+      (status: RegisterStatus) => {
         switch (status) {
           case RegisterStatus.success:
             {

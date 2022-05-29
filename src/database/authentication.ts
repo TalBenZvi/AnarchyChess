@@ -11,16 +11,19 @@ import {
 import { MongodbClient } from "../database/mongodb_client";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
+import { stat } from "fs";
 
 export class Authentication {
-  //static currentUser: User = null as any;
-  
+  static currentUser: User = null as any;
+
+  /*
   static currentUser: User = {
     id: "627c0e2c5573d5400492587f",
     username: "admin",
     email: "talbz03@gmail.com",
   };
-  
+  */
+
   static mongodbClient: MongodbClient = new MongodbClient();
   static serverFlowEngine: ServerFlowEngine;
   static clientFlowEngine: ClientFlowEngine;
@@ -39,15 +42,15 @@ export class Authentication {
 
   static register(
     user: RegisterParams,
-    callback: (isSuccessfull: boolean, status: RegisterStatus) => void
+    callback: (status: RegisterStatus) => void
   ) {
     Authentication.mongodbClient.register(
       user,
-      (isSuccessfullClient: boolean, status: RegisterStatus, user: User) => {
+      (status: RegisterStatus, user: User) => {
         if (status === RegisterStatus.success) {
           Authentication.currentUser = user;
         }
-        callback(isSuccessfullClient, status);
+        callback(status);
       }
     );
   }
@@ -55,73 +58,90 @@ export class Authentication {
   static login(
     usernameOrEmail: string,
     password: string,
-    callback: (isSuccessfull: boolean, status: LoginStatus) => void
+    callback: (status: LoginStatus) => void
   ) {
     Authentication.mongodbClient.login(
       usernameOrEmail,
       password,
-      (isSuccessfullClient: boolean, status: LoginStatus, user: User) => {
+      (status: LoginStatus, user: User) => {
         if (status === LoginStatus.success) {
           Authentication.currentUser = user;
         }
-        callback(isSuccessfullClient, status);
+        callback(status);
       }
     );
   }
 
   static createLobby(
     lobbyParams: LobbyParams,
-    callback: (isSuccessfull: boolean, status: LobbyCreationStatus) => void
+    callback: (status: LobbyCreationStatus) => void
   ) {
     Authentication.mongodbClient.createLobby(
       lobbyParams,
-      async (
-        isSuccessfullClient: boolean,
-        status: LobbyCreationStatus,
-        gameID: string
-      ) => {
+      async (status: LobbyCreationStatus, gameID: string) => {
+        let connectionStatus: LobbyCreationStatus = status;
         if (status === LobbyCreationStatus.success) {
           Authentication.serverFlowEngine = new ServerFlowEngine();
           Authentication.serverFlowEngine.acceptConnections(gameID);
           Authentication.clientFlowEngine = new ClientFlowEngine(
-            Authentication.currentUser.id
+            Authentication.currentUser
           );
-          Authentication.clientFlowEngine.targetServerIndex = 0;
-          await Authentication.clientFlowEngine.attemptToConnect(gameID);
+          let isConnectionSuccessfull: boolean = await Authentication.clientFlowEngine.attemptToConnect(
+            gameID,
+            0
+          );
+          if (!isConnectionSuccessfull) {
+            Authentication.clientFlowEngine.destroyConnection();
+            Authentication.clientFlowEngine = null as any;
+            Authentication.serverFlowEngine.destroyConnections();
+            Authentication.serverFlowEngine = null as any;
+            connectionStatus = LobbyCreationStatus.connectionError;
+          }
         }
-        callback(isSuccessfullClient, status);
+        callback(connectionStatus);
       }
     );
   }
 
   static getLobbies(callback: (lobbies: Lobby[]) => void) {
     if (Authentication.currentUser != null) {
-      Authentication.mongodbClient.getLobbies(Authentication.currentUser.id, callback);
+      Authentication.mongodbClient.getLobbies(
+        Authentication.currentUser.id,
+        callback
+      );
     }
   }
 
   static joinLobby(
     lobbyID: string,
-    callback: (isSuccessfull: boolean, status: LobbyJoiningStatus) => void
+    callback: (status: LobbyJoiningStatus) => void
   ) {
     Authentication.mongodbClient.joinLobby(
       Authentication.currentUser.id,
       lobbyID,
-      async (
-        isSuccessfullClient: boolean,
-        status: LobbyJoiningStatus,
-        serverIndex: number
-      ) => {
+      async (status: LobbyJoiningStatus, serverIndex: number) => {
+        let connectionStatus: LobbyJoiningStatus = status;
         if (status === LobbyJoiningStatus.success) {
           Authentication.clientFlowEngine = new ClientFlowEngine(
-            Authentication.currentUser.id
+            Authentication.currentUser
           );
-          Authentication.clientFlowEngine.targetServerIndex = serverIndex;
-          await Authentication.clientFlowEngine.attemptToConnect(lobbyID);
+          let isConnectionSuccessfull = await Authentication.clientFlowEngine.attemptToConnect(
+            lobbyID,
+            serverIndex
+          );
+          if (!isConnectionSuccessfull) {
+            Authentication.clientFlowEngine.destroyConnection();
+            Authentication.clientFlowEngine = null as any;
+            connectionStatus = LobbyJoiningStatus.connectionError;
+          }
         }
-        callback(isSuccessfullClient, status);
+        callback(connectionStatus);
       }
     );
+  }
+
+  static updateLobbyMembers(lobbyID: string, memberIDs: string[]) {
+    Authentication.mongodbClient.updateLobbyMembers(lobbyID, memberIDs);
   }
 
   static leaveLobby() {
@@ -129,9 +149,5 @@ export class Authentication {
       Authentication.clientFlowEngine.destroyConnection();
     }
     Authentication.clientFlowEngine = null as any;
-  }
-
-  static updateLobbyMembers(lobbyID: string, memberIDs: string[]) {
-    Authentication.mongodbClient.updateLobbyMembers(lobbyID, memberIDs);
   }
 }

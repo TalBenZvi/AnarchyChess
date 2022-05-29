@@ -1,3 +1,5 @@
+import Peer from "peerjs";
+
 import { Move, NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import {
   Event,
@@ -12,8 +14,8 @@ import {
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
 } from "../game_flow_util/communication";
-import Peer from "peerjs";
 import { Authentication } from "../database/authentication";
+import { User } from "../database/database_util";
 
 const MAX_CONNECTION_TRIES = 20;
 // in millis
@@ -35,10 +37,6 @@ export interface GameClientObserver {
   ): void;
 }
 
-export enum ConnectionStatus {
-  success,
-  failure,
-}
 
 export class GameClient {
   private clientPeer: any = null;
@@ -46,14 +44,15 @@ export class GameClient {
   gameStatus: GameStatus = GameStatus.inactive;
   playerIndex: number = null as any;
 
-  constructor(private observer: GameClientObserver, private playerID: string) {}
+  constructor(private observer: GameClientObserver, private user: User) {}
 
+  // returns whether or not the connection was successfull
   async attemptToConnect(
     gameID: string,
     serverIndex: number
-  ): Promise<ConnectionStatus> {
+  ): Promise<boolean> {
     if (this.gameStatus === GameStatus.inactive) {
-      this.clientPeer = new Peer(`${gameID}_client_${this.playerID}`, {
+      this.clientPeer = new Peer(`${gameID}_client_${this.user.id}`, {
         host: PEERJS_SERVER_IP,
         port: PEERJS_SERVER_PORT,
         path: "/myapp",
@@ -88,7 +87,7 @@ export class GameClient {
                 info: new Map<RequestInfo, string>([
                   [
                     RequestInfo.user,
-                    JSON.stringify(Authentication.currentUser),
+                    JSON.stringify(this.user),
                   ],
                 ]),
               },
@@ -102,11 +101,11 @@ export class GameClient {
               new Map<ClientNotificationInfo, any>()
             );
           });
-          return ConnectionStatus.success;
+          return true;
         }
       }
     }
-    return ConnectionStatus.failure;
+    return false;
   }
 
   destroyConenction(): void {

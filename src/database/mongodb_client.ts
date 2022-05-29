@@ -16,11 +16,7 @@ import {
 export class MongodbClient {
   register(
     user: RegisterParams,
-    callback: (
-      isSuccessfull: boolean,
-      status: RegisterStatus,
-      user: User
-    ) => void
+    callback: (status: RegisterStatus, user: User) => void
   ): void {
     const request = new XMLHttpRequest();
     const url =
@@ -29,10 +25,14 @@ export class MongodbClient {
     request.send(JSON.stringify(user));
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
-        let response: RegisterResponse = JSON.parse(
-          JSON.parse(request.responseText)
-        );
-        callback(request.status === 200, response.status, response.user);
+        if (request.status === 200) {
+          let response: RegisterResponse = JSON.parse(
+            JSON.parse(request.responseText)
+          );
+          callback(response.status, response.user);
+        } else {
+          callback(RegisterStatus.connectionError, null as any);
+        }
       }
     };
   }
@@ -40,7 +40,7 @@ export class MongodbClient {
   login(
     usernameOrEmail: string,
     password: string,
-    callback: (isSuccessfull: boolean, status: LoginStatus, user: User) => void
+    callback: (status: LoginStatus, user: User) => void
   ): void {
     const request = new XMLHttpRequest();
     const url =
@@ -51,21 +51,21 @@ export class MongodbClient {
     );
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
-        let response: LoginResponse = JSON.parse(
-          JSON.parse(request.responseText)
-        );
-        callback(request.status === 200, response.status, response.user);
+        if (request.status === 200) {
+          let response: LoginResponse = JSON.parse(
+            JSON.parse(request.responseText)
+          );
+          callback(response.status, response.user);
+        } else {
+          callback(LoginStatus.connectionError, null as any);
+        }
       }
     };
   }
 
   createLobby(
     lobbyParams: LobbyParams,
-    callback: (
-      isSuccessfull: boolean,
-      status: LobbyCreationStatus,
-      gameID: string
-    ) => void
+    callback: (status: LobbyCreationStatus, gameID: string) => void
   ): void {
     const request = new XMLHttpRequest();
     const url =
@@ -74,10 +74,14 @@ export class MongodbClient {
     request.send(JSON.stringify(lobbyParams));
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
-        let response: LobbyCreationResponse = JSON.parse(
-          JSON.parse(request.responseText)
-        );
-        callback(request.status === 200, response.status, response.gameID);
+        if (request.status === 200) {
+          let response: LobbyCreationResponse = JSON.parse(
+            JSON.parse(request.responseText)
+          );
+          callback(response.status, response.gameID);
+        } else {
+          callback(LobbyCreationStatus.connectionError, null as any);
+        }
       }
     };
   }
@@ -90,17 +94,21 @@ export class MongodbClient {
     request.send(JSON.stringify({ userID: userID }));
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
-        callback(
-          JSON.parse(request.responseText).map(
-            (databaseLobby: any, _: number) => {
-              return {
-                id: databaseLobby["_id"],
-                name: databaseLobby["name"],
-                memberIDs: databaseLobby["memberIDs"],
-              };
-            }
-          )
-        );
+        if (request.status === 200) {
+          callback(
+            JSON.parse(request.responseText).map(
+              (databaseLobby: any, _: number) => {
+                return {
+                  id: databaseLobby["_id"],
+                  name: databaseLobby["name"],
+                  memberIDs: databaseLobby["memberIDs"],
+                };
+              }
+            )
+          );
+        } else {
+          callback([]);
+        }
       }
     };
   }
@@ -108,11 +116,7 @@ export class MongodbClient {
   joinLobby(
     userID: string,
     lobbyID: string,
-    callback: (
-      isSuccessfull: boolean,
-      status: LobbyJoiningStatus,
-      serverIndex: number
-    ) => void
+    callback: (status: LobbyJoiningStatus, serverIndex: number) => void
   ): void {
     const request = new XMLHttpRequest();
     const url =
@@ -121,10 +125,14 @@ export class MongodbClient {
     request.send(JSON.stringify({ userID: userID, lobbyID: lobbyID }));
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
-        let response: LobbyJoiningResponse = JSON.parse(
-          JSON.parse(request.responseText)
-        );
-        callback(request.status === 200, response.status, response.serverIndex);
+        if (request.status === 200) {
+          let response: LobbyJoiningResponse = JSON.parse(
+            JSON.parse(request.responseText)
+          );
+          callback(response.status, response.serverIndex);
+        } else {
+          callback(LobbyJoiningStatus.connectionError, null as any);
+        }
       }
     };
   }

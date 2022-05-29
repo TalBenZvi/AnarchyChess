@@ -3,7 +3,6 @@ import {
   ClientNotificationType,
   ClientNotificationInfo,
   GameClientObserver,
-  ConnectionStatus,
 } from "./game_client";
 import {
   Position,
@@ -62,11 +61,10 @@ export interface ClientFlowEngineObserver {
 }
 
 export class ClientFlowEngine implements GameClientObserver {
-  public targetServerIndex: number = null as any;
   private gameClient: GameClient;
 
   private playerIndex: number = null as any;
-  private playerID: string;
+  private user: User;
 
   private position: Position = null as any;
 
@@ -76,9 +74,9 @@ export class ClientFlowEngine implements GameClientObserver {
   public shouldStopSimulation: boolean = false;
   private receivedEventIndices: number[] = [];
 
-  constructor(playerID: string) {
-    this.playerID = playerID;
-    this.gameClient = new GameClient(this, playerID);
+  constructor(user: User) {
+    this.user = user;
+    this.gameClient = new GameClient(this, user);
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -94,12 +92,12 @@ export class ClientFlowEngine implements GameClientObserver {
     }
   }
 
-  async attemptToConnect(gameID: string) {
-    if (this.targetServerIndex != null) {
-      let connectionStatus: ConnectionStatus =
-        await this.gameClient.attemptToConnect(gameID, this.targetServerIndex);
-      console.log(`${this.playerID}: ${connectionStatus}`);
-    }
+  // returns whether or not the connection was successfull
+  async attemptToConnect(gameID: string, serverIndex: number): Promise<boolean> {
+    return await this.gameClient.attemptToConnect(
+      gameID,
+      serverIndex
+    );
   }
 
   destroyConnection(): void {
@@ -211,8 +209,9 @@ export class ClientFlowEngine implements GameClientObserver {
           parseInt(event.info.get(EventInfo.playerIndex) as string),
           moveNotification
         );
-        let movingPlayerLocation: Square =
-          this.position.getPlayerLocation(movingPlayerIndex);
+        let movingPlayerLocation: Square = this.position.getPlayerLocation(
+          movingPlayerIndex
+        );
         // if move is valid
         if (move != null) {
           // isCapture
@@ -277,8 +276,9 @@ export class ClientFlowEngine implements GameClientObserver {
           }
           // isCastle
           if (move.isCastle) {
-            let movingPiece: Piece =
-              this.position.getPieceByPlayer(movingPlayerIndex);
+            let movingPiece: Piece = this.position.getPieceByPlayer(
+              movingPlayerIndex
+            );
             let startRow: number =
               movingPiece.color === PieceColor.white ? 0 : 7;
             let startColumn: number =

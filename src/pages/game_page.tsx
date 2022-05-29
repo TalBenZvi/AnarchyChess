@@ -10,11 +10,15 @@ import ChessBoard from "../components/chess_board";
 
 const PLAYER_ENGINE_INDEX: number = 11;
 
+
 function GamePage() {
+  
   let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
+  /*
   let clientFlowEngines: ClientFlowEngine[] = [...Array(NUM_OF_PLAYERS)].map(
     (_, i) => new ClientFlowEngine(`id${i}`)
   );
+  */
   let isRunning: boolean = true;
   return (
     /* background */
@@ -35,7 +39,7 @@ function GamePage() {
           lightColor="#ff6666"
           darkColor="#353535"
           povColor={PieceColor.white}
-          clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]}
+          clientFlowEngine={null as any}
         />
       </div>
       {/* buttons */}
@@ -54,9 +58,11 @@ function GamePage() {
           let gameID: string = Math.random().toString();
           serverFlowEngine.acceptConnections(gameID);
           await new Promise((f) => setTimeout(f, 3000));
+          /*
           for (let clientFlowEngine of clientFlowEngines) {
             clientFlowEngine.attemptToConnect(gameID);
           }
+          */
         }}
       >
         start
@@ -77,10 +83,12 @@ function GamePage() {
           while (isRunning) {
             let i = Math.floor(Math.random() * NUM_OF_PLAYERS);
             if (i !== PLAYER_ENGINE_INDEX) {
+              /*
               clientFlowEngines[i].runTest();
               if (clientFlowEngines[i].shouldStopSimulation) {
                 isRunning = false;
               }
+              */
               await new Promise((f) => setTimeout(f, 100));
             }
           }
@@ -121,14 +129,14 @@ function GamePage() {
           backgroundColor="#454545"
           tileColor="#808080"
           povColor={PieceColor.white}
-          clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]}
+          clientFlowEngine={null as any}
         />
       </div>
       {/* death screen */}
-      <DeathScreen clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]} />
+      <DeathScreen clientFlowEngine={null as any} />
       {/* promotion screen */}
       <PromotionScreen
-        clientFlowEngine={clientFlowEngines[PLAYER_ENGINE_INDEX]}
+        clientFlowEngine={null as any}
       />
     </div>
   );

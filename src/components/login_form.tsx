@@ -42,7 +42,7 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     Authentication.login(
       this.state.usernameOrEmail,
       this.state.password,
-      (isSuccessfull: boolean, status: LoginStatus) => {
+      (status: LoginStatus) => {
         switch (status) {
           case LoginStatus.success:
             {

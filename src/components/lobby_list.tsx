@@ -307,10 +307,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                       } else {
                         Authentication.joinLobby(
                           lobby.id,
-                          (
-                            isSuccessfull: boolean,
-                            status: LobbyJoiningStatus
-                          ) => {
+                          (status: LobbyJoiningStatus) => {
                             switch (status) {
                               case LobbyJoiningStatus.success:
                                 {
