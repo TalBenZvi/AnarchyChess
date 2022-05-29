@@ -16,7 +16,6 @@ import {
   PlayingPiece,
 } from "../game_flow_util/game_elements";
 import {
-  GraveYardComponent,
   PromotionScreenComponent,
   PlayerListComponent,
   ClientPageComponent,
@@ -78,7 +77,6 @@ export class ClientFlowEngine implements GameClientObserver {
   private position: Position = null as any;
 
   private _clientPage: ClientPageComponent = null as any;
-  private _graveYard: GraveYardComponent = null as any;
   private _promotionScreen: PromotionScreenComponent = null as any;
   private _playerList: PlayerListComponent = null as any;
 
@@ -95,10 +93,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   set clientPage(clientPage: ClientPageComponent) {
     this._clientPage = clientPage;
-  }
-
-  set graveYard(graveYard: GraveYardComponent) {
-    this._graveYard = graveYard;
   }
 
   set promotionScreen(promotionScreen: PromotionScreenComponent) {
@@ -159,13 +153,6 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   private killPlayer(dyingPlayerIndex: number, deathTimer: number): void {
-    if (this._graveYard != null) {
-      this._graveYard.addPiece(
-        Position.getStartPieceByPlayer(dyingPlayerIndex),
-        new Date().getTime() + deathTimer * 1000
-      );
-    }
-
     this.position.killPlayer(dyingPlayerIndex);
 
     if (
@@ -203,15 +190,6 @@ export class ClientFlowEngine implements GameClientObserver {
     this.gameClient.gameStatus = GameStatus.running;
     this.position = new Position(`client ${playerIndex}`);
     this.position.setToStartingPosition();
-    let povColor: PieceColor = this.position.getPieceByPlayer(
-      this.playerIndex
-    ).color;
-
-    if (this._graveYard != null) {
-      this._graveYard.clear();
-      this._graveYard.setPovColor(povColor);
-    }
-
     this.notifyObservers(
       ClientEventType.gameStarted,
       new Map<ClientEventInfo, any>([

@@ -1,14 +1,20 @@
 import * as React from "react";
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
+
 import {
   PieceColor,
   reverseColor,
   Piece,
   colorToString,
   typeToString,
+  Position,
 } from "../game_flow_util/game_elements";
-import { GraveYardComponent } from "../components/game_component_interfaces"
-import { ClientFlowEngine } from "../client_side/client_flow_engine";
-import { CountdownCircleTimer } from "react-countdown-circle-timer";
+import {
+  ClientFlowEngine,
+  ClientFlowEngineObserver,
+  ClientEventType,
+  ClientEventInfo,
+} from "../client_side/client_flow_engine";
 
 function importAll(r: any) {
   let images: Map<string, any> = new Map<string, any>();
@@ -46,7 +52,8 @@ interface GraveYardState {
 
 class GraveYard
   extends React.Component<GraveYardProps, GraveYardState>
-  implements GraveYardComponent {
+  implements ClientFlowEngineObserver
+{
   state = {
     povColor: this.props.povColor,
     graveYardItems: new Map<PieceColor, GraveYardItem[]>([
@@ -58,68 +65,8 @@ class GraveYard
   constructor(props: GraveYardProps) {
     super(props);
     if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.graveYard = this;
+      props.clientFlowEngine.addObserver(this);
     }
-  }
-
-  private tile(
-    tileSize: number,
-    margin: number,
-    contrast: number,
-    color: PieceColor,
-    itemIndex: number
-  ) {
-    let { imagePath, respawnCompletionTime } = (this.state.graveYardItems.get(
-      color
-    ) as GraveYardItem[])[itemIndex];
-    return (
-      <div
-        style={{
-          width: tileSize,
-          height: tileSize,
-          backgroundColor: this.props.tileColor,
-          borderRadius: 10,
-          margin: margin,
-          marginTop: 15,
-          position: "relative",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            color: "#cc2222",
-            fontSize: tileSize * 0.8,
-            textShadow: "3px 3px #000000",
-            zIndex: 2,
-          }}
-        >
-          <CountdownCircleTimer
-            size={tileSize}
-            isPlaying={true}
-            duration={(respawnCompletionTime - new Date().getTime()) / 1000}
-            colors={"#ffffff00"}
-            trailColor="#ffffff00"
-            onComplete={() => {
-              this.removeItem(color, itemIndex);
-            }}
-          >
-            {({ remainingTime }) => remainingTime}
-          </CountdownCircleTimer>
-        </div>
-        <div
-          style={{
-            filter: `contrast(${contrast * 100}%)`,
-          }}
-        >
-          <img
-            src={images.get(imagePath)}
-            height={tileSize}
-            width={tileSize}
-            alt=""
-          />
-        </div>
-      </div>
-    );
   }
 
   addPiece(piece: Piece, respawnCompletionTime: number): void {
@@ -190,13 +137,13 @@ class GraveYard
     });
   }
 
-  setPovColor(povColor: PieceColor): void {
+  private setPovColor(povColor: PieceColor): void {
     this.setState(() => {
       return { povColor: povColor };
     });
   }
 
-  clear(): void {
+  private clear(): void {
     this.setState(() => {
       return {
         graveYardItems: new Map<PieceColor, GraveYardItem[]>([
@@ -207,31 +154,113 @@ class GraveYard
     });
   }
 
+  notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
+    switch (eventType) {
+      case ClientEventType.gameStarted: {
+        this.clear();
+        this.setPovColor(
+          Position.getStartPieceByPlayer(info.get(ClientEventInfo.playerIndex))
+            .color
+        );
+        break;
+      }
+      case ClientEventType.death: {
+        this.addPiece(
+          Position.getStartPieceByPlayer(
+            info.get(ClientEventInfo.dyingPlayerIndex)
+          ),
+          new Date().getTime() + info.get(ClientEventInfo.deathTimer) * 1000
+        );
+        break;
+      }
+    }
+  }
+
+  private tile(
+    tileSize: number,
+    margin: number,
+    contrast: number,
+    color: PieceColor,
+    itemIndex: number
+  ) {
+    let { imagePath, respawnCompletionTime } = (
+      this.state.graveYardItems.get(color) as GraveYardItem[]
+    )[itemIndex];
+    return (
+      <div
+        style={{
+          width: tileSize,
+          height: tileSize,
+          backgroundColor: this.props.tileColor,
+          borderRadius: 10,
+          margin: margin,
+          marginTop: 15,
+          position: "relative",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            color: "#cc2222",
+            fontSize: tileSize * 0.8,
+            textShadow: "3px 3px #000000",
+            zIndex: 2,
+          }}
+        >
+          <CountdownCircleTimer
+            size={tileSize}
+            isPlaying={true}
+            duration={(respawnCompletionTime - new Date().getTime()) / 1000}
+            colors={"#ffffff00"}
+            trailColor="#ffffff00"
+            onComplete={() => {
+              this.removeItem(color, itemIndex);
+            }}
+          >
+            {({ remainingTime }) => remainingTime}
+          </CountdownCircleTimer>
+        </div>
+        <div
+          style={{
+            filter: `contrast(${contrast * 100}%)`,
+          }}
+        >
+          <img
+            src={images.get(imagePath)}
+            height={tileSize}
+            width={tileSize}
+            alt=""
+          />
+        </div>
+      </div>
+    );
+  }
+
   render() {
     let { povColor, graveYardItems } = this.state;
     let tileSize: number = (this.props.width / ROW_SIZE) * 0.85;
     let margin: number = (this.props.width / ROW_SIZE - tileSize) / 2;
-    let graveYardItemsByRows: GraveYardItem[][] = [
-      ...Array(NUM_OF_ROWS),
-    ].map((_, i) => []);
-    graveYardItemsByRows[0] = (graveYardItems.get(
-      reverseColor(povColor)
-    ) as GraveYardItem[]).slice(0, ROW_SIZE);
-    graveYardItemsByRows[1] = (graveYardItems.get(
-      reverseColor(povColor)
-    ) as GraveYardItem[]).slice(ROW_SIZE, 2 * ROW_SIZE);
-    graveYardItemsByRows[2] = (graveYardItems.get(
-      reverseColor(povColor)
-    ) as GraveYardItem[]).slice(2 * ROW_SIZE, 3 * ROW_SIZE);
-    graveYardItemsByRows[3] = (graveYardItems.get(
-      povColor
-    ) as GraveYardItem[]).slice(0, ROW_SIZE);
-    graveYardItemsByRows[4] = (graveYardItems.get(
-      povColor
-    ) as GraveYardItem[]).slice(ROW_SIZE, 2 * ROW_SIZE);
-    graveYardItemsByRows[5] = (graveYardItems.get(
-      povColor
-    ) as GraveYardItem[]).slice(2 * ROW_SIZE, 3 * ROW_SIZE);
+    let graveYardItemsByRows: GraveYardItem[][] = [...Array(NUM_OF_ROWS)].map(
+      (_, i) => []
+    );
+    graveYardItemsByRows[0] = (
+      graveYardItems.get(reverseColor(povColor)) as GraveYardItem[]
+    ).slice(0, ROW_SIZE);
+    graveYardItemsByRows[1] = (
+      graveYardItems.get(reverseColor(povColor)) as GraveYardItem[]
+    ).slice(ROW_SIZE, 2 * ROW_SIZE);
+    graveYardItemsByRows[2] = (
+      graveYardItems.get(reverseColor(povColor)) as GraveYardItem[]
+    ).slice(2 * ROW_SIZE, 3 * ROW_SIZE);
+    graveYardItemsByRows[3] = (
+      graveYardItems.get(povColor) as GraveYardItem[]
+    ).slice(0, ROW_SIZE);
+    graveYardItemsByRows[4] = (
+      graveYardItems.get(povColor) as GraveYardItem[]
+    ).slice(ROW_SIZE, 2 * ROW_SIZE);
+    graveYardItemsByRows[5] = (
+      graveYardItems.get(povColor) as GraveYardItem[]
+    ).slice(2 * ROW_SIZE, 3 * ROW_SIZE);
     return (
       <div
         style={{

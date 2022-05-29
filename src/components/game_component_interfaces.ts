@@ -11,14 +11,6 @@ export interface ClientPageComponent {
   disconnect(): void;
 }
 
-export interface GraveYardComponent {
-  addPiece(piece: Piece, respawnCompletionTime: number): void;
-
-  setPovColor(povColor: PieceColor): void;
-
-  clear(): void;
-}
-
 export interface PromotionScreenComponent {
   show(move: Move, color: PieceColor): void;
 
