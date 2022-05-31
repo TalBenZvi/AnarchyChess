@@ -35,7 +35,7 @@ export interface ServerObserver {
 
 export class GameServer {
   private serverPeers: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
-  private clients: any[] = [];
+  private clients: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private gameStatus: GameStatus = GameStatus.inactive;
   private broadcastedEventsLog: Event[] = [];
 
@@ -122,7 +122,9 @@ export class GameServer {
   }
 
   sendEvent(event: Event, playerIndex: number) {
-    this.clients[playerIndex].send(JSON.stringify(event, replacer));
+    if (this.clients[playerIndex] != null) {
+      this.clients[playerIndex].send(JSON.stringify(event, replacer));
+    }
   }
 
   broadcastEvent(event: Event): void {

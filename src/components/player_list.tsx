@@ -13,49 +13,13 @@ import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 interface PlayerListProps {
   width: number;
   height: number;
-  clientFlowEngine: ClientFlowEngine;
+  playerList: User[];
 }
 
-interface PlayerListState {
-  connectedPlayers: User[];
-}
+interface PlayerListState {}
 
-class PlayerList
-  extends React.Component<PlayerListProps, PlayerListState>
-  implements ClientFlowEngineObserver
-{
-  state = {
-    connectedPlayers: [],
-    /*
-    connectedPlayers: [
-      {
-        id: "testID",
-        username: "admin",
-      },
-      ...[...Array(20)].map((_, i) => ({
-        id: i.toString(),
-        username: `player ${i}`,
-      })),
-    ],
-    */
-  };
-
-  constructor(props: PlayerListProps) {
-    super(props);
-    if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.addObserver(this);
-    }
-  }
-
-  private setPlayers(players: User[]): void {
-    this.setState({ connectedPlayers: players });
-  }
-
-  notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
-    if (eventType === ClientEventType.playerListUpdate) {
-      this.setPlayers(info.get(ClientEventInfo.playerList));
-    }
-  }
+class PlayerList extends React.Component<PlayerListProps, PlayerListState> {
+  state = {};
 
   private tileList(
     playerList: User[],
@@ -102,16 +66,15 @@ class PlayerList
   }
 
   render() {
-    let { width, height } = this.props;
-    let { connectedPlayers } = this.state;
+    let { width, height, playerList } = this.props;
     let tileWidth: number = width / 2;
     let tileHeight: number = (height / NUM_OF_PLAYERS) * 2;
     let verticalLineHeight: number = height;
     let verticalLineMargin: number = 0;
     let fontSize: number = tileHeight * 0.4;
-    let playerList: User[] = [
-      ...connectedPlayers,
-      ...Array(NUM_OF_PLAYERS - connectedPlayers.length).fill(null),
+    playerList = [
+      ...(playerList.filter((player: User) => player != null)),
+      ...Array(NUM_OF_PLAYERS - playerList.length).fill(null),
     ];
     return (
       <div

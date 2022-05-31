@@ -58,14 +58,17 @@ class ClientPage
       <div className="background">
         {(() => {
           switch (lobbyState) {
+            /* open for players */
             case LobbyState.open: {
               return (
                 <LobbyPage clientFlowEngine={Authentication.clientFlowEngine} />
               );
             }
+            /* game running */
             case LobbyState.running: {
               return <div />;
             }
+            /* lobby closing */
             case LobbyState.closing: {
               return (
                 <div
@@ -87,6 +90,7 @@ class ClientPage
                 </div>
               );
             }
+            /* closed */
             case LobbyState.closed: {
               return <Redirect push to="/" />;
             }

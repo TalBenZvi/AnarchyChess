@@ -59,6 +59,7 @@ ul.row {
   background: #333;
   font-family: "MS PGothic";
   color: #ccc;
+  border: 3px solid #555;
 }
 
 .clear-button {
@@ -117,8 +118,6 @@ ul.row {
   filter: contrast(50%);
 }
 
-
-
 .image-button {
   /*cursor: pointer;*/
   filter: contrast(50%);
@@ -151,7 +150,6 @@ ul.row {
   color: #ed1b24;
   font-size: 20px;
   line-height: 80px;
-  
 }
 
 .navbar-button:hover {
