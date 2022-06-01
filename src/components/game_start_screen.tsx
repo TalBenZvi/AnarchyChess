@@ -15,8 +15,10 @@ import {
   Position,
 } from "../game_flow_util/game_elements";
 
-const WHITE_TITLE_COLOR: string = "#eeeeee";
-const BLACK_TITLE_COLOR: string = "#333333";
+const WHITE_TITLE_COLOR: string = "#d2d2d2";
+const BLACK_TITLE_COLOR: string = "#111111";
+const WHITE_OUTLINE_COLOR: string = "#888888";
+const BLACK_OUTLINE_COLOR: string = "#111111";
 
 interface GameStartScreenProps {
   clientFlowEngine: ClientFlowEngine;
@@ -91,13 +93,12 @@ class GameStartScreen
     }
     let titleColor: string =
       piece.color === PieceColor.white ? WHITE_TITLE_COLOR : BLACK_TITLE_COLOR;
-    let outlineColor: string =
-      piece.color === PieceColor.white ? BLACK_TITLE_COLOR : WHITE_TITLE_COLOR;
+    let outlineColor: string = piece.color === PieceColor.white ? BLACK_OUTLINE_COLOR : WHITE_OUTLINE_COLOR;
     return (
       <div
         style={{
           position: "absolute",
-          boxShadow: "0 0 0 100vmax rgba(80, 80, 80, 0.5)",
+          boxShadow: "0 0 0 100vmax rgba(80, 80, 80, 0.7)",
           //color: "titleColor",
           background: "gray",
           zIndex: 3,

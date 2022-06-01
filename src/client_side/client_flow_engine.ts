@@ -172,12 +172,24 @@ export class ClientFlowEngine implements GameClientObserver {
     this.gameClient.gameStatus = GameStatus.running;
     this.position = new Position(`client ${playerIndex}`);
     this.position.setToStartingPosition();
+    if (this.user.username === "admin") {
+      console.log("there1");
+      console.log([...this.observers]);
+    }
     this.notifyObservers(
       ClientEventType.roleAssigned,
       new Map<ClientEventInfo, any>([
         [ClientEventInfo.playerIndex, playerIndex],
       ])
     );
+    setTimeout(() => {
+      this.notifyObservers(
+        ClientEventType.gameStarted,
+        new Map<ClientEventInfo, any>([
+          [ClientEventInfo.initialCooldown, initialCooldown],
+        ])
+      );
+    }, GAME_START_DELAY * 1000);
   }
 
   private respawnPlayer(

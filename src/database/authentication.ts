@@ -84,7 +84,7 @@ export class Authentication {
           Authentication.clientFlowEngine = new ClientFlowEngine(
             Authentication.currentUser
           );
-          Authentication.clientFlowEngine.attemptToConnect(gameID, 0, {
+          Authentication.clientFlowEngine.attemptToConnect(gameID, 1, {
             onSuccess: () => {
               callback(LobbyCreationStatus.success);
             },
