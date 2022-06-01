@@ -1,145 +1,109 @@
 import React from "react";
+import NavBar from "../components/navbar";
 import GraveYard from "../components/graveyard";
 import DeathScreen from "../components/death_screen";
 import PromotionScreen from "../components/promotion_screen";
+import { withRouter } from "react-router";
 
 import { PieceColor, NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import ChessBoard from "../components/chess_board";
+import { Authentication } from "../database/authentication";
+import { BaseBot } from "../bots/base_bot";
 
-const PLAYER_ENGINE_INDEX: number = 11;
+interface GamePageProps {}
 
+interface GamePageState {}
 
-function GamePage() {
-  
-  let serverFlowEngine: ServerFlowEngine = new ServerFlowEngine();
-  /*
-  let clientFlowEngines: ClientFlowEngine[] = [...Array(NUM_OF_PLAYERS)].map(
-    (_, i) => new ClientFlowEngine(`id${i}`)
-  );
-  */
-  let isRunning: boolean = true;
-  return (
-    /* background */
-    <div
-      style={{
-        position: "absolute",
-        backgroundColor: "#222222",
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      {/* board */}
-      <div className="centered">
-        <ChessBoard
-          size={850}
-          //lightColor="#ccc"
-          //darkColor="#ff5555"
-          lightColor="#ff6666"
-          darkColor="#353535"
-          povColor={PieceColor.white}
-          clientFlowEngine={null as any}
-        />
-      </div>
-      {/* buttons */}
-      <button
-        style={{
-          margin: 20,
-          background: "none",
-          color: "white",
-          border: "none",
-          padding: 0,
-          font: "inherit",
-          cursor: "pointer",
-          outline: "inherit",
-        }}
-        onClick={async () => {
-          let gameID: string = Math.random().toString();
-          serverFlowEngine.acceptConnections(gameID);
-          await new Promise((f) => setTimeout(f, 3000));
-          /*
-          for (let clientFlowEngine of clientFlowEngines) {
-            clientFlowEngine.attemptToConnect(gameID);
+class GamePage extends React.Component<any, any> {
+  state = {};
+
+  constructor(gamePageProps: any) {
+    super(gamePageProps);
+    (async () => {
+      Authentication.serverFlowEngine = new ServerFlowEngine();
+      Authentication.serverFlowEngine.acceptConnections("testGameID");
+      Authentication.clientFlowEngine = new ClientFlowEngine(
+        Authentication.currentUser
+      );
+      Authentication.clientFlowEngine.attemptToConnect("testGameID", 0, {});
+      /*
+      let bots: BaseBot[] = [];
+      let isConnected: Promise<boolean>[] = [];
+      
+      for (let i = 1; i < NUM_OF_PLAYERS; i++) {
+        let bot = new BaseBot({
+          id: (i + 1).toString(),
+          username: `bot_${i + 1}`,
+        });
+        bots.push(bot);
+        isConnected.push(
+          bot.attemptToConnect(Authentication.serverFlowEngine.gameID, i)
+        );
+      }
+      let areAllBotsConnected: boolean = true;
+      for (let i = 0; i < isConnected.length; i++) {
+        if (!(await isConnected[i])) {
+          areAllBotsConnected = false;
+          console.log(i);
+          for (let j = 0; j < i; j++) {
+            bots[j].disconnect();
           }
-          */
-        }}
-      >
-        start
-      </button>
-      <br />
-      <button
-        style={{
-          margin: 20,
-          background: "none",
-          color: "white",
-          border: "none",
-          padding: 0,
-          font: "inherit",
-          cursor: "pointer",
-          outline: "inherit",
-        }}
-        onClick={async () => {
-          while (isRunning) {
-            let i = Math.floor(Math.random() * NUM_OF_PLAYERS);
-            if (i !== PLAYER_ENGINE_INDEX) {
-              /*
-              clientFlowEngines[i].runTest();
-              if (clientFlowEngines[i].shouldStopSimulation) {
-                isRunning = false;
-              }
-              */
-              await new Promise((f) => setTimeout(f, 100));
-            }
-          }
-        }}
-      >
-        test
-      </button>
-      <br />
-      <button
-        style={{
-          margin: 20,
-          background: "none",
-          color: "white",
-          border: "none",
-          padding: 0,
-          font: "inherit",
-          cursor: "pointer",
-          outline: "inherit",
-        }}
-        onClick={() => {
-          isRunning = false;
-        }}
-      >
-        stop
-      </button>
-      {/* graveyard */}
-      <div
-        style={{
-          position: "absolute",
-          left: 1405,
-          top: "50%",
-          transform: "translate(0, -50%)",
-        }}
-      >
-        <GraveYard
-          width={500}
-          height={850}
-          backgroundColor="#454545"
-          tileColor="#808080"
-          povColor={PieceColor.white}
-          clientFlowEngine={null as any}
-        />
+        }
+      }
+      if (areAllBotsConnected) {
+        Authentication.serverFlowEngine.startGame();
+      }
+      */
+    })();
+  }
+
+  render() {
+    return (
+      /* background */
+      <div className="background">
+        <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
+        {/* board */}
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            transform: "translate(-50%, 0%)",
+            top: "10%",
+          }}
+        >
+          <ChessBoard
+            size={800}
+            lightColor="#ff6666"
+            darkColor="#353535"
+            povColor={PieceColor.white}
+            clientFlowEngine={Authentication.clientFlowEngine}
+          />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            top: "10%",
+            right: 18,
+          }}
+        >
+          <GraveYard
+            width={500}
+            height={800}
+            backgroundColor="#454545"
+            tileColor="#808080"
+            povColor={PieceColor.white}
+            clientFlowEngine={null as any}
+          />
+        </div>
+        {/* death screen */}
+        <DeathScreen clientFlowEngine={null as any} />
+        {/* promotion screen */}
+        <PromotionScreen clientFlowEngine={null as any} />
       </div>
-      {/* death screen */}
-      <DeathScreen clientFlowEngine={null as any} />
-      {/* promotion screen */}
-      <PromotionScreen
-        clientFlowEngine={null as any}
-      />
-    </div>
-  );
+    );
+  }
 }
 
-export default GamePage;
+export default withRouter(GamePage);

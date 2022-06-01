@@ -54,6 +54,11 @@ export enum GameStatus {
   running,
 }
 
+export interface OptionalConnectionCallbacks {
+  onSuccess?: () => void;
+  onFailure?: () => void;
+}
+
 export function replacer(key: any, value: any) {
   if (
     [

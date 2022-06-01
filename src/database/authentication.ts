@@ -16,17 +16,15 @@ import { stat } from "fs";
 export class Authentication {
   //static currentUser: User = null as any;
 
-  
   static currentUser: User = {
     id: "627c0e2c5573d5400492587f",
     username: "admin",
     email: "talbz03@gmail.com",
   };
-  
 
   static mongodbClient: MongodbClient = new MongodbClient();
-  static serverFlowEngine: ServerFlowEngine;
-  static clientFlowEngine: ClientFlowEngine;
+  static serverFlowEngine: ServerFlowEngine = null as any;
+  static clientFlowEngine: ClientFlowEngine = null as any;
 
   static logout() {
     if (Authentication.clientFlowEngine != null) {
@@ -79,26 +77,25 @@ export class Authentication {
     Authentication.mongodbClient.createLobby(
       lobbyParams,
       async (status: LobbyCreationStatus, gameID: string) => {
-        let connectionStatus: LobbyCreationStatus = status;
         if (status === LobbyCreationStatus.success) {
           Authentication.serverFlowEngine = new ServerFlowEngine();
           Authentication.serverFlowEngine.acceptConnections(gameID);
           Authentication.clientFlowEngine = new ClientFlowEngine(
             Authentication.currentUser
           );
-          let isConnectionSuccessfull: boolean = await Authentication.clientFlowEngine.attemptToConnect(
-            gameID,
-            0
-          );
-          if (!isConnectionSuccessfull) {
-            Authentication.clientFlowEngine.destroyConnection();
-            Authentication.clientFlowEngine = null as any;
-            Authentication.serverFlowEngine.destroyConnections();
-            Authentication.serverFlowEngine = null as any;
-            connectionStatus = LobbyCreationStatus.connectionError;
-          }
+          Authentication.clientFlowEngine.attemptToConnect(gameID, 0, {
+            onSuccess: () => {
+              callback(LobbyCreationStatus.success);
+            },
+            onFailure: () => {
+              Authentication.clientFlowEngine.destroyConnection();
+              Authentication.clientFlowEngine = null as any;
+              Authentication.serverFlowEngine.destroyConnections();
+              Authentication.serverFlowEngine = null as any;
+              callback(LobbyCreationStatus.connectionError);
+            },
+          });
         }
-        callback(connectionStatus);
       }
     );
   }
@@ -125,23 +122,27 @@ export class Authentication {
           Authentication.clientFlowEngine = new ClientFlowEngine(
             Authentication.currentUser
           );
-          let isConnectionSuccessfull = await Authentication.clientFlowEngine.attemptToConnect(
+          Authentication.clientFlowEngine.attemptToConnect(
             lobbyID,
-            serverIndex
+            serverIndex,
+            {
+              onSuccess: () => {
+                callback(LobbyJoiningStatus.success);
+              },
+              onFailure: () => {
+                Authentication.clientFlowEngine.destroyConnection();
+                Authentication.clientFlowEngine = null as any;
+                callback(LobbyJoiningStatus.connectionError);
+              },
+            }
           );
-          if (!isConnectionSuccessfull) {
-            Authentication.clientFlowEngine.destroyConnection();
-            Authentication.clientFlowEngine = null as any;
-            connectionStatus = LobbyJoiningStatus.connectionError;
-          }
         }
-        callback(connectionStatus);
       }
     );
   }
 
   static updateLobbyMembers(lobbyID: string, memberIDs: string[]) {
-    Authentication.mongodbClient.updateLobbyMembers(lobbyID, memberIDs);
+    //Authentication.mongodbClient.updateLobbyMembers(lobbyID, memberIDs);
   }
 
   static closeLobby() {

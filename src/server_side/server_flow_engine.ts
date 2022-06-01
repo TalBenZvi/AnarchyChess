@@ -58,7 +58,7 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
-  private startGame(): void {
+  startGame(): void {
     this.position.setToStartingPosition();
     this.isGameRunning = true;
     let initialPlayerCooldowns: number[] = [];
@@ -223,16 +223,6 @@ export class ServerFlowEngine implements ServerObserver {
         player == null ? (null as any) : player.id
       )
     );
-    let isServerFull: boolean = true;
-    for (let player of this.players) {
-      if (player == null) {
-        isServerFull = false;
-      }
-    }
-    if (isServerFull) {
-      await new Promise((f) => setTimeout(f, 1000));
-      this.startGame();
-    }
   }
 
   private handleDisconnection(playerIndex: number) {
@@ -306,8 +296,6 @@ export class ServerFlowEngine implements ServerObserver {
       }
       case ServerNotificationType.filledServer: {
         console.log("server full");
-        await new Promise((f) => setTimeout(f, 1000));
-        this.startGame();
         break;
       }
       case ServerNotificationType.receivedRequest: {

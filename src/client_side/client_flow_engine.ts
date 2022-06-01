@@ -19,6 +19,7 @@ import {
   EventType,
   GameStatus,
   reviver,
+  OptionalConnectionCallbacks,
 } from "../game_flow_util/communication";
 import { User } from "../database/database_util";
 
@@ -93,11 +94,25 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   // returns whether or not the connection was successfull
-  async attemptToConnect(gameID: string, serverIndex: number): Promise<boolean> {
-    return await this.gameClient.attemptToConnect(
-      gameID,
-      serverIndex
-    );
+  attemptToConnect(
+    gameID: string,
+    serverIndex: number,
+    optionalConnectionCallbacks: OptionalConnectionCallbacks
+  ) {
+    this.gameClient.attemptToConnect(gameID, serverIndex, {
+      onSuccess: () => {
+        console.log(`${this.user.username} connected`);
+        if (optionalConnectionCallbacks.onSuccess != undefined) {
+          optionalConnectionCallbacks.onSuccess();
+        }
+      },
+      onFailure: () => {
+        console.log(`${this.user.username} connected`);
+        if (optionalConnectionCallbacks.onFailure != undefined) {
+          optionalConnectionCallbacks.onFailure();
+        }
+      },
+    });
   }
 
   destroyConnection(): void {
@@ -209,9 +224,8 @@ export class ClientFlowEngine implements GameClientObserver {
           parseInt(event.info.get(EventInfo.playerIndex) as string),
           moveNotification
         );
-        let movingPlayerLocation: Square = this.position.getPlayerLocation(
-          movingPlayerIndex
-        );
+        let movingPlayerLocation: Square =
+          this.position.getPlayerLocation(movingPlayerIndex);
         // if move is valid
         if (move != null) {
           // isCapture
@@ -276,9 +290,8 @@ export class ClientFlowEngine implements GameClientObserver {
           }
           // isCastle
           if (move.isCastle) {
-            let movingPiece: Piece = this.position.getPieceByPlayer(
-              movingPlayerIndex
-            );
+            let movingPiece: Piece =
+              this.position.getPieceByPlayer(movingPlayerIndex);
             let startRow: number =
               movingPiece.color === PieceColor.white ? 0 : 7;
             let startColumn: number =

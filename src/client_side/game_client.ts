@@ -13,6 +13,7 @@ import {
   EventType,
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
+  OptionalConnectionCallbacks
 } from "../game_flow_util/communication";
 import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
@@ -37,7 +38,6 @@ export interface GameClientObserver {
   ): void;
 }
 
-
 export class GameClient {
   private clientPeer: any = null;
   private serverConnection: any = null;
@@ -49,63 +49,66 @@ export class GameClient {
   // returns whether or not the connection was successfull
   async attemptToConnect(
     gameID: string,
-    serverIndex: number
-  ): Promise<boolean> {
+    serverIndex: number,
+    optionalConnectionCallbacks: OptionalConnectionCallbacks,
+  ) {
     if (this.gameStatus === GameStatus.inactive) {
       this.clientPeer = new Peer(`${gameID}_client_${this.user.id}`, {
         host: PEERJS_SERVER_IP,
         port: PEERJS_SERVER_PORT,
         path: "/myapp",
       });
-      let didConnect: boolean = false;
-      for (let i = 0; i < MAX_CONNECTION_TRIES; i++) {
+      let numOfTries: number = 0;
+      let requestInterval = setInterval(() => {
         this.serverConnection = this.clientPeer.connect(
           `${gameID}_server_${serverIndex}`
         );
         if (this.serverConnection != undefined) {
           this.serverConnection.on("open", () => {
-            didConnect = true;
-          });
-        }
-        await new Promise((f) => setTimeout(f, DELAY_BETWEEN_TRIES));
-        if (didConnect) {
-          // listen for events
-          this.serverConnection.on("data", (eventData: any) => {
-            let event: Event = JSON.parse(eventData.toString(), reviver);
-            this.observer.notify(
-              ClientNotificationType.receivedEvent,
-              new Map<ClientNotificationInfo, any>([
-                [ClientNotificationInfo.event, event],
-              ])
+            clearInterval(requestInterval);
+            // listen for events
+            this.serverConnection.on("data", (eventData: any) => {
+              let event: Event = JSON.parse(eventData.toString(), reviver);
+              this.observer.notify(
+                ClientNotificationType.receivedEvent,
+                new Map<ClientNotificationInfo, any>([
+                  [ClientNotificationInfo.event, event],
+                ])
+              );
+            });
+            // when disconnected from server
+            this.serverConnection.on("close", () => {
+              this.observer.notify(
+                ClientNotificationType.disconnectedFromServer,
+                new Map<ClientNotificationInfo, any>()
+              );
+            });
+            // request connection
+            this.serverConnection.send(
+              JSON.stringify(
+                {
+                  type: RequestType.connection,
+                  info: new Map<RequestInfo, string>([
+                    [RequestInfo.user, JSON.stringify(this.user)],
+                  ]),
+                },
+                replacer
+              )
             );
+            if (optionalConnectionCallbacks.onSuccess != undefined) {
+              optionalConnectionCallbacks.onSuccess();
+            }
           });
-          // request connection
-          this.serverConnection.send(
-            JSON.stringify(
-              {
-                type: RequestType.connection,
-                info: new Map<RequestInfo, string>([
-                  [
-                    RequestInfo.user,
-                    JSON.stringify(this.user),
-                  ],
-                ]),
-              },
-              replacer
-            )
-          );
-          // when disconnected from server
-          this.serverConnection.on("close", () => {
-            this.observer.notify(
-              ClientNotificationType.disconnectedFromServer,
-              new Map<ClientNotificationInfo, any>()
-            );
-          });
-          return true;
+          numOfTries++;
+          if (numOfTries >= MAX_CONNECTION_TRIES) {
+            clearInterval(requestInterval);
+            if (optionalConnectionCallbacks.onFailure != undefined) {
+              optionalConnectionCallbacks.onFailure();
+            }
+          }
         }
-      }
+      }, DELAY_BETWEEN_TRIES)
     }
-    return false;
   }
 
   destroyConenction(): void {

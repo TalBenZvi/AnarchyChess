@@ -6,6 +6,7 @@ import {
 } from "../client_side/client_flow_engine";
 import { Move, Square, Piece, Position } from "../game_flow_util/game_elements";
 import { User } from "../database/database_util";
+import { OptionalConnectionCallbacks } from "../game_flow_util/communication";
 
 export class BaseBot implements ClientFlowEngineObserver {
   private clientFlowEngine: ClientFlowEngine = null as any;
@@ -16,11 +17,16 @@ export class BaseBot implements ClientFlowEngineObserver {
   }
 
   // returns whether or not the connection was successfull
-  async attemptToConnect(
+  attemptToConnect(
     gameID: string,
-    serverIndex: number
-  ): Promise<boolean> {
-    return await this.clientFlowEngine.attemptToConnect(gameID, serverIndex);
+    serverIndex: number,
+    optionalConnectionCallbacks: OptionalConnectionCallbacks
+  ) {
+    this.clientFlowEngine.attemptToConnect(
+      gameID,
+      serverIndex,
+      optionalConnectionCallbacks
+    );
   }
 
   disconnect() {

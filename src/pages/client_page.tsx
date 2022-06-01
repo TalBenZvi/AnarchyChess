@@ -3,6 +3,8 @@ import { withRouter, Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
 import LobbyPage from "./lobby_page";
+import GamePage from "./game_page";
+
 import {
   ClientFlowEngineObserver,
   ClientEventType,
@@ -27,7 +29,7 @@ class ClientPage
   implements ClientFlowEngineObserver
 {
   state = {
-    lobbyState: LobbyState.open,
+    lobbyState: LobbyState.running,
   };
 
   componentDidMount() {
@@ -44,8 +46,15 @@ class ClientPage
   }
 
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
-    if (eventType === ClientEventType.disconnection) {
-      this.disconnect();
+    switch (eventType) {
+      case ClientEventType.disconnection: {
+        this.disconnect();
+        break;
+      }
+      case ClientEventType.gameStarted: {
+        this.setState({ lobbyState: LobbyState.running });
+        break;
+      }
     }
   }
 
@@ -60,13 +69,11 @@ class ClientPage
           switch (lobbyState) {
             /* open for players */
             case LobbyState.open: {
-              return (
-                <LobbyPage clientFlowEngine={Authentication.clientFlowEngine} />
-              );
+              return <LobbyPage />;
             }
             /* game running */
             case LobbyState.running: {
-              return <div />;
+              return <GamePage />;
             }
             /* lobby closing */
             case LobbyState.closing: {

@@ -5,7 +5,6 @@ import { Redirect } from "react-router";
 import NavBar from "../components/navbar";
 import PlayerList from "../components/player_list";
 import {
-  ClientFlowEngine,
   ClientFlowEngineObserver,
   ClientEventType,
   ClientEventInfo,
@@ -57,31 +56,39 @@ class LobbyPage
 
   private fillwithBots = async (playerList: User[]) => {
     this.setState({ isBotDialogOpen: false });
-    let bots: BaseBot[] = [];
-    let isConnected: Promise<boolean>[] = [];
-    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-      if (playerList[i] == null) {
-        let bot = new BaseBot({
+    let numOfRequiredBots = playerList.filter(
+      (player: User) => player == null
+    ).length;
+    let bots: BaseBot[] = [...Array(numOfRequiredBots)].map(
+      (i) =>
+        new BaseBot({
           id: (i + 1).toString(),
           username: `bot_${i + 1}`,
-        });
-        bots.push(bot);
-        isConnected.push(
-          bot.attemptToConnect(Authentication.serverFlowEngine.gameID, i)
+        })
+    );
+    let numOfConnectedBots: number = 0;
+    let nextAvailableBotIndex: number = 0;
+    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+      if (playerList[i] == null) {
+        bots[nextAvailableBotIndex].attemptToConnect(
+          Authentication.serverFlowEngine.gameID,
+          i,
+          {
+            onSuccess: () => {
+              numOfConnectedBots++;
+              if (numOfConnectedBots === numOfRequiredBots) {
+                console.log("starting");
+              }
+            },
+            onFailure: () => {
+              for (let bot of bots) {
+                bot.disconnect();
+              }
+            },
+          }
         );
+        nextAvailableBotIndex++;
       }
-    }
-    let areAllBotsConnected: boolean = true;
-    for (let i = 0; i < isConnected.length; i++) {
-      if (!(await isConnected[i])) {
-        areAllBotsConnected = false;
-        for (let j = 0; j < i; j++) {
-          bots[j].disconnect();
-        }
-      }
-    }
-    if (areAllBotsConnected) {
-      console.log("starting");
     }
   };
 
@@ -125,12 +132,11 @@ class LobbyPage
             if (isHost) {
               Authentication.closeLobby();
             }
-            this.setState({shouldRedirectToHome: true});
+            this.setState({ shouldRedirectToHome: true });
           }}
         >
           {isHost ? "Close Lobby" : "Leave"}
         </button>
-        {/* bot dialog */}
         {/* start game button */}
         {isHost ? (
           <button
