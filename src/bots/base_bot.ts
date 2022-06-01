@@ -23,6 +23,10 @@ export class BaseBot implements ClientFlowEngineObserver {
     return await this.clientFlowEngine.attemptToConnect(gameID, serverIndex);
   }
 
+  disconnect() {
+    this.clientFlowEngine.destroyConnection();
+  }
+
   protected getPosition(): Position {
     return this.clientFlowEngine.getPosition();
   }

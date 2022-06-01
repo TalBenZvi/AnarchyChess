@@ -1,5 +1,6 @@
 import * as React from "react";
 import { withRouter } from "react-router";
+import { Redirect } from "react-router";
 
 import NavBar from "../components/navbar";
 import PlayerList from "../components/player_list";
@@ -19,6 +20,7 @@ interface LobbyPageProps {}
 interface LobbyPageState {
   playerList: User[];
   isBotDialogOpen: boolean;
+  shouldRedirectToHome: boolean;
 }
 
 class LobbyPage
@@ -28,6 +30,7 @@ class LobbyPage
   state = {
     playerList: [],
     isBotDialogOpen: false,
+    shouldRedirectToHome: false,
   };
   private _isMounted: boolean = false;
 
@@ -69,10 +72,12 @@ class LobbyPage
       }
     }
     let areAllBotsConnected: boolean = true;
-    for (let isBotConnected of isConnected) {
-      if (!(await isBotConnected)) {
-        console.log("problem with bots");
+    for (let i = 0; i < isConnected.length; i++) {
+      if (!(await isConnected[i])) {
         areAllBotsConnected = false;
+        for (let j = 0; j < i; j++) {
+          bots[j].disconnect();
+        }
       }
     }
     if (areAllBotsConnected) {
@@ -81,10 +86,16 @@ class LobbyPage
   };
 
   render() {
-    let { playerList, isBotDialogOpen } = this.state;
+    let { playerList, isBotDialogOpen, shouldRedirectToHome } = this.state;
+    if (shouldRedirectToHome) {
+      return <Redirect push to="/" />;
+    }
     let numOfConnectedPlayers: number = playerList.filter(
       (player: User) => player != null
     ).length;
+    let isHost: boolean =
+      Authentication.serverFlowEngine != null &&
+      this.props.match.params.id === Authentication.serverFlowEngine.gameID;
     return (
       <div className="background">
         <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
@@ -98,27 +109,53 @@ class LobbyPage
         >
           <PlayerList width={500} height={750} playerList={playerList} />
         </div>
-        {/* start game button */}
+        {/* leave / close lobby button */}
         <button
           className="app-button"
           style={{
             position: "absolute",
-            width: 200,
-            height: 80,
-            right: 50,
-            bottom: 30,
-            fontSize: 30,
+            width: 150,
+            height: 50,
+            left: 590,
+            top: 110,
+            fontSize: 20,
           }}
           onClick={() => {
-            if (numOfConnectedPlayers == NUM_OF_PLAYERS) {
-              console.log("starting");
-            } else {
-              this.setState({ isBotDialogOpen: true });
+            Authentication.leaveLobby();
+            if (isHost) {
+              Authentication.closeLobby();
             }
+            this.setState({shouldRedirectToHome: true});
           }}
         >
-          Start Game
+          {isHost ? "Close Lobby" : "Leave"}
         </button>
+        {/* bot dialog */}
+        {/* start game button */}
+        {isHost ? (
+          <button
+            className="app-button"
+            style={{
+              position: "absolute",
+              width: 200,
+              height: 80,
+              right: 50,
+              bottom: 30,
+              fontSize: 30,
+            }}
+            onClick={() => {
+              if (numOfConnectedPlayers == NUM_OF_PLAYERS) {
+                console.log("starting");
+              } else {
+                this.setState({ isBotDialogOpen: true });
+              }
+            }}
+          >
+            Start Game
+          </button>
+        ) : (
+          <div />
+        )}
         {/* bot dialog */}
         {isBotDialogOpen ? (
           <div>

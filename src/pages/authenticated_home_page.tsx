@@ -9,7 +9,7 @@ interface AuthenticatedHomePageProps {}
 
 interface AuthenticatedHomePageState {
   isLobbyCreationFormOpen: boolean;
-  shouldRedirectToGame: boolean;
+  shouldRedirectToLobby: boolean;
 }
 
 class AuthenticatedHomePage extends React.Component<
@@ -18,14 +18,14 @@ class AuthenticatedHomePage extends React.Component<
 > {
   state = {
     isLobbyCreationFormOpen: false,
-    shouldRedirectToGame: false,
+    shouldRedirectToLobby: false,
   };
 
   createALobby = () => {};
 
   render() {
-    let { isLobbyCreationFormOpen, shouldRedirectToGame } = this.state;
-    if (shouldRedirectToGame) {
+    let { isLobbyCreationFormOpen, shouldRedirectToLobby } = this.state;
+    if (shouldRedirectToLobby) {
       return (
         <Redirect
           push
@@ -70,7 +70,7 @@ class AuthenticatedHomePage extends React.Component<
                 {/* form */}
                 <LobbyCreationForm
                   onSuccess={() => {
-                    this.setState({ shouldRedirectToGame: true });
+                    this.setState({ shouldRedirectToLobby: true });
                   }}
                 />
                 {/* cancel button */}

@@ -42,6 +42,8 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
           }}
           src={homeTitle}
           onClick={() => {
+            Authentication.leaveLobby();
+            Authentication.closeLobby();
             this.setState({ redirectAddress: "/" });
           }}
         />

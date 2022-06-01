@@ -144,6 +144,13 @@ export class Authentication {
     Authentication.mongodbClient.updateLobbyMembers(lobbyID, memberIDs);
   }
 
+  static closeLobby() {
+    if (Authentication.serverFlowEngine != null) {
+      Authentication.serverFlowEngine.destroyConnections();
+    }
+    Authentication.serverFlowEngine = null as any;
+  }
+
   static leaveLobby() {
     if (Authentication.clientFlowEngine != null) {
       Authentication.clientFlowEngine.destroyConnection();
