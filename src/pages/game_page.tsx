@@ -19,45 +19,28 @@ interface GamePageState {}
 class GamePage extends React.Component<any, any> {
   state = {};
 
+  /*
   constructor(gamePageProps: any) {
     super(gamePageProps);
-    (async () => {
-      Authentication.serverFlowEngine = new ServerFlowEngine();
-      Authentication.serverFlowEngine.acceptConnections("testGameID");
-      Authentication.clientFlowEngine = new ClientFlowEngine(
-        Authentication.currentUser
-      );
-      Authentication.clientFlowEngine.attemptToConnect("testGameID", 0, {});
-      /*
-      let bots: BaseBot[] = [];
-      let isConnected: Promise<boolean>[] = [];
-      
-      for (let i = 1; i < NUM_OF_PLAYERS; i++) {
-        let bot = new BaseBot({
-          id: (i + 1).toString(),
-          username: `bot_${i + 1}`,
-        });
-        bots.push(bot);
-        isConnected.push(
-          bot.attemptToConnect(Authentication.serverFlowEngine.gameID, i)
-        );
-      }
-      let areAllBotsConnected: boolean = true;
-      for (let i = 0; i < isConnected.length; i++) {
-        if (!(await isConnected[i])) {
-          areAllBotsConnected = false;
-          console.log(i);
-          for (let j = 0; j < i; j++) {
-            bots[j].disconnect();
-          }
-        }
-      }
-      if (areAllBotsConnected) {
-        Authentication.serverFlowEngine.startGame();
-      }
-      */
-    })();
+    
+    Authentication.serverFlowEngine = new ServerFlowEngine();
+    Authentication.serverFlowEngine.acceptConnections("testGameID");
+    Authentication.clientFlowEngine = new ClientFlowEngine(
+      Authentication.currentUser
+    );
+    Authentication.clientFlowEngine.attemptToConnect("testGameID", 0, {});
+
+    for (let i = 1; i < 20; i++) {
+      let bot = new BaseBot({
+        id: i.toString(),
+        username: `bot_${i}`,
+      });
+      bot.attemptToConnect(Authentication.serverFlowEngine.gameID, i, {});
+    }
+    console.log("here1");
+    setTimeout(() => console.log("here2"), 10000);
   }
+  */
 
   render() {
     return (
@@ -94,13 +77,13 @@ class GamePage extends React.Component<any, any> {
             backgroundColor="#454545"
             tileColor="#808080"
             povColor={PieceColor.white}
-            clientFlowEngine={null as any}
+            clientFlowEngine={Authentication.clientFlowEngine}
           />
         </div>
         {/* death screen */}
-        <DeathScreen clientFlowEngine={null as any} />
+        <DeathScreen clientFlowEngine={Authentication.clientFlowEngine} />
         {/* promotion screen */}
-        <PromotionScreen clientFlowEngine={null as any} />
+        <PromotionScreen clientFlowEngine={Authentication.clientFlowEngine} />
       </div>
     );
   }

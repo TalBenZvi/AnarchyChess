@@ -26,6 +26,7 @@ import { User } from "../database/database_util";
 export enum ClientEventType {
   disconnection,
   playerListUpdate,
+  roleAssigned,
   gameStarted,
   move,
   promotion,
@@ -37,8 +38,9 @@ export enum ClientEventType {
 export enum ClientEventInfo {
   // playerListUpdate
   playerList,
-  // gameStarted
+  // roleAssigned
   playerIndex,
+  // gameStarted
   initialCooldown,
   // move
   movingPlayerIndex,
@@ -64,10 +66,11 @@ export interface ClientFlowEngineObserver {
 export class ClientFlowEngine implements GameClientObserver {
   private gameClient: GameClient;
 
-  private playerIndex: number = null as any;
   private user: User;
 
   private position: Position = null as any;
+  private _playerIndex: number = null as any;
+  isGameRunning: boolean = false;
 
   private observers: ClientFlowEngineObserver[] = [];
 
@@ -78,6 +81,10 @@ export class ClientFlowEngine implements GameClientObserver {
   constructor(user: User) {
     this.user = user;
     this.gameClient = new GameClient(this, user);
+  }
+
+  get playerIndex(): number {
+    return this._playerIndex;
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -156,16 +163,16 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   private startGame(playerIndex: number, initialCooldown: number): void {
-    this.playerIndex = playerIndex;
+    this.isGameRunning = true;
+    this._playerIndex = playerIndex;
     this.gameClient.playerIndex = playerIndex;
     this.gameClient.gameStatus = GameStatus.running;
     this.position = new Position(`client ${playerIndex}`);
     this.position.setToStartingPosition();
     this.notifyObservers(
-      ClientEventType.gameStarted,
+      ClientEventType.roleAssigned,
       new Map<ClientEventInfo, any>([
         [ClientEventInfo.playerIndex, playerIndex],
-        [ClientEventInfo.initialCooldown, initialCooldown],
       ])
     );
   }
@@ -353,7 +360,7 @@ export class ClientFlowEngine implements GameClientObserver {
       PieceType.queen,
     ];
     let availableMoves: Move[] = this.position.findAvaillableMovesForPlayer(
-      this.playerIndex
+      this._playerIndex
     );
     if (availableMoves.length !== 0) {
       let chosenMove: Move =

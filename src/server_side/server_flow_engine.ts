@@ -32,7 +32,7 @@ const COOLDOWN_VARIANCE = 0.2;
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
   private _gameID: string = null as any;
-  private players: User[] = [...Array(NUM_OF_PLAYERS)].fill(null);
+  private _players: User[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private position: Position = new Position("server");
   private isGameRunning: boolean = false;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
@@ -45,6 +45,10 @@ export class ServerFlowEngine implements ServerObserver {
 
   get gameID(): string {
     return this._gameID;
+  }
+
+  get players(): User[] {
+    return [...this._players];
   }
 
   acceptConnections(gameID: string): void {
@@ -61,19 +65,16 @@ export class ServerFlowEngine implements ServerObserver {
   startGame(): void {
     this.position.setToStartingPosition();
     this.isGameRunning = true;
-    let initialPlayerCooldowns: number[] = [];
-    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-      initialPlayerCooldowns.push(
-        this.putPlayerOnCooldown(i, new Date().getTime())
-      );
-    }
+    let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
+      (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
+    );
     this.gameServer.startGame(initialPlayerCooldowns);
   }
 
   private killPlayer(playerIndex: number): number {
     this.isAlive[playerIndex] = false;
-    let respawnTimer: number = Position.getStartPieceByPlayer(playerIndex)
-      .respawnTimer;
+    let respawnTimer: number =
+      Position.getStartPieceByPlayer(playerIndex).respawnTimer;
     this.position.killPlayer(playerIndex);
     this.isOnCooldown[playerIndex] = false;
     this.moveRequests[playerIndex] = null as any;
@@ -84,9 +85,8 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   private respawnPlayer(playerIndex: number) {
-    let respawnSquare: Square = this.position.getRespawnSquareForPlayer(
-      playerIndex
-    );
+    let respawnSquare: Square =
+      this.position.getRespawnSquareForPlayer(playerIndex);
     this.position.respawnPlayerAt(playerIndex, respawnSquare);
     this.isAlive[playerIndex] = true;
     this.gameServer.broadcastEvent({
@@ -205,41 +205,48 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
-  private async handleConnection(playerIndex: number, user: User) {
-    this.players[playerIndex] = user;
+  private handleConnection(playerIndex: number, user: User) {
+    this._players[playerIndex] = user;
+    //console.log([...this.players].filter((player) => player != null).length);
+    //console.log([...this.players]);
     this.gameServer.broadcastEvent({
       index: null as any,
       type: EventType.playerListUpdate,
       info: new Map<EventInfo, string>([
         [
           EventInfo.connectedPlayers,
-          JSON.stringify(this.players.filter((player: User) => player != null)),
+          JSON.stringify(
+            this._players.filter((player: User) => player != null)
+          ),
         ],
       ]),
     });
     Authentication.updateLobbyMembers(
       this._gameID,
-      this.players.map((player: User) =>
+      this._players.map((player: User) =>
         player == null ? (null as any) : player.id
       )
     );
   }
 
   private handleDisconnection(playerIndex: number) {
-    this.players[playerIndex] = null as any;
+    console.log("here");
+    this._players[playerIndex] = null as any;
     this.gameServer.broadcastEvent({
       index: null as any,
       type: EventType.playerListUpdate,
       info: new Map<EventInfo, string>([
         [
           EventInfo.connectedPlayers,
-          JSON.stringify(this.players.filter((player: User) => player != null)),
+          JSON.stringify(
+            this._players.filter((player: User) => player != null)
+          ),
         ],
       ]),
     });
     Authentication.updateLobbyMembers(
       this._gameID,
-      this.players.map((player: User) =>
+      this._players.map((player: User) =>
         player == null ? (null as any) : player.id
       )
     );

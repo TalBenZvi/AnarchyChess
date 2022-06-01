@@ -20,7 +20,9 @@ import { User } from "../database/database_util";
 
 const MAX_CONNECTION_TRIES = 20;
 // in millis
-const DELAY_BETWEEN_TRIES = 500;
+//const DELAY_BETWEEN_TRIES = 1000;
+
+let DELAY_BETWEEN_TRIES = Math.random() * 500 + 500;
 
 export enum ClientNotificationType {
   disconnectedFromServer,

@@ -20,6 +20,7 @@ interface LobbyPageState {
   playerList: User[];
   isBotDialogOpen: boolean;
   shouldRedirectToHome: boolean;
+  isGameStarting: boolean;
 }
 
 class LobbyPage
@@ -30,6 +31,7 @@ class LobbyPage
     playerList: [],
     isBotDialogOpen: false,
     shouldRedirectToHome: false,
+    isGameStarting: false,
   };
   private _isMounted: boolean = false;
 
@@ -54,19 +56,23 @@ class LobbyPage
     }
   }
 
-  private fillwithBots = async (playerList: User[]) => {
-    this.setState({ isBotDialogOpen: false });
+  private startGame(): void {
+    Authentication.serverFlowEngine.startGame();
+  }
+
+  private fillwithBots = async () => {
+    this.setState({ isBotDialogOpen: false, isGameStarting: true });
+    let playerList = Authentication.serverFlowEngine.players;
     let numOfRequiredBots = playerList.filter(
       (player: User) => player == null
     ).length;
     let bots: BaseBot[] = [...Array(numOfRequiredBots)].map(
-      (i) =>
+      (_, i) =>
         new BaseBot({
           id: (i + 1).toString(),
           username: `bot_${i + 1}`,
         })
     );
-    let numOfConnectedBots: number = 0;
     let nextAvailableBotIndex: number = 0;
     for (let i = 0; i < NUM_OF_PLAYERS; i++) {
       if (playerList[i] == null) {
@@ -74,12 +80,6 @@ class LobbyPage
           Authentication.serverFlowEngine.gameID,
           i,
           {
-            onSuccess: () => {
-              numOfConnectedBots++;
-              if (numOfConnectedBots === numOfRequiredBots) {
-                console.log("starting");
-              }
-            },
             onFailure: () => {
               for (let bot of bots) {
                 bot.disconnect();
@@ -93,13 +93,17 @@ class LobbyPage
   };
 
   render() {
-    let { playerList, isBotDialogOpen, shouldRedirectToHome } = this.state;
+    let { playerList, isBotDialogOpen, shouldRedirectToHome, isGameStarting } =
+      this.state;
     if (shouldRedirectToHome) {
       return <Redirect push to="/" />;
     }
     let numOfConnectedPlayers: number = playerList.filter(
       (player: User) => player != null
     ).length;
+    if (numOfConnectedPlayers == NUM_OF_PLAYERS && isGameStarting) {
+      this.startGame();
+    }
     let isHost: boolean =
       Authentication.serverFlowEngine != null &&
       this.props.match.params.id === Authentication.serverFlowEngine.gameID;
@@ -151,7 +155,7 @@ class LobbyPage
             }}
             onClick={() => {
               if (numOfConnectedPlayers == NUM_OF_PLAYERS) {
-                console.log("starting");
+                this.startGame();
               } else {
                 this.setState({ isBotDialogOpen: true });
               }
@@ -216,7 +220,7 @@ class LobbyPage
                     height: 50,
                     fontSize: 20,
                   }}
-                  onClick={() => this.fillwithBots(playerList)}
+                  onClick={() => this.fillwithBots()}
                 >
                   Confirm
                 </button>

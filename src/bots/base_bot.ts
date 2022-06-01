@@ -11,7 +11,7 @@ import { OptionalConnectionCallbacks } from "../game_flow_util/communication";
 export class BaseBot implements ClientFlowEngineObserver {
   private clientFlowEngine: ClientFlowEngine = null as any;
 
-  constructor(user: User) {
+  constructor(public user: User) {
     this.clientFlowEngine = new ClientFlowEngine(user);
     this.clientFlowEngine.addObserver(this);
   }

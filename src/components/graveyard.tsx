@@ -61,11 +61,22 @@ class GraveYard
       [PieceColor.black, []],
     ]),
   };
+  private _isMounted: boolean = false;
 
   constructor(props: GraveYardProps) {
     super(props);
     if (props.clientFlowEngine != null) {
       props.clientFlowEngine.addObserver(this);
+    }
+  }
+
+  componentDidMount() {
+    this._isMounted = true;
+    if (this.props.clientFlowEngine.playerIndex != null) {
+      this.setPovColor(
+        Position.getStartPieceByPlayer(this.props.clientFlowEngine.playerIndex)
+          .color
+      );
     }
   }
 
@@ -156,12 +167,15 @@ class GraveYard
 
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
     switch (eventType) {
-      case ClientEventType.gameStarted: {
-        this.clear();
-        this.setPovColor(
-          Position.getStartPieceByPlayer(info.get(ClientEventInfo.playerIndex))
-            .color
-        );
+      case ClientEventType.roleAssigned: {
+        if (this._isMounted) {
+          this.clear();
+          this.setPovColor(
+            Position.getStartPieceByPlayer(
+              info.get(ClientEventInfo.playerIndex)
+            ).color
+          );
+        }
         break;
       }
       case ClientEventType.death: {

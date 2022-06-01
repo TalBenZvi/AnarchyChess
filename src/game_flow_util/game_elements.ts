@@ -880,22 +880,7 @@ export class Position {
   locateMoveForPlayer(playerIndex: number, move: Move): Move {
     let square: Square = this._playerLocations[playerIndex];
     if (square != null) {
-      /*
-      if (this.pieceAt(square.row, square.column) == null) {
-        console.log(
-          playerIndex,
-          square.row,
-          square.column,
-          JSON.stringify(move)
-        );
-      }
-      */
       return this._boardArrangement[square.row][square.column].locateMove(
-        this,
-        square,
-        move
-      );
-      return this.pieceAt(square.row, square.column).locateMove(
         this,
         square,
         move

@@ -536,8 +536,9 @@ class ChessBoard
   constructor(props: ChessBoardProps) {
     super(props);
     this.canvasRef = React.createRef();
-    if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.addObserver(this);
+    let clientFlowEngine: ClientFlowEngine = props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.addObserver(this);
     }
   }
 
@@ -560,6 +561,9 @@ class ChessBoard
       this.boardArea.mouseClicked(event.x - rect.left, event.y - rect.top);
     });
     this.shouldUpdateBoard = true;
+    if (this.props.clientFlowEngine.playerIndex != null) {
+      this.assignRole(this.props.clientFlowEngine.playerIndex);
+    }
     requestAnimationFrame(this.renderFunction);
   }
 
@@ -630,15 +634,23 @@ class ChessBoard
     this.shouldUpdateBoard = true;
   }
 
-  private startGame(playerIndex: number, initialCooldown: number): void {
-    this.playerIndex = playerIndex;
+  private assignRole(playerIndex: number) {
+    if (this.boardArea != null) {
+      this.playerIndex = playerIndex;
+      let position: Position = this.props.clientFlowEngine.getPosition();
+      let povColor: PieceColor = position.getPieceByPlayer(playerIndex).color;
+      this.setPovColor(povColor);
+      this.setPlayerSquare(position.getPlayerLocation(playerIndex));
+      this.setPieces(position.playingPieces);
+    }
+  }
+
+  private startGame(initialCooldown: number): void {
     let position: Position = this.props.clientFlowEngine.getPosition();
-    let povColor: PieceColor = position.getPieceByPlayer(playerIndex).color;
-    this.setPovColor(povColor);
-    this.setPlayerSquare(position.getPlayerLocation(playerIndex));
-    this.setPieces(position.playingPieces);
-    this.setAvailableMoves(position.findAvaillableMovesForPlayer(playerIndex));
-    this.startCooldownTimer(initialCooldown, povColor);
+    this.setAvailableMoves(
+      position.findAvaillableMovesForPlayer(this.playerIndex)
+    );
+    this.startCooldownTimer(initialCooldown, PieceColor.white);
   }
 
   private updateRespawnPreviewAndAvailableMoves() {
@@ -737,11 +749,12 @@ class ChessBoard
 
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
     switch (eventType) {
+      case ClientEventType.roleAssigned: {
+        this.assignRole(info.get(ClientEventInfo.playerIndex));
+        break;
+      }
       case ClientEventType.gameStarted: {
-        this.startGame(
-          info.get(ClientEventInfo.playerIndex),
-          info.get(ClientEventInfo.initialCooldown)
-        );
+        this.startGame(info.get(ClientEventInfo.initialCooldown));
         break;
       }
       case ClientEventType.move: {

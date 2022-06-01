@@ -29,7 +29,7 @@ class ClientPage
   implements ClientFlowEngineObserver
 {
   state = {
-    lobbyState: LobbyState.running,
+    lobbyState: LobbyState.open,
   };
 
   componentDidMount() {
@@ -45,13 +45,17 @@ class ClientPage
     this.setState({ lobbyState: LobbyState.closing });
   }
 
+  startGame(): void {
+    this.setState({ lobbyState: LobbyState.running });
+  }
+
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
     switch (eventType) {
       case ClientEventType.disconnection: {
         this.disconnect();
         break;
       }
-      case ClientEventType.gameStarted: {
+      case ClientEventType.roleAssigned: {
         this.setState({ lobbyState: LobbyState.running });
         break;
       }
