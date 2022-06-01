@@ -13,15 +13,15 @@ import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
 export class Authentication {
-  static currentUser: User = null as any;
+  //static currentUser: User = null as any;
 
-  /*
+  
   static currentUser: User = {
     id: "627c0e2c5573d5400492587f",
     username: "admin",
     email: "talbz03@gmail.com",
   };
-  */
+  
 
   static mongodbClient: MongodbClient = new MongodbClient();
   static serverFlowEngine: ServerFlowEngine = null as any;

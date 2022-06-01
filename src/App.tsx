@@ -21,6 +21,9 @@ function App() {
         <Route path="/game" exact>
           <GamePage />
         </Route>
+        <Route path="/test" exact>
+          <TestPage />
+        </Route>
       </Switch>
     </Router>
   );

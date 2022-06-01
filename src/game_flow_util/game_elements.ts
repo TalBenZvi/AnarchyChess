@@ -110,9 +110,9 @@ export class Move {
   ) {
     if (params != null) {
       this.isPromotion = Boolean(params.isPromotion);
-      this.promotionType = (Boolean(params.promotionType)
-        ? params.promotionType
-        : null) as PieceType;
+      this.promotionType = (
+        Boolean(params.promotionType) ? params.promotionType : null
+      ) as PieceType;
       this.isCapture = Boolean(params.isCapture);
       this.isEnPassant = Boolean(params.isEnPassant);
       this.isCastle = Boolean(params.isCastle);
@@ -141,7 +141,7 @@ export class Move {
 export abstract class Piece {
   private _respawnSquares: Square[];
 
-  constructor(public color: PieceColor, startColumn: number) {
+  constructor(public color: PieceColor, protected startColumn: number) {
     if (startColumn == null) {
       this._respawnSquares = [];
     } else {
@@ -239,6 +239,8 @@ export abstract class Piece {
     }
     return null as any;
   }
+
+  abstract toString(): string;
 }
 
 abstract class UnblockablePiece extends Piece {
@@ -406,6 +408,10 @@ export class Pawn extends Piece {
 
     return legalMoves;
   }
+
+  toString(): string {
+    return `${String.fromCharCode("A".charCodeAt(0) + this.startColumn)} Pawn`;
+  }
 }
 
 export class Knight extends UnblockablePiece {
@@ -425,6 +431,10 @@ export class Knight extends UnblockablePiece {
       new MoveOffset(-2, -1),
     ];
   }
+
+  toString(): string {
+    return `${this.startColumn <= 3 ? "Queenside" : "Kingside"} Knight`;
+  }
 }
 
 export class Bishop extends BlockablePiece {
@@ -440,6 +450,14 @@ export class Bishop extends BlockablePiece {
       new MoveOffset(-1, -1),
     ];
   }
+
+  toString(): string {
+    return `${
+      (this.color === PieceColor.white) === this.startColumn <= 3
+        ? "Dark Squared"
+        : "Light Squared"
+    } Bishop`;
+  }
 }
 
 export class Rook extends BlockablePiece {
@@ -454,6 +472,10 @@ export class Rook extends BlockablePiece {
       new MoveOffset(0, 1),
       new MoveOffset(0, -1),
     ];
+  }
+
+  toString(): string {
+    return `${this.startColumn <= 3 ? "Queenside" : "Kingside"} Rook`;
   }
 }
 
@@ -473,6 +495,10 @@ export class Queen extends BlockablePiece {
       new MoveOffset(-1, 1),
       new MoveOffset(-1, -1),
     ];
+  }
+
+  toString(): string {
+    return "Queen";
   }
 }
 
@@ -575,6 +601,10 @@ export class King extends UnblockablePiece {
       }
     }
     return legalMoves;
+  }
+
+  toString(): string {
+    return "King";
   }
 }
 
@@ -752,8 +782,8 @@ export class Position {
         piece: Position.getStartPieceByPlayer(i),
         row: Position.startPlayerLocations[i].row,
         column: Position.startPlayerLocations[i].column,
-      }
-    })
+      };
+    });
   }
 
   get playerLocations(): Square[] {
@@ -761,18 +791,16 @@ export class Position {
   }
 
   get playingPieces(): PlayingPiece[] {
-    return this.playerLocations.map(
-      (square: Square): PlayingPiece => {
-        if (square == null) {
-          return { piece: null as any, row: null as any, column: null as any };
-        }
-        return {
-          piece: this.pieceAt(square.row, square.column),
-          row: square.row,
-          column: square.column,
-        };
+    return this.playerLocations.map((square: Square): PlayingPiece => {
+      if (square == null) {
+        return { piece: null as any, row: null as any, column: null as any };
       }
-    );
+      return {
+        piece: this.pieceAt(square.row, square.column),
+        row: square.row,
+        column: square.column,
+      };
+    });
   }
 
   // debug
@@ -962,13 +990,11 @@ export class Position {
         return true;
       }
       this.killPlayerAt(row, column);
-      this._boardArrangement[row][column] = this._boardArrangement[startRow][
-        startColumn
-      ];
+      this._boardArrangement[row][column] =
+        this._boardArrangement[startRow][startColumn];
       this._boardArrangement[startRow][startColumn] = null as any;
-      this._playerArrangement[row][column] = this._playerArrangement[startRow][
-        startColumn
-      ];
+      this._playerArrangement[row][column] =
+        this._playerArrangement[startRow][startColumn];
       this._playerArrangement[startRow][startColumn] = null as any;
       this._playerLocations[playerIndex] = new Square(row, column);
       this._updateCastleRights(startRow, startColumn);
@@ -1091,12 +1117,10 @@ export class Position {
     let startPositionDescription: string = JSON.stringify(this, replacer);
     if (respawnSquare != null) {
       this._playerLocations[playerIndex] = respawnSquare;
-      this._boardArrangement[respawnSquare.row][
-        respawnSquare.column
-      ] = Position.getStartPieceByPlayer(playerIndex);
-      this._playerArrangement[respawnSquare.row][
-        respawnSquare.column
-      ] = playerIndex;
+      this._boardArrangement[respawnSquare.row][respawnSquare.column] =
+        Position.getStartPieceByPlayer(playerIndex);
+      this._playerArrangement[respawnSquare.row][respawnSquare.column] =
+        playerIndex;
     }
     if (areFieldsCoordinated && !this.areFieldsCoordinated()) {
       console.log(this.id, "respawnPlayerAt");
@@ -1106,5 +1130,3 @@ export class Position {
     }
   }
 }
-
-

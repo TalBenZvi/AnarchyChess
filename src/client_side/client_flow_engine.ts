@@ -23,6 +23,9 @@ import {
 } from "../game_flow_util/communication";
 import { User } from "../database/database_util";
 
+// in seconds
+export const GAME_START_DELAY: number = 3;
+
 export enum ClientEventType {
   disconnection,
   playerListUpdate,

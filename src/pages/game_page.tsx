@@ -1,10 +1,11 @@
 import React from "react";
+import { withRouter } from "react-router";
+
 import NavBar from "../components/navbar";
 import GraveYard from "../components/graveyard";
 import DeathScreen from "../components/death_screen";
 import PromotionScreen from "../components/promotion_screen";
-import { withRouter } from "react-router";
-
+import GameStartScreen from "../components/game_start_screen";
 import { PieceColor, NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
@@ -64,6 +65,7 @@ class GamePage extends React.Component<any, any> {
             clientFlowEngine={Authentication.clientFlowEngine}
           />
         </div>
+        {/* graveyard */}
         <div
           style={{
             position: "absolute",
@@ -84,6 +86,8 @@ class GamePage extends React.Component<any, any> {
         <DeathScreen clientFlowEngine={Authentication.clientFlowEngine} />
         {/* promotion screen */}
         <PromotionScreen clientFlowEngine={Authentication.clientFlowEngine} />
+        {/* game start screen */}
+        <GameStartScreen clientFlowEngine={Authentication.clientFlowEngine} />
       </div>
     );
   }
