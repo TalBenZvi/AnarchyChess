@@ -51,7 +51,7 @@
     "backend-start": "NODE_ENV=production node server/index.js",
     "peer-js-start": "peerjs --port 3030 --key peerjs --path /myapp",
     "start": "npm-run-all -p start-js peer-js-start",
-    "build": "npm-run-all build-css && react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
