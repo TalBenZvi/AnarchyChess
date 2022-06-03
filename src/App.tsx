@@ -6,7 +6,6 @@ import GamePage from "./pages/game_page";
 import HomePage from "./pages/home_page";
 import ClientPage from "./pages/client_page";
 import TestPage from "./pages/test_page";
-import client_page from "./pages/client_page";
 
 function App() {
   return (

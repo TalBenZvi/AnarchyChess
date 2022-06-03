@@ -535,7 +535,6 @@ class ChessBoard
 
   constructor(props: ChessBoardProps) {
     super(props);
-    console.log("here0");
     this.canvasRef = React.createRef();
     let clientFlowEngine: ClientFlowEngine = props.clientFlowEngine;
     if (clientFlowEngine != null) {
@@ -556,7 +555,6 @@ class ChessBoard
     const canvas = this.canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    console.log("here1");
     this.boardArea = new BoardArea(ctx, this.props);
     let rect = canvas.getBoundingClientRect();
     canvas.addEventListener("mousedown", (event: any) => {
@@ -585,8 +583,6 @@ class ChessBoard
   }
 
   private setAvailableMoves(availableMoves: Move[]): void {
-    console.log("here2");
-    console.log(5, this.boardArea);
     this.boardArea.setAvailableMoves(availableMoves);
     this.shouldUpdateBoard = true;
   }
@@ -639,7 +635,6 @@ class ChessBoard
   }
 
   private assignRole(playerIndex: number) {
-    console.log(2, this.boardArea);
     if (this.boardArea != null) {
       this.playerIndex = playerIndex;
       let position: Position = this.props.clientFlowEngine.getPosition();
@@ -651,7 +646,6 @@ class ChessBoard
   }
 
   private startGame(initialCooldown: number): void {
-    console.log(4, this.boardArea);
     let position: Position = this.props.clientFlowEngine.getPosition();
     this.setAvailableMoves(
       position.findAvaillableMovesForPlayer(this.playerIndex)
@@ -761,7 +755,6 @@ class ChessBoard
         break;
       }
       case ClientEventType.gameStarted: {
-        console.log(3, this.boardArea);
         this.startGame(info.get(ClientEventInfo.initialCooldown));
         break;
       }

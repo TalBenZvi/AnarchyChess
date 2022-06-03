@@ -111,13 +111,11 @@ export class ClientFlowEngine implements GameClientObserver {
   ) {
     this.gameClient.attemptToConnect(gameID, serverIndex, {
       onSuccess: () => {
-        console.log(`${this.user.username} connected`);
         if (optionalConnectionCallbacks.onSuccess != undefined) {
           optionalConnectionCallbacks.onSuccess();
         }
       },
       onFailure: () => {
-        console.log(`${this.user.username} connected`);
         if (optionalConnectionCallbacks.onFailure != undefined) {
           optionalConnectionCallbacks.onFailure();
         }
@@ -172,10 +170,6 @@ export class ClientFlowEngine implements GameClientObserver {
     this.gameClient.gameStatus = GameStatus.running;
     this.position = new Position(`client ${playerIndex}`);
     this.position.setToStartingPosition();
-    if (this.user.username === "admin") {
-      console.log("there1");
-      console.log([...this.observers]);
-    }
     this.notifyObservers(
       ClientEventType.roleAssigned,
       new Map<ClientEventInfo, any>([
