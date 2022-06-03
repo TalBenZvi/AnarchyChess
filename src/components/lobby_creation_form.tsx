@@ -3,7 +3,7 @@ import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 
 import { Authentication } from "../database/authentication";
-import { LobbyParams, LobbyCreationStatus } from "../database/database_util";
+import { LobbyCreationStatus } from "../database/database_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 
@@ -13,6 +13,10 @@ interface LobbyCreationFormProps {
 
 interface LobbyCreationFormState {
   name: string;
+  isPrivate: boolean;
+  password: string;
+  isPasswordShown: boolean;
+  areTeamsPrearranged: boolean;
   isWaitingForResponse: boolean;
 }
 
@@ -22,6 +26,10 @@ class LobbyCreationForm extends React.Component<
 > {
   state = {
     name: "",
+    isPrivate: false,
+    password: "",
+    isPasswordShown: false,
+    areTeamsPrearranged: false,
     isWaitingForResponse: false,
   };
 
@@ -29,12 +37,30 @@ class LobbyCreationForm extends React.Component<
     this.setState({ name: event.target.value });
   };
 
+  private setIsPrivate = () => {
+    this.setState({ isPrivate: !this.state.isPrivate });
+  };
+
+  private setPassword = (event: any) => {
+    this.setState({ password: event.target.value });
+  };
+
+  private setAreTeamsPrearranged = () => {
+    this.setState({ areTeamsPrearranged: !this.state.areTeamsPrearranged });
+  };
+
   private createLobby = (event: any) => {
+    let { name, isPrivate, password, areTeamsPrearranged } = this.state;
     this.setState(() => {
       return { isWaitingForResponse: true };
     });
     Authentication.createLobby(
-      { creatorID: Authentication.currentUser.id, name: this.state.name },
+      {
+        creatorID: Authentication.currentUser.id,
+        name: name,
+        password: isPrivate ? password : (null as any),
+        areTeamsPrearranged: areTeamsPrearranged,
+      },
       (status: LobbyCreationStatus) => {
         switch (status) {
           case LobbyCreationStatus.success:
@@ -70,15 +96,16 @@ class LobbyCreationForm extends React.Component<
     setFunction: (event: any) => void,
     top: number
   ): any {
+    let isPassword = fieldName == "Password";
     return (
       <label>
         {/* text input*/}
         <input
-          type="text"
+          type={isPassword && !this.state.isPasswordShown ? "password" : "text"}
           placeholder={fieldName}
           value={value}
           onChange={setFunction}
-          className="clear-text-input"
+          className="clear-text"
           style={{
             position: "absolute",
             width: 330,
@@ -97,12 +124,76 @@ class LobbyCreationForm extends React.Component<
             width: 440,
           }}
         />
+        {/* reveal password icon */}
+        {isPassword ? (
+          <img
+            style={{
+              position: "absolute",
+              left: 440,
+              top: top + 15,
+              width: 30,
+              filter: "contrast(70%)",
+            }}
+            src={revealPasswordIcon}
+            onMouseOver={() => {
+              this.setState({ isPasswordShown: true });
+            }}
+            onMouseOut={() => {
+              this.setState({ isPasswordShown: false });
+            }}
+          />
+        ) : (
+          <div />
+        )}
       </label>
     );
   }
 
+  private checkboxInputField(
+    name: string,
+    isChecked: boolean,
+    setFunction: () => void,
+    top: number
+  ): any {
+    return (
+      <div>
+        {/* checkbox input */}
+        <button
+          className={isChecked ? "checked-checkbox" : "checkbox"}
+          style={{
+            position: "absolute",
+            top: top,
+            height: 20,
+            width: 20,
+          }}
+          onClick={setFunction}
+        />
+        {/* title */}
+        <div
+          className="clear-text"
+          style={{
+            position: "absolute",
+            top: top - 10,
+            left: 60,
+            height: 60,
+            fontSize: 25,
+            fontWeight: "bold",
+          }}
+        >
+          {name}
+        </div>
+      </div>
+    );
+  }
+
   render() {
-    let { name, isWaitingForResponse } = this.state;
+    let {
+      name,
+      password,
+      isPrivate,
+      areTeamsPrearranged,
+      isWaitingForResponse,
+    } = this.state;
     return (
       <div
         style={{
@@ -119,6 +210,7 @@ class LobbyCreationForm extends React.Component<
             top: 10,
             width: 400,
             textAlign: "center",
+            fontWeight: "bold",
           }}
         >
           Create New Lobby
@@ -126,6 +218,12 @@ class LobbyCreationForm extends React.Component<
         <form onSubmit={this.createLobby} spellCheck={false}>
           {/* name */}
           {this.textInputField("Name", name, this.setName, 150)}
+          {/* password */}
+          {isPrivate ? (
+            this.textInputField("Password", password, this.setPassword, 270)
+          ) : (
+            <div />
+          )}
           {/* create button */}
           <input
             type="submit"
@@ -142,6 +240,25 @@ class LobbyCreationForm extends React.Component<
             }}
           />
         </form>
+        {/* private checkbox */}
+        {this.checkboxInputField("Private", isPrivate, this.setIsPrivate, 255)}
+        {/* prearranged teams checkbox */}
+        {this.checkboxInputField(
+          "Prearranged Teams",
+          areTeamsPrearranged,
+          this.setAreTeamsPrearranged,
+          520
+        )}
+        <div
+          className="clear-text"
+          style={{
+            position: "absolute",
+            top: 550,
+          }}
+        >
+          *Teams will be decided before the game starts and won't change between
+          rounds
+        </div>
         {/* loading icon */}
         {isWaitingForResponse ? (
           <div

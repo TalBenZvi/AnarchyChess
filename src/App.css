@@ -28,7 +28,7 @@ ul.row {
   z-index: 1;
   height: 100%;
   width: 100%;
-  background-color: #00000030;
+  background-color: #00000070;
 }
 
 .background {
@@ -73,7 +73,6 @@ ul.row {
 }
 
 .text-input {
-  border-radius: 5px;
   background: #ccc;
   color: #000;
   border: none;
@@ -82,7 +81,7 @@ ul.row {
   outline: inherit;
 }
 
-.clear-text-input {
+.clear-text {
   background: none;
   color: #ccc;
   border: none;
@@ -158,4 +157,34 @@ ul.row {
 
 .navbar-button:active {
   background: none;
+}
+
+.checkbox {
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  background: #505050;
+  border: 2px solid #202020;
+  border-radius: 5px;
+}
+
+.checkbox:hover {
+  background: #606060;
+}
+
+.checked-checkbox {
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  background: #bbbbbb;
+  border: 2px solid #202020;
+  border-radius: 5px;
+}
+
+.checked-checkbox:hover {
+  background: #dddddd;
 }

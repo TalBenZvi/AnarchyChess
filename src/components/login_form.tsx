@@ -86,7 +86,7 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
           placeholder={fieldName}
           value={value}
           onChange={setFunction}
-          className="clear-text-input"
+          className="clear-text"
           style={{
             position: "absolute",
             width: 330,

@@ -8,6 +8,8 @@ export interface User {
 export interface Lobby {
   id: string;
   name: string;
+  password: string;
+  areTeamsPrearranged: boolean;
   memberIDs: string[];
 }
 
@@ -41,8 +43,10 @@ export interface LoginResponse {
 }
 
 export interface LobbyParams {
-  creatorID: string,
-  name: string,
+  creatorID: string;
+  name: string;
+  password: string;
+  areTeamsPrearranged: boolean;
 }
 
 export enum LobbyCreationStatus {

@@ -3,7 +3,7 @@ import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 
 import { Authentication } from "../database/authentication";
-import { RegisterParams, RegisterStatus } from "../database/database_util";
+import { RegisterStatus } from "../database/database_util";
 
 import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";
@@ -156,7 +156,7 @@ class RegisterForm extends React.Component<
           placeholder={fieldName}
           value={value}
           onChange={setFunction}
-          className="clear-text-input"
+          className="clear-text"
           style={{
             position: "absolute",
             width: 330,
