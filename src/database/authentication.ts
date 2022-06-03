@@ -13,7 +13,7 @@ import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 
 export class Authentication {
-  //static currentUser: User = null as any;
+  // static currentUser: User = null as any;
 
   
   static currentUser: User = {

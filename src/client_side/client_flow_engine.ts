@@ -363,25 +363,4 @@ export class ClientFlowEngine implements GameClientObserver {
       }
     }
   }
-
-  async runTest() {
-    let promotionTypes: PieceType[] = [
-      PieceType.knight,
-      PieceType.bishop,
-      PieceType.rook,
-      PieceType.queen,
-    ];
-    let availableMoves: Move[] = this.position.findAvaillableMovesForPlayer(
-      this._playerIndex
-    );
-    if (availableMoves.length !== 0) {
-      let chosenMove: Move =
-        availableMoves[Math.floor(Math.random() * availableMoves.length)];
-      if (chosenMove.isPromotion) {
-        chosenMove.promotionType =
-          promotionTypes[Math.floor(Math.random() * promotionTypes.length)];
-      }
-      this.sendMove(chosenMove);
-    }
-  }
 }

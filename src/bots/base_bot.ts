@@ -45,7 +45,9 @@ export class BaseBot implements ClientFlowEngineObserver {
 
   protected onPlayerListUpdate(playerList: User[]): void {}
 
-  protected onGameStart(playerIndex: number, initialCooldown: number): void {}
+  protected onRoleAssignment(playerIndex: number) {}
+
+  protected onGameStart(initialCooldown: number): void {}
 
   protected onMoveReceived(
     movingPlayerIndex: number,
@@ -77,11 +79,12 @@ export class BaseBot implements ClientFlowEngineObserver {
         this.onPlayerListUpdate(info.get(ClientEventInfo.playerList));
         break;
       }
+      case ClientEventType.roleAssigned: {
+        this.onRoleAssignment(info.get(ClientEventInfo.playerIndex));
+        break;
+      }
       case ClientEventType.gameStarted: {
-        this.onGameStart(
-          info.get(ClientEventInfo.playerIndex),
-          info.get(ClientEventInfo.initialCooldown)
-        );
+        this.onGameStart(info.get(ClientEventInfo.initialCooldown));
         break;
       }
       case ClientEventType.move: {

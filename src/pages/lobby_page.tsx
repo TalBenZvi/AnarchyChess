@@ -12,6 +12,7 @@ import {
 import { User } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { BaseBot } from "../bots/base_bot";
+import { RandomBot } from "../bots/random_bot";
 import { Authentication } from "../database/authentication";
 
 interface LobbyPageProps {}
@@ -68,7 +69,7 @@ class LobbyPage
     ).length;
     let bots: BaseBot[] = [...Array(numOfRequiredBots)].map(
       (_, i) =>
-        new BaseBot({
+        new RandomBot({
           id: (i + 1).toString(),
           username: `bot_${i + 1}`,
         })
