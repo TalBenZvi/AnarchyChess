@@ -56,7 +56,7 @@ export class GameClient {
   ) {
     if (this.gameStatus === GameStatus.inactive) {
       this.clientPeer = new Peer(`${gameID}_client_${this.user.id}`, {
-        host: "/",
+        host: "localhost",
         port: PEERJS_SERVER_PORT,
         path: "/myapp",
       });
