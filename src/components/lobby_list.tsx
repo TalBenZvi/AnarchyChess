@@ -6,8 +6,11 @@ import { Redirect } from "react-router";
 import { Lobby, LobbyJoiningStatus } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { Authentication } from "../database/authentication";
+
 import rightArrow from "../assets/page_design/right_arrow.png";
 import refreshIcon from "../assets/page_design/refresh_icon.png";
+import lockIcon from "../assets/page_design/lock_icon.png";
+import checkmarkIcon from "../assets/page_design/checkmark_icon.png";
 
 const LOBBIES_IN_A_PAGE: number = 10;
 
@@ -21,7 +24,8 @@ interface LobbyListState {
   lobbies: Lobby[];
   page: number;
   isWaitingForResponse: boolean;
-  selectedLobbyIndex: number;
+  selectedLobby: Lobby;
+  selectedLobbyForPassword: Lobby;
   targetLobbyID: string;
 }
 
@@ -30,9 +34,15 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     lobbies: [],
     page: 0,
     isWaitingForResponse: true,
-    selectedLobbyIndex: null as any,
+    selectedLobby: null as any,
+    selectedLobbyForPassword: null as any,
     targetLobbyID: null as any,
   };
+  enteredPassword: string = "";
+
+  componentDidMount() {
+    this.loadLobbiesFromDatabase();
+  }
 
   private loadLobbiesFromDatabase = () => {
     Authentication.getLobbies((lobbies: Lobby[]) => {
@@ -41,9 +51,47 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     this.setState({ isWaitingForResponse: true });
   };
 
-  componentDidMount() {
-    this.loadLobbiesFromDatabase();
-  }
+  private joinLobby = (lobby: Lobby) => {
+    Authentication.joinLobby(lobby.id, (status: LobbyJoiningStatus) => {
+      switch (status) {
+        case LobbyJoiningStatus.success:
+          {
+            this.setState(() => {
+              return { targetLobbyID: lobby.id };
+            });
+          }
+          break;
+        case LobbyJoiningStatus.failure:
+          {
+            toast("Error joining lobby");
+            this.setState(() => {
+              return {
+                selectedLobby: null as any,
+              };
+            });
+          }
+          break;
+        case LobbyJoiningStatus.connectionError:
+          {
+            toast("There has been a connection error");
+            this.setState(() => {
+              return {
+                selectedLobby: null as any,
+              };
+            });
+          }
+          break;
+      }
+    });
+    this.setState({
+      selectedLobby: lobby,
+      selectedLobbyForPassword: null as any,
+    });
+  };
+
+  private setEnteredPassword = (event: any) => {
+    this.enteredPassword = event.target.value;
+  };
 
   render() {
     let { width, height, onLobbyCreationSelection } = this.props;
@@ -51,7 +99,8 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
       lobbies,
       page,
       isWaitingForResponse,
-      selectedLobbyIndex,
+      selectedLobby,
+      selectedLobbyForPassword,
       targetLobbyID,
     } = this.state;
     if (targetLobbyID != null) {
@@ -87,10 +136,51 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             transform: "translate(-50%, 0%)",
             fontSize: titleFontSize,
             display: "inline-block",
+            fontWeight: "bold",
           }}
         >
           Lobbies
         </div>
+        {/* column titles */}
+        {isWaitingForResponse ? (
+          <div />
+        ) : (
+          <div>
+            <div
+              style={{
+                position: "fixed",
+                left: "10%",
+                transform: "translate(-50%, 0%)",
+                fontSize: fontSize,
+                fontWeight: "bold",
+              }}
+            >
+              Name
+            </div>
+            <div
+              style={{
+                position: "fixed",
+                left: "35%",
+                transform: "translate(-50%, 0%)",
+                fontSize: fontSize,
+                fontWeight: "bold",
+              }}
+            >
+              Owner
+            </div>
+            <div
+              style={{
+                position: "fixed",
+                left: "60%",
+                transform: "translate(-50%, 0%)",
+                fontSize: fontSize,
+                fontWeight: "bold",
+              }}
+            >
+              Capacity
+            </div>
+          </div>
+        )}
         {/* refresh button */}
         <button
           className="app-button"
@@ -135,7 +225,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
         </button>
         {isWaitingForResponse ? (
           <div>
-            {/* loading title */}
+            {/* searching title */}
             <div
               className="centered-title"
               style={{
@@ -149,7 +239,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             >
               Searching for lobbies...
             </div>
-            {/* loading spinner */}
+            {/* searching spinner */}
             <div
               style={{
                 position: "fixed",
@@ -207,7 +297,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                 }}
               ></img>
             </button>
-            {/* content text */}
+            {/* content indicator */}
             <div
               style={{
                 position: "fixed",
@@ -250,7 +340,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             </button>
             {/* lobbies */}
             <ul className="no-bullets">
-              {displayedLobbies.map((lobby: Lobby, i: number) => (
+              {displayedLobbies.map((lobby: Lobby, _: number) => (
                 <li
                   key={Math.random()}
                   style={{
@@ -270,86 +360,147 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                   <div
                     style={{
                       position: "fixed",
-                      paddingLeft: fontPadding,
+                      left: "7%",
+                      transform: "translate(-50%, 0%)",
                     }}
                   >
                     {lobby.name}
+                  </div>
+                  {/* lobby owner */}
+                  <div
+                    style={{
+                      position: "fixed",
+                      left: "34%",
+                      transform: "translate(-50%, 0%)",
+                    }}
+                  >
+                    {lobby.creatorName}
                   </div>
                   {/* lobby capacity */}
                   <div
                     style={{
                       position: "fixed",
-                      left: "50%",
+                      left: "61%",
                       transform: "translate(-50%, 0%)",
                     }}
                   >{`${
                     lobby.memberIDs.filter((id: string) => id !== "").length
                   } / ${NUM_OF_PLAYERS}`}</div>
+                  {/* lock icon */}
+                  {lobby.password == null ||
+                  selectedLobby == lobby ||
+                  selectedLobbyForPassword == lobby ? (
+                    <div />
+                  ) : (
+                    <img
+                      src={lockIcon}
+                      style={{
+                        position: "fixed",
+                        left: "85%",
+                        top: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: tileHeight * 0.5,
+                        height: tileHeight * 0.5,
+                        filter: "contrast(0.5) brightness(3)",
+                      }}
+                    />
+                  )}
                   {/* join button */}
-                  <button
-                    className="app-button"
-                    disabled={
-                      selectedLobbyIndex != null && selectedLobbyIndex !== i
-                    }
-                    style={{
-                      position: "relative",
-                      float: "right",
-                      marginRight: fontPadding,
-                      top: "50%",
-                      transform: "translate(0%, -50%)",
-                      width: width * 0.1,
-                      height: buttonHeight,
-                      lineHeight: `${buttonHeight * 0.8}px`,
-                    }}
-                    onClick={() => {
-                      if (selectedLobbyIndex === i) {
-                        this.setState({ selectedLobbyIndex: null as any });
-                      } else {
-                        Authentication.joinLobby(
-                          lobby.id,
-                          (status: LobbyJoiningStatus) => {
-                            switch (status) {
-                              case LobbyJoiningStatus.success:
-                                {
-                                  this.setState(() => {
-                                    return { targetLobbyID: lobby.id };
-                                  });
-                                }
-                                break;
-                              case LobbyJoiningStatus.failure:
-                                {
-                                  toast("Error joining lobby");
-                                  this.setState(() => {
-                                    return { selectedLobbyIndex: null as any };
-                                  });
-                                }
-                                break;
-                              case LobbyJoiningStatus.connectionError:
-                                {
-                                  toast("There has been a connection error");
-                                  this.setState(() => {
-                                    return { selectedLobbyIndex: null as any };
-                                  });
-                                }
-                                break;
-                            }
-                          }
-                        );
-                        this.setState({ selectedLobbyIndex: i });
+                  {selectedLobby == lobby ||
+                  selectedLobbyForPassword == lobby ? (
+                    <div />
+                  ) : (
+                    <button
+                      className="app-button"
+                      disabled={
+                        selectedLobby != null && selectedLobby !== lobby
                       }
-                    }}
-                  >
-                    {selectedLobbyIndex === i ? "Cancel" : "Join"}
-                  </button>
-                  {/* join lobby loading spinner */}
-                  {selectedLobbyIndex === i ? (
-                    <div
                       style={{
                         position: "relative",
                         float: "right",
+                        marginRight: fontPadding,
                         top: "50%",
-                        marginRight: width * 0.015,
                         transform: "translate(0%, -50%)",
+                        width: width * 0.1,
+                        height: buttonHeight,
+                        lineHeight: `${buttonHeight * 0.8}px`,
+                      }}
+                      onClick={() => {
+                        if (lobby.password == null) {
+                          this.joinLobby(lobby);
+                        } else {
+                          this.setState({ selectedLobbyForPassword: lobby });
+                        }
+                      }}
+                    >
+                      Join
+                    </button>
+                  )}
+                  {/* password input field */}
+                  {selectedLobbyForPassword == lobby ? (
+                    <div>
+                      <input
+                        type="password"
+                        className="clear-text"
+                        placeholder="Password"
+                        onChange={this.setEnteredPassword}
+                        style={{
+                          position: "fixed",
+                          left: "88%",
+                          top: "50%",
+                          transform: "translate(-50%, -50%)",
+                          display: "flex",
+                          flexWrap: "wrap",
+                          height: tileHeight * 0.8,
+                          width: width * 0.1,
+                          border: "1px solid #ccc",
+                          borderRadius: 5,
+                          background: "#202020",
+                          fontSize: fontSize * 0.9,
+                          textAlign: "center",
+                        }}
+                      />
+                      <button
+                        className="app-button"
+                        style={{
+                          position: "fixed",
+                          left: "97%",
+                          top: "50%",
+                          transform: "translate(-50%, -50%)",
+                          height: tileHeight * 0.8,
+                          width: tileHeight * 0.8,
+                        }}
+                        onClick={() => {
+                          if (this.enteredPassword === lobby.password) {
+                            this.joinLobby(lobby);
+                          } else {
+                            toast("Wrong password");
+                          }
+                        }}
+                      >
+                        <img
+                          src={checkmarkIcon}
+                          style={{
+                            position: "fixed",
+                            transform: "translate(-50%, -50%)",
+                            width: tileHeight * 0.5,
+                            height: tileHeight * 0.5,
+                            filter: "contrast(0.5) brightness(3)",
+                          }}
+                        />
+                      </button>
+                    </div>
+                  ) : (
+                    <div />
+                  )}
+                  {/* join lobby loading spinner */}
+                  {selectedLobby === lobby ? (
+                    <div
+                      style={{
+                        position: "fixed",
+                        left: "93%",
+                        top: "50%",
+                        transform: "translate(-50%, -50%)",
                         display: "flex",
                         flexWrap: "wrap",
                       }}

@@ -57,6 +57,7 @@ class LobbyCreationForm extends React.Component<
     Authentication.createLobby(
       {
         creatorID: Authentication.currentUser.id,
+        creatorName: Authentication.currentUser.username,
         name: name,
         password: isPrivate ? password : (null as any),
         areTeamsPrearranged: areTeamsPrearranged,

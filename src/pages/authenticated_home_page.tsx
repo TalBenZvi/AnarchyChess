@@ -102,14 +102,14 @@ class AuthenticatedHomePage extends React.Component<
           className="centered"
           style={{
             position: "absolute",
-            top: 180,
+            top: 130,
             left: "50%",
             transform: "translate(-50%, 0%)",
           }}
         >
           <LobbyList
-            width={900}
-            height={600}
+            width={1100}
+            height={700}
             onLobbyCreationSelection={() =>
               this.setState({ isLobbyCreationFormOpen: true })
             }

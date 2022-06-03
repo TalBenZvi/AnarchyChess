@@ -15,7 +15,6 @@ import { ClientFlowEngine } from "../client_side/client_flow_engine";
 export class Authentication {
   // static currentUser: User = null as any;
 
-  
   static currentUser: User = {
     id: "627c0e2c5573d5400492587f",
     username: "admin",

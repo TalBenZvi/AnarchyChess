@@ -1,6 +1,6 @@
 export interface User {
   id: string;
-  username?: string;
+  username: string;
   email?: string;
   password?: string;
 }
@@ -8,6 +8,7 @@ export interface User {
 export interface Lobby {
   id: string;
   name: string;
+  creatorName: string;
   password: string;
   areTeamsPrearranged: boolean;
   memberIDs: string[];
@@ -44,6 +45,7 @@ export interface LoginResponse {
 
 export interface LobbyParams {
   creatorID: string;
+  creatorName: string;
   name: string;
   password: string;
   areTeamsPrearranged: boolean;

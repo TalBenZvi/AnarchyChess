@@ -101,8 +101,11 @@ export class MongodbClient {
                 return {
                   id: databaseLobby["_id"],
                   name: databaseLobby["name"],
+                  creatorName: databaseLobby["creatorName"],
+                  password: databaseLobby["password"],
+                  areTeamsPrearranged: databaseLobby["areTeamsPrearranged"],
                   memberIDs: databaseLobby["memberIDs"],
-                };
+                } as Lobby;
               }
             )
           );
