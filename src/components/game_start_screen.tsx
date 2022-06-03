@@ -37,20 +37,24 @@ class GameStartScreen
   state = { isActive: false, piece: null as any, gameStartTimer: 0 };
   private _isMounted: boolean = false;
 
-  constructor(props: GameStartScreenProps) {
-    super(props);
-    if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.addObserver(this);
+  componentDidMount() {
+    this._isMounted = true;
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.addObserver(this);
+      if (clientFlowEngine.playerIndex != null) {
+        this.show(
+          Position.getStartPieceByPlayer(clientFlowEngine.playerIndex),
+          GAME_START_DELAY
+        );
+      }
     }
   }
 
-  componentDidMount() {
-    this._isMounted = true;
-    if (this.props.clientFlowEngine.playerIndex != null) {
-      this.show(
-        Position.getStartPieceByPlayer(this.props.clientFlowEngine.playerIndex),
-        GAME_START_DELAY
-      );
+  componentWillUnmount() {
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.removeObserver(this);
     }
   }
 
@@ -93,7 +97,10 @@ class GameStartScreen
     }
     let titleColor: string =
       piece.color === PieceColor.white ? WHITE_TITLE_COLOR : BLACK_TITLE_COLOR;
-    let outlineColor: string = piece.color === PieceColor.white ? BLACK_OUTLINE_COLOR : WHITE_OUTLINE_COLOR;
+    let outlineColor: string =
+      piece.color === PieceColor.white
+        ? BLACK_OUTLINE_COLOR
+        : WHITE_OUTLINE_COLOR;
     return (
       <div
         style={{

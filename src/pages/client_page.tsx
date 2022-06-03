@@ -38,6 +38,12 @@ class ClientPage
     }
   }
 
+  componentWillUnmount() {
+    if (Authentication.clientFlowEngine != null) {
+      Authentication.clientFlowEngine.removeObserver(this);
+    }
+  }
+
   disconnect(): void {
     setTimeout(() => {
       this.setState({ lobbyState: LobbyState.closed });

@@ -27,10 +27,17 @@ class DeathScreen
 
   playerIndex: number = null as any;
 
-  constructor(props: DeathScreenProps) {
-    super(props);
-    if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.addObserver(this);
+  componentDidMount() {
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.addObserver(this);
+    }
+  }
+
+  componentWillUnmount() {
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.removeObserver(this);
     }
   }
 

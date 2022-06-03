@@ -63,20 +63,24 @@ class GraveYard
   };
   private _isMounted: boolean = false;
 
-  constructor(props: GraveYardProps) {
-    super(props);
-    if (props.clientFlowEngine != null) {
-      props.clientFlowEngine.addObserver(this);
+  componentDidMount() {
+    this._isMounted = true;
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.addObserver(this);
+      if (clientFlowEngine.playerIndex != null) {
+        this.setPovColor(
+          Position.getStartPieceByPlayer(this.props.clientFlowEngine.playerIndex)
+            .color
+        );
+      }
     }
   }
 
-  componentDidMount() {
-    this._isMounted = true;
-    if (this.props.clientFlowEngine.playerIndex != null) {
-      this.setPovColor(
-        Position.getStartPieceByPlayer(this.props.clientFlowEngine.playerIndex)
-          .color
-      );
+  componentWillUnmount() {
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.removeObserver(this);
     }
   }
 

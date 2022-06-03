@@ -69,8 +69,6 @@ export interface ClientFlowEngineObserver {
 export class ClientFlowEngine implements GameClientObserver {
   private gameClient: GameClient;
 
-  private user: User;
-
   private position: Position = null as any;
   private _playerIndex: number = null as any;
   isGameRunning: boolean = false;
@@ -81,8 +79,7 @@ export class ClientFlowEngine implements GameClientObserver {
   public shouldStopSimulation: boolean = false;
   private receivedEventIndices: number[] = [];
 
-  constructor(user: User) {
-    this.user = user;
+  constructor(private user: User) {
     this.gameClient = new GameClient(this, user);
   }
 
@@ -92,6 +89,12 @@ export class ClientFlowEngine implements GameClientObserver {
 
   addObserver(observer: ClientFlowEngineObserver) {
     this.observers.push(observer);
+  }
+
+  removeObserver(observerToRemove: ClientFlowEngineObserver) {
+    this.observers = this.observers.filter(
+      (observer: ClientFlowEngineObserver) => observer != observerToRemove
+    );
   }
 
   private notifyObservers(

@@ -51,7 +51,7 @@
     "start-js": "react-scripts start",
     "peer-js-start": "peerjs --port 3030 --key peerjs --path /myapp",
     "peer-js-start-new": "node peerjs_server/peer_server.js",
-    "start": "sdfgsdfgsdfhsfnpm-run-all -p start-js peer-js-start",
+    "start": "npm-run-all -p start-js peer-js-start",
     "build-js": "react-scripts build",
     "build": "npm-run-all build-js ",
     "test": "react-scripts test",

@@ -46,7 +46,7 @@ const MOVE_BUTTON_OPACITY: number = 0.2;
 const PLAYER_SQUARE_BRIGHTNESS: number = 0.4;
 const FPS: number = 60;
 // in seconds
-const PIECE_TRAVEL_TIME: number = 0.1;
+const PIECE_TRAVEL_TIME: number = 0.2;
 const PIECE_DYING_TIME: number = 0.15;
 const PIECE_RESPAWNING_TIME: number = 0.15;
 const DEAD_PIECE_ELEVATION_FACTOR: number = 1;
@@ -536,12 +536,8 @@ class ChessBoard
   constructor(props: ChessBoardProps) {
     super(props);
     this.canvasRef = React.createRef();
-    let clientFlowEngine: ClientFlowEngine = props.clientFlowEngine;
-    if (clientFlowEngine != null) {
-      clientFlowEngine.addObserver(this);
-    }
   }
-
+  
   private renderFunction = () => {
     if (this.shouldUpdateBoard) {
       this.shouldUpdateBoard = false;
@@ -550,7 +546,7 @@ class ChessBoard
     }
     requestAnimationFrame(this.renderFunction);
   };
-
+  
   componentDidMount() {
     const canvas = this.canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -561,13 +557,25 @@ class ChessBoard
       this.boardArea.mouseClicked(event.x - rect.left, event.y - rect.top);
     });
     this.shouldUpdateBoard = true;
-    if (this.props.clientFlowEngine.playerIndex != null) {
-      this.assignRole(this.props.clientFlowEngine.playerIndex);
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      if (clientFlowEngine.playerIndex != null) {
+        this.assignRole(clientFlowEngine.playerIndex);
+      }      
+      clientFlowEngine.addObserver(this);
     }
     requestAnimationFrame(this.renderFunction);
   }
 
+  componentWillUnmount() {
+    let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
+    if (clientFlowEngine != null) {
+      clientFlowEngine.removeObserver(this);
+    }
+  }
+
   private setPovColor(povColor: PieceColor): void {
+
     this.boardArea.setPovColor(povColor);
     this.shouldUpdateBoard = true;
   }
@@ -750,7 +758,6 @@ class ChessBoard
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
     switch (eventType) {
       case ClientEventType.roleAssigned: {
-        throw "here";
         this.assignRole(info.get(ClientEventInfo.playerIndex));
         break;
       }
