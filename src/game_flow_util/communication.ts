@@ -16,7 +16,7 @@ export enum EventType {
 
 export enum EventInfo {
   // playerListUpdate
-  connectedPlayers,
+  playerList,
   // game started
   initialCooldown,
   playerIndex,

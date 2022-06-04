@@ -3,7 +3,7 @@ import { withRouter } from "react-router";
 import { Redirect } from "react-router";
 
 import NavBar from "../components/navbar";
-import PlayerList from "../components/player_list";
+import PlayerListComponent from "../components/player_list_component";
 import {
   ClientFlowEngineObserver,
   ClientEventType,
@@ -14,11 +14,12 @@ import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { BaseBot } from "../bots/base_bot";
 import { RandomBot } from "../bots/random_bot";
 import { Authentication } from "../database/authentication";
+import { PlayerList } from "../game_flow_util/player_list";
 
 interface LobbyPageProps {}
 
 interface LobbyPageState {
-  playerList: User[];
+  playerList: PlayerList;
   isBotDialogOpen: boolean;
   shouldRedirectToHome: boolean;
   isGameStarting: boolean;
@@ -28,8 +29,8 @@ class LobbyPage
   extends React.Component<any, any>
   implements ClientFlowEngineObserver
 {
-  state = {
-    playerList: [],
+  state: LobbyPageState = {
+    playerList: null as any,
     isBotDialogOpen: false,
     shouldRedirectToHome: false,
     isGameStarting: false,
@@ -99,9 +100,8 @@ class LobbyPage
     if (shouldRedirectToHome) {
       return <Redirect push to="/" />;
     }
-    let numOfConnectedPlayers: number = playerList.filter(
-      (player: User) => player != null
-    ).length;
+    let numOfConnectedPlayers: number =
+      playerList == null ? 0 : playerList.getConnectedUsers().length;
     if (numOfConnectedPlayers == NUM_OF_PLAYERS && isGameStarting) {
       this.startGame();
     }
@@ -119,7 +119,11 @@ class LobbyPage
             left: 50,
           }}
         >
-          <PlayerList width={500} height={750} playerList={playerList} />
+          <PlayerListComponent
+            width={500}
+            height={750}
+            playerList={playerList}
+          />
         </div>
         {/* leave / close lobby button */}
         <button
@@ -192,9 +196,7 @@ class LobbyPage
                 }}
                 onClick={() => {}}
               >
-                {`Your lobby only has ${
-                  playerList.filter((player: User) => player != null).length
-                }/32 players. The rest of the spots will be filled by bots`}
+                {`Your lobby only has ${numOfConnectedPlayers}/32 players. The rest of the spots will be filled by bots`}
                 {/* cancel button */}
                 <button
                   className="app-button"

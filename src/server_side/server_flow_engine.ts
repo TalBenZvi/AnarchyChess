@@ -24,15 +24,16 @@ import {
   RequestInfo,
   reviver,
 } from "../game_flow_util/communication";
-import { User } from "../database/database_util";
+import { Lobby, User } from "../database/database_util";
 import { Authentication } from "../database/authentication";
+import { PlayerList } from "../game_flow_util/player_list";
 
 const COOLDOWN_VARIANCE = 0.2;
 
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
   private _gameID: string = null as any;
-  private _players: User[] = [...Array(NUM_OF_PLAYERS)].fill(null);
+  private playerList: PlayerList = null as any;
   private position: Position = new Position("server");
   private isGameRunning: boolean = false;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
@@ -48,12 +49,13 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   get players(): User[] {
-    return [...this._players];
+    return this.playerList.getAllUsers();
   }
 
-  acceptConnections(gameID: string): void {
-    this._gameID = gameID;
-    this.gameServer.acceptConnections(gameID);
+  acceptConnections(lobby: Lobby): void {
+    this._gameID = lobby.id;
+    this.gameServer.acceptConnections(lobby.id);
+    this.playerList = new PlayerList(lobby.areTeamsPrearranged);
   }
 
   destroyConnections(): void {
@@ -205,55 +207,38 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
-  private handleConnection(playerIndex: number, user: User) {
-    this._players[playerIndex] = user;
-    //console.log([...this.players].filter((player) => player != null).length);
-    //console.log([...this.players]);
+  private handleConnection(userIndex: number, user: User) {
+    this.playerList.setPlayer(userIndex, user);
     this.gameServer.broadcastEvent({
       index: null as any,
       type: EventType.playerListUpdate,
       info: new Map<EventInfo, string>([
-        [
-          EventInfo.connectedPlayers,
-          JSON.stringify(
-            this._players.filter((player: User) => player != null)
-          ),
-        ],
+        [EventInfo.playerList, JSON.stringify(this.playerList)],
       ]),
     });
     Authentication.updateLobbyMembers(
       this._gameID,
-      this._players.map((player: User) =>
-        player == null ? (null as any) : player.id
-      )
+      this.playerList.getAllUsers().map((user: User) => user == null ? null as any : user.id)
     );
   }
 
-  private handleDisconnection(playerIndex: number) {
-    console.log("here");
-    this._players[playerIndex] = null as any;
+  private handleDisconnection(userIndex: number) {
+    this.playerList.removePlayer(userIndex);
     this.gameServer.broadcastEvent({
       index: null as any,
       type: EventType.playerListUpdate,
       info: new Map<EventInfo, string>([
-        [
-          EventInfo.connectedPlayers,
-          JSON.stringify(
-            this._players.filter((player: User) => player != null)
-          ),
-        ],
+        [EventInfo.playerList, JSON.stringify(this.playerList)],
       ]),
     });
     Authentication.updateLobbyMembers(
       this._gameID,
-      this._players.map((player: User) =>
-        player == null ? (null as any) : player.id
-      )
+      this.playerList.getAllUsers().map((user: User) => user == null ? null as any : user.id)
     );
   }
 
   private async handleRequest(
-    playerIndex: number,
+    userIndex: number,
     request: Request,
     requestArrivalTime: number
   ) {
@@ -264,12 +249,12 @@ export class ServerFlowEngine implements ServerObserver {
           request.info.get(RequestInfo.user) as string,
           reviver
         );
-        this.handleConnection(playerIndex, user);
+        this.handleConnection(userIndex, user);
         break;
       }
       // disconnection
       case RequestType.disconnection: {
-        this.handleDisconnection(playerIndex);
+        this.handleDisconnection(userIndex);
         break;
       }
       // move
@@ -279,9 +264,9 @@ export class ServerFlowEngine implements ServerObserver {
             request.info.get(RequestInfo.move) as string,
             reviver
           );
-          this.moveRequests[playerIndex] = moveRequest;
-          if (!this.isOnCooldown[playerIndex] && this.isAlive[playerIndex]) {
-            this.registerMove(playerIndex, moveRequest, requestArrivalTime);
+          this.moveRequests[userIndex] = moveRequest;
+          if (!this.isOnCooldown[userIndex] && this.isAlive[userIndex]) {
+            this.registerMove(userIndex, moveRequest, requestArrivalTime);
           }
         }
         break;
@@ -295,14 +280,10 @@ export class ServerFlowEngine implements ServerObserver {
   ) {
     switch (notification) {
       case ServerNotificationType.playerDisconnected: {
-        let playerIndex: number = notificationInfo.get(
-          ServerNotificationInfo.playerIndex
+        let userIndex: number = notificationInfo.get(
+          ServerNotificationInfo.userIndex
         );
-        this.handleDisconnection(playerIndex);
-        break;
-      }
-      case ServerNotificationType.filledServer: {
-        console.log("server full");
+        this.handleDisconnection(userIndex);
         break;
       }
       case ServerNotificationType.receivedRequest: {
@@ -311,7 +292,7 @@ export class ServerFlowEngine implements ServerObserver {
           ServerNotificationInfo.request
         );
         this.handleRequest(
-          notificationInfo.get(ServerNotificationInfo.playerIndex),
+          notificationInfo.get(ServerNotificationInfo.userIndex),
           request,
           requestArrivalTime
         );

@@ -22,6 +22,7 @@ import {
   OptionalConnectionCallbacks,
 } from "../game_flow_util/communication";
 import { User } from "../database/database_util";
+import { PlayerList } from "../game_flow_util/player_list";
 
 // in seconds
 export const GAME_START_DELAY: number = 3;
@@ -157,11 +158,11 @@ export class ClientFlowEngine implements GameClientObserver {
     );
   }
 
-  private updatePlayerList(connectedPlayers: User[]): void {
+  private updatePlayerList(playerList: PlayerList): void {
     this.notifyObservers(
       ClientEventType.playerListUpdate,
       new Map<ClientEventInfo, any>([
-        [ClientEventInfo.playerList, [...connectedPlayers]],
+        [ClientEventInfo.playerList, playerList],
       ])
     );
   }
@@ -212,11 +213,11 @@ export class ClientFlowEngine implements GameClientObserver {
     switch (event.type) {
       // player list update
       case EventType.playerListUpdate: {
-        let connectedPlayers: User[] = JSON.parse(
-          event.info.get(EventInfo.connectedPlayers) as string,
-          reviver
+        let playerList: PlayerList = new PlayerList(false);
+        playerList.setFromJSON(
+          event.info.get(EventInfo.playerList) as string
         );
-        this.updatePlayerList(connectedPlayers);
+        this.updatePlayerList(playerList);
         break;
       }
       // game started

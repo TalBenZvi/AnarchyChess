@@ -11,6 +11,7 @@ import {
   LobbyCreationStatus,
   LobbyJoiningStatus,
   LobbyJoiningResponse,
+  covertDatabaseLobby,
 } from "./database_util";
 
 export class MongodbClient {
@@ -65,7 +66,7 @@ export class MongodbClient {
 
   createLobby(
     lobbyParams: LobbyParams,
-    callback: (status: LobbyCreationStatus, gameID: string) => void
+    callback: (status: LobbyCreationStatus, createdLobby: Lobby) => void
   ): void {
     const request = new XMLHttpRequest();
     const url =
@@ -78,7 +79,7 @@ export class MongodbClient {
           let response: LobbyCreationResponse = JSON.parse(
             JSON.parse(request.responseText)
           );
-          callback(response.status, response.gameID);
+          callback(response.status, response.createdLobby);
         } else {
           callback(LobbyCreationStatus.connectionError, null as any);
         }
@@ -95,20 +96,7 @@ export class MongodbClient {
     request.onreadystatechange = (e) => {
       if (request.readyState === 4) {
         if (request.status === 200) {
-          callback(
-            JSON.parse(request.responseText).map(
-              (databaseLobby: any, _: number) => {
-                return {
-                  id: databaseLobby["_id"],
-                  name: databaseLobby["name"],
-                  creatorName: databaseLobby["creatorName"],
-                  password: databaseLobby["password"],
-                  areTeamsPrearranged: databaseLobby["areTeamsPrearranged"],
-                  memberIDs: databaseLobby["memberIDs"],
-                } as Lobby;
-              }
-            )
-          );
+          callback(JSON.parse(request.responseText).map(covertDatabaseLobby));
         } else {
           callback([]);
         }

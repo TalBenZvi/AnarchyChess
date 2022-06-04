@@ -7,6 +7,7 @@ import {
 import { Move, Square, Piece, Position } from "../game_flow_util/game_elements";
 import { User } from "../database/database_util";
 import { OptionalConnectionCallbacks } from "../game_flow_util/communication";
+import { PlayerList } from "../game_flow_util/player_list";
 
 export class BaseBot implements ClientFlowEngineObserver {
   private clientFlowEngine: ClientFlowEngine = null as any;
@@ -43,7 +44,7 @@ export class BaseBot implements ClientFlowEngineObserver {
 
   protected onDisconnection(): void {}
 
-  protected onPlayerListUpdate(playerList: User[]): void {}
+  protected onPlayerListUpdate(playerList: PlayerList): void {}
 
   protected onRoleAssignment(playerIndex: number) {}
 

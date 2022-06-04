@@ -14,6 +14,17 @@ export interface Lobby {
   memberIDs: string[];
 }
 
+export function covertDatabaseLobby(databaseLobby: any): Lobby {
+  return {
+    id: databaseLobby["_id"],
+    name: databaseLobby["name"],
+    creatorName: databaseLobby["creatorName"],
+    password: databaseLobby["password"],
+    areTeamsPrearranged: databaseLobby["areTeamsPrearranged"],
+    memberIDs: databaseLobby["memberIDs"],
+  } as Lobby;
+}
+
 export interface RegisterParams {
   username: string;
   email: string;
@@ -59,7 +70,7 @@ export enum LobbyCreationStatus {
 
 export interface LobbyCreationResponse {
   status: LobbyCreationStatus;
-  gameID: string;
+  createdLobby: Lobby;
 }
 
 export enum LobbyJoiningStatus {

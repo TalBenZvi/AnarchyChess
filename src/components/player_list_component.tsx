@@ -9,20 +9,24 @@ import {
 import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
+import { PlayerList } from "../game_flow_util/player_list";
 
 interface PlayerListProps {
   width: number;
   height: number;
-  playerList: User[];
+  playerList: PlayerList;
 }
 
 interface PlayerListState {}
 
-class PlayerList extends React.Component<PlayerListProps, PlayerListState> {
+class PlayerListComponent extends React.Component<
+  PlayerListProps,
+  PlayerListState
+> {
   state = {};
 
   private tileList(
-    playerList: User[],
+    players: User[],
     tileWidth: number,
     tileHeight: number,
     fontSize: number
@@ -35,32 +39,30 @@ class PlayerList extends React.Component<PlayerListProps, PlayerListState> {
           zIndex: 1,
         }}
       >
-        {playerList
-          .slice(0, NUM_OF_PLAYERS / 2)
-          .map((player: User, i: number) => (
-            <li key={Math.random()}>
-              <div
-                style={{
-                  boxSizing: "border-box",
-                  height: tileHeight,
-                  width: tileWidth,
-                  lineHeight: `${tileHeight}px`,
-                  paddingLeft: tileWidth * 0.05,
-                  color: "#ccc",
-                  borderBottom:
-                    i === NUM_OF_PLAYERS / 2 - 1 ? "" : "2px solid #555",
-                  fontSize: fontSize,
-                  fontWeight:
-                    player != null &&
-                    player.username === Authentication.currentUser.username
-                      ? "bold"
-                      : "normal",
-                }}
-              >
-                {player == null ? "" : player.username}
-              </div>
-            </li>
-          ))}
+        {players.slice(0, NUM_OF_PLAYERS / 2).map((player: User, i: number) => (
+          <li key={Math.random()}>
+            <div
+              style={{
+                boxSizing: "border-box",
+                height: tileHeight,
+                width: tileWidth,
+                lineHeight: `${tileHeight}px`,
+                paddingLeft: tileWidth * 0.05,
+                color: "#ccc",
+                borderBottom:
+                  i === NUM_OF_PLAYERS / 2 - 1 ? "" : "2px solid #555",
+                fontSize: fontSize,
+                fontWeight:
+                  player != null &&
+                  player.username === Authentication.currentUser.username
+                    ? "bold"
+                    : "normal",
+              }}
+            >
+              {player == null ? "" : player.username}
+            </div>
+          </li>
+        ))}
       </ul>
     );
   }
@@ -72,9 +74,11 @@ class PlayerList extends React.Component<PlayerListProps, PlayerListState> {
     let verticalLineHeight: number = height;
     let verticalLineMargin: number = 0;
     let fontSize: number = tileHeight * 0.4;
-    playerList = [
-      ...(playerList.filter((player: User) => player != null)),
-      ...Array(NUM_OF_PLAYERS - playerList.length).fill(null),
+    let connectedPlayers =
+      playerList == null ? [] : playerList.getConnectedUsers();
+    let players: User[] = [
+      ...connectedPlayers,
+      ...Array(NUM_OF_PLAYERS - connectedPlayers.length).fill(null),
     ];
     return (
       <div
@@ -89,7 +93,7 @@ class PlayerList extends React.Component<PlayerListProps, PlayerListState> {
       >
         {/* left row */}
         {this.tileList(
-          playerList.slice(0, NUM_OF_PLAYERS / 2),
+          players.slice(0, NUM_OF_PLAYERS / 2),
           tileWidth,
           tileHeight,
           fontSize
@@ -102,7 +106,7 @@ class PlayerList extends React.Component<PlayerListProps, PlayerListState> {
           }}
         >
           {this.tileList(
-            playerList.slice(NUM_OF_PLAYERS / 2),
+            players.slice(NUM_OF_PLAYERS / 2),
             tileWidth,
             tileHeight,
             fontSize
@@ -124,4 +128,4 @@ class PlayerList extends React.Component<PlayerListProps, PlayerListState> {
   }
 }
 
-export default PlayerList;
+export default PlayerListComponent;

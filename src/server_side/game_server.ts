@@ -15,13 +15,12 @@ import Peer from "peerjs";
 export enum ServerNotificationType {
   playerConnected,
   playerDisconnected,
-  filledServer,
   receivedRequest,
 }
 
 export enum ServerNotificationInfo {
   // general
-  playerIndex,
+  userIndex,
   // receivedRequest
   request,
 }
@@ -42,7 +41,6 @@ export class GameServer {
   constructor(private observer: ServerObserver) {}
 
   acceptConnections(gameID: string): void {
-    //this.fillWithDummies(NUM_OF_PLAYERS - 16);
     if (this.gameStatus === GameStatus.inactive) {
       this.broadcastedEventsLog = [];
       this.gameStatus = GameStatus.waitingForPlayers;
@@ -60,7 +58,7 @@ export class GameServer {
             this.observer.notify(
               ServerNotificationType.receivedRequest,
               new Map<ServerNotificationInfo, any>([
-                [ServerNotificationInfo.playerIndex, i],
+                [ServerNotificationInfo.userIndex, i],
                 [ServerNotificationInfo.request, request],
               ])
             );
@@ -70,12 +68,13 @@ export class GameServer {
             this.observer.notify(
               ServerNotificationType.playerDisconnected,
               new Map<ServerNotificationInfo, any>([
-                [ServerNotificationInfo.playerIndex, i],
+                [ServerNotificationInfo.userIndex, i],
               ])
             );
           });
         });
         this.serverPeers[i].on("close", () => {
+          console.log("here");
           const request = new XMLHttpRequest();
           const url =
             "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/destroyLobby";
@@ -107,7 +106,7 @@ export class GameServer {
               index: null as any,
               type: EventType.gameStarted,
               info: new Map<EventInfo, string>([
-                [EventInfo.playerIndex, JSON.stringify(i, replacer)],
+                [EventInfo.playerIndex, i.toString()],
                 [
                   EventInfo.initialCooldown,
                   JSON.stringify(initialPlayerCooldowns[i], replacer),
@@ -121,7 +120,7 @@ export class GameServer {
     }
   }
 
-  sendEvent(event: Event, playerIndex: number) {
+  private sendEvent(event: Event, playerIndex: number) {
     if (this.clients[playerIndex] != null) {
       this.clients[playerIndex].send(JSON.stringify(event, replacer));
     }

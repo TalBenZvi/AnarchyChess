@@ -20,7 +20,6 @@ export class Authentication {
     username: "admin",
     email: "talbz03@gmail.com",
   };
-  
 
   static mongodbClient: MongodbClient = new MongodbClient();
   static serverFlowEngine: ServerFlowEngine = null as any;
@@ -76,14 +75,14 @@ export class Authentication {
   ) {
     Authentication.mongodbClient.createLobby(
       lobbyParams,
-      async (status: LobbyCreationStatus, gameID: string) => {
+      async (status: LobbyCreationStatus, createdLobby: Lobby) => {
         if (status === LobbyCreationStatus.success) {
           Authentication.serverFlowEngine = new ServerFlowEngine();
-          Authentication.serverFlowEngine.acceptConnections(gameID);
+          Authentication.serverFlowEngine.acceptConnections(createdLobby);
           Authentication.clientFlowEngine = new ClientFlowEngine(
             Authentication.currentUser
           );
-          Authentication.clientFlowEngine.attemptToConnect(gameID, 1, {
+          Authentication.clientFlowEngine.attemptToConnect(createdLobby.id, 1, {
             onSuccess: () => {
               callback(LobbyCreationStatus.success);
             },
