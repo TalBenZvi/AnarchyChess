@@ -36,6 +36,7 @@ export class ServerFlowEngine implements ServerObserver {
   private playerList: PlayerList = null as any;
   private position: Position = new Position("server");
   private isGameRunning: boolean = false;
+  private roleAssignemnts: number[] = null as any;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
   private isAlive: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(true);
@@ -67,10 +68,14 @@ export class ServerFlowEngine implements ServerObserver {
   startGame(): void {
     this.position.setToStartingPosition();
     this.isGameRunning = true;
+    this.roleAssignemnts = this.playerList.generateRoleAssignments();
     let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
       (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
     );
-    this.gameServer.startGame(initialPlayerCooldowns);
+    this.gameServer.startGame(
+      [...this.roleAssignemnts],
+      initialPlayerCooldowns
+    );
   }
 
   private killPlayer(playerIndex: number): number {
@@ -218,7 +223,9 @@ export class ServerFlowEngine implements ServerObserver {
     });
     Authentication.updateLobbyMembers(
       this._gameID,
-      this.playerList.getAllUsers().map((user: User) => user == null ? null as any : user.id)
+      this.playerList
+        .getAllUsers()
+        .map((user: User) => (user == null ? (null as any) : user.id))
     );
   }
 
@@ -233,7 +240,9 @@ export class ServerFlowEngine implements ServerObserver {
     });
     Authentication.updateLobbyMembers(
       this._gameID,
-      this.playerList.getAllUsers().map((user: User) => user == null ? null as any : user.id)
+      this.playerList
+        .getAllUsers()
+        .map((user: User) => (user == null ? (null as any) : user.id))
     );
   }
 
@@ -264,9 +273,10 @@ export class ServerFlowEngine implements ServerObserver {
             request.info.get(RequestInfo.move) as string,
             reviver
           );
-          this.moveRequests[userIndex] = moveRequest;
-          if (!this.isOnCooldown[userIndex] && this.isAlive[userIndex]) {
-            this.registerMove(userIndex, moveRequest, requestArrivalTime);
+          let playerIndex: number = this.roleAssignemnts[userIndex];
+          this.moveRequests[playerIndex] = moveRequest;
+          if (!this.isOnCooldown[playerIndex] && this.isAlive[playerIndex]) {
+            this.registerMove(playerIndex, moveRequest, requestArrivalTime);
           }
         }
         break;

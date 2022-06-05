@@ -73,14 +73,6 @@ export class GameServer {
             );
           });
         });
-        this.serverPeers[i].on("close", () => {
-          console.log("here");
-          const request = new XMLHttpRequest();
-          const url =
-            "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/destroyLobby";
-          request.open("POST", url);
-          request.send();
-        });
       }
       console.log("all servers connected");
     }
@@ -94,7 +86,7 @@ export class GameServer {
     }
   }
 
-  startGame(initialPlayerCooldowns: number[]): void {
+  startGame(roleAssignemnts: number[], initialPlayerCooldowns: number[]): void {
     if (this.gameStatus === GameStatus.waitingForPlayers) {
       this.gameStatus = GameStatus.running;
       console.log("game started");
@@ -106,10 +98,10 @@ export class GameServer {
               index: null as any,
               type: EventType.gameStarted,
               info: new Map<EventInfo, string>([
-                [EventInfo.playerIndex, i.toString()],
+                [EventInfo.playerIndex, roleAssignemnts[i].toString()],
                 [
                   EventInfo.initialCooldown,
-                  JSON.stringify(initialPlayerCooldowns[i], replacer),
+                  initialPlayerCooldowns[i].toString(),
                 ],
               ]),
             },

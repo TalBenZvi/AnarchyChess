@@ -22,7 +22,6 @@ interface LobbyPageState {
   playerList: PlayerList;
   isBotDialogOpen: boolean;
   shouldRedirectToHome: boolean;
-  isGameStarting: boolean;
 }
 
 class LobbyPage
@@ -33,8 +32,8 @@ class LobbyPage
     playerList: null as any,
     isBotDialogOpen: false,
     shouldRedirectToHome: false,
-    isGameStarting: false,
   };
+  isGameStarting: boolean = false;
   private _isMounted: boolean = false;
 
   componentDidMount() {
@@ -54,7 +53,13 @@ class LobbyPage
 
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
     if (eventType === ClientEventType.playerListUpdate && this._isMounted) {
-      this.setState({ playerList: info.get(ClientEventInfo.playerList) });
+      let playerList: PlayerList = info.get(ClientEventInfo.playerList);
+      let numOfConnectedPlayers: number =
+        playerList == null ? 0 : playerList.getConnectedUsers().length;
+      if (numOfConnectedPlayers == NUM_OF_PLAYERS && this.isGameStarting) {
+        this.startGame();
+      }
+      this.setState({ playerList: playerList });
     }
   }
 
@@ -63,14 +68,15 @@ class LobbyPage
   }
 
   private fillwithBots = async () => {
-    this.setState({ isBotDialogOpen: false, isGameStarting: true });
+    this.setState({ isBotDialogOpen: false });
+    this.isGameStarting = true;
     let playerList = Authentication.serverFlowEngine.players;
     let numOfRequiredBots = playerList.filter(
       (player: User) => player == null
     ).length;
     let bots: BaseBot[] = [...Array(numOfRequiredBots)].map(
       (_, i) =>
-        new RandomBot({
+        new BaseBot({
           id: (i + 1).toString(),
           username: `bot_${i + 1}`,
         })
@@ -95,16 +101,12 @@ class LobbyPage
   };
 
   render() {
-    let { playerList, isBotDialogOpen, shouldRedirectToHome, isGameStarting } =
-      this.state;
+    let { playerList, isBotDialogOpen, shouldRedirectToHome } = this.state;
     if (shouldRedirectToHome) {
       return <Redirect push to="/" />;
     }
     let numOfConnectedPlayers: number =
       playerList == null ? 0 : playerList.getConnectedUsers().length;
-    if (numOfConnectedPlayers == NUM_OF_PLAYERS && isGameStarting) {
-      this.startGame();
-    }
     let isHost: boolean =
       Authentication.serverFlowEngine != null &&
       this.props.match.params.id === Authentication.serverFlowEngine.gameID;

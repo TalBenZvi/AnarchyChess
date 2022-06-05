@@ -93,3 +93,13 @@ export function reviver(key: any, value: any) {
   }
   return value;
 }
+
+export function shuffle(array: any[]) {
+  let n = array.length;
+  for (let i = 0; i < n; i++) {
+    let j: number = Math.floor(Math.random() * (n - i)) + i;
+    let temp: any = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+}

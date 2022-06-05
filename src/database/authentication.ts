@@ -82,7 +82,7 @@ export class Authentication {
           Authentication.clientFlowEngine = new ClientFlowEngine(
             Authentication.currentUser
           );
-          Authentication.clientFlowEngine.attemptToConnect(createdLobby.id, 1, {
+          Authentication.clientFlowEngine.attemptToConnect(createdLobby.id, 0, {
             onSuccess: () => {
               callback(LobbyCreationStatus.success);
             },

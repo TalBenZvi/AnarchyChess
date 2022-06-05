@@ -7,6 +7,8 @@ import HomePage from "./pages/home_page";
 import ClientPage from "./pages/client_page";
 import TestPage from "./pages/test_page";
 
+import { shuffle } from "./game_flow_util/communication";
+
 function App() {
   return (
     <Router>
