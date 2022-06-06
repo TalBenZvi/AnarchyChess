@@ -32,7 +32,7 @@ const COOLDOWN_VARIANCE = 0.2;
 
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
-  private _gameID: string = null as any;
+  private _lobby: Lobby = null as any;
   private playerList: PlayerList = null as any;
   private position: Position = new Position("server");
   private isGameRunning: boolean = false;
@@ -45,8 +45,8 @@ export class ServerFlowEngine implements ServerObserver {
     this.gameServer = new GameServer(this);
   }
 
-  get gameID(): string {
-    return this._gameID;
+  get lobby(): Lobby {
+    return this._lobby;
   }
 
   get players(): User[] {
@@ -54,7 +54,7 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   acceptConnections(lobby: Lobby): void {
-    this._gameID = lobby.id;
+    this._lobby = lobby;
     this.gameServer.acceptConnections(lobby.id);
     this.playerList = new PlayerList(lobby.areTeamsPrearranged);
   }
@@ -63,6 +63,20 @@ export class ServerFlowEngine implements ServerObserver {
     if (this.gameServer != null) {
       this.gameServer.destroyConenctions();
     }
+  }
+
+  kickPlayer(player: User): void {
+    let userIndex = this.playerList.indexOf(player);
+    if (userIndex != -1) {
+      this.playerList.removePlayerAtIndex(userIndex);
+      this.gameServer.disconnectFromUser(userIndex);
+      this.sendPlayerListUpdates();
+    }
+  }
+
+  changePlayerTeam(player: User) {
+    this.playerList.changePlayerTeam(player);
+    this.sendPlayerListUpdates();
   }
 
   startGame(): void {
@@ -212,8 +226,7 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
-  private handleConnection(userIndex: number, user: User) {
-    this.playerList.setPlayer(userIndex, user);
+  private sendPlayerListUpdates() {
     this.gameServer.broadcastEvent({
       index: null as any,
       type: EventType.playerListUpdate,
@@ -222,28 +235,21 @@ export class ServerFlowEngine implements ServerObserver {
       ]),
     });
     Authentication.updateLobbyMembers(
-      this._gameID,
+      this.lobby.id,
       this.playerList
         .getAllUsers()
         .map((user: User) => (user == null ? (null as any) : user.id))
     );
   }
 
+  private handleConnection(userIndex: number, user: User) {
+    this.playerList.setPlayer(userIndex, user);
+    this.sendPlayerListUpdates()
+  }
+
   private handleDisconnection(userIndex: number) {
-    this.playerList.removePlayer(userIndex);
-    this.gameServer.broadcastEvent({
-      index: null as any,
-      type: EventType.playerListUpdate,
-      info: new Map<EventInfo, string>([
-        [EventInfo.playerList, JSON.stringify(this.playerList)],
-      ]),
-    });
-    Authentication.updateLobbyMembers(
-      this._gameID,
-      this.playerList
-        .getAllUsers()
-        .map((user: User) => (user == null ? (null as any) : user.id))
-    );
+    this.playerList.removePlayerAtIndex(userIndex);
+    this.sendPlayerListUpdates();
   }
 
   private async handleRequest(

@@ -52,7 +52,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   };
 
   private joinLobby = (lobby: Lobby) => {
-    Authentication.joinLobby(lobby.id, (status: LobbyJoiningStatus) => {
+    Authentication.joinLobby(lobby, (status: LobbyJoiningStatus) => {
       switch (status) {
         case LobbyJoiningStatus.success:
           {

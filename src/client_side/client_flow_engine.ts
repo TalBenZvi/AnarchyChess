@@ -21,7 +21,7 @@ import {
   reviver,
   OptionalConnectionCallbacks,
 } from "../game_flow_util/communication";
-import { User } from "../database/database_util";
+import { Lobby, User } from "../database/database_util";
 import { PlayerList } from "../game_flow_util/player_list";
 
 // in seconds
@@ -69,6 +69,7 @@ export interface ClientFlowEngineObserver {
 
 export class ClientFlowEngine implements GameClientObserver {
   private gameClient: GameClient;
+  private currentLobby: Lobby = null as any;
 
   private position: Position = null as any;
   private _playerIndex: number = null as any;
@@ -109,11 +110,12 @@ export class ClientFlowEngine implements GameClientObserver {
 
   // returns whether or not the connection was successfull
   attemptToConnect(
-    gameID: string,
+    lobby: Lobby,
     serverIndex: number,
     optionalConnectionCallbacks: OptionalConnectionCallbacks
   ) {
-    this.gameClient.attemptToConnect(gameID, serverIndex, {
+    this.currentLobby = lobby;
+    this.gameClient.attemptToConnect(lobby.id, serverIndex, {
       onSuccess: () => {
         if (optionalConnectionCallbacks.onSuccess != undefined) {
           optionalConnectionCallbacks.onSuccess();

@@ -1,36 +1,63 @@
 import * as React from "react";
 
-import {
-  ClientFlowEngine,
-  ClientFlowEngineObserver,
-  ClientEventType,
-  ClientEventInfo,
-} from "../client_side/client_flow_engine";
 import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
-import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
+import { NUM_OF_PLAYERS, PieceColor } from "../game_flow_util/game_elements";
 import { PlayerList } from "../game_flow_util/player_list";
+
+import menuIcon from "../assets/page_design/menu_icon.png";
+
+const TILE_COLORS: Map<PieceColor, string> = new Map([
+  [null as any, "#272727"],
+  [PieceColor.white, "#bbbbbb"],
+  [PieceColor.black, "#151515"],
+]);
+
+const TILE_FONT_COLORS: Map<PieceColor, string> = new Map([
+  [null as any, "#ccc"],
+  [PieceColor.white, "#111111"],
+  [PieceColor.black, "#ccc"],
+]);
+
+const TILE_BORDER_COLORS: Map<PieceColor, string> = new Map([
+  [null as any, "#252525"],
+  [PieceColor.white, "#9f9f9f"],
+  [PieceColor.black, "#111111"],
+]);
+
+const KICK_MENU_TITLE: string = "Kick";
+const CHANGE_TEAM_MENU_TITLE: string = "Change Team";
 
 interface PlayerListProps {
   width: number;
   height: number;
   playerList: PlayerList;
+  isHost: boolean;
 }
 
-interface PlayerListState {}
+interface PlayerListState {
+  openMenuIndex: number;
+}
 
 class PlayerListComponent extends React.Component<
   PlayerListProps,
   PlayerListState
 > {
-  state = {};
+  state = {
+    openMenuIndex: null as any,
+  };
 
   private tileList(
+    isLeftColumn: boolean,
     players: User[],
     tileWidth: number,
     tileHeight: number,
-    fontSize: number
+    tileMargin: number,
+    fontSize: number,
+    color: PieceColor
   ) {
+    let { openMenuIndex } = this.state;
+    let openMenuButtonSize = tileHeight * 0.6;
     return (
       <ul
         className="no-bullets"
@@ -41,16 +68,23 @@ class PlayerListComponent extends React.Component<
       >
         {players.slice(0, NUM_OF_PLAYERS / 2).map((player: User, i: number) => (
           <li key={Math.random()}>
+            {/* tile */}
             <div
               style={{
-                boxSizing: "border-box",
+                position: "relative",
                 height: tileHeight,
                 width: tileWidth,
+                marginTop: tileMargin,
+                marginBottom: tileMargin,
+                marginLeft: tileMargin,
+                paddingLeft: tileMargin * 2,
+                boxSizing: "border-box",
+                zIndex: 1,
+                background: TILE_COLORS.get(color),
+                border: `3px solid ${TILE_BORDER_COLORS.get(color)}`,
+                borderRadius: "5px",
+                color: TILE_FONT_COLORS.get(color),
                 lineHeight: `${tileHeight}px`,
-                paddingLeft: tileWidth * 0.05,
-                color: "#ccc",
-                borderBottom:
-                  i === NUM_OF_PLAYERS / 2 - 1 ? "" : "2px solid #555",
                 fontSize: fontSize,
                 fontWeight:
                   player != null &&
@@ -60,6 +94,51 @@ class PlayerListComponent extends React.Component<
               }}
             >
               {player == null ? "" : player.username}
+              {/* open menu button */}
+              {this.props.isHost && player != null ? (
+                <div>
+                  <button
+                    className="small-button"
+                    style={{
+                      position: "absolute",
+                      right: "5%",
+                      top: "50%",
+                      transform: "translate(50%,-50%)",
+                      zIndex: 2,
+                      width: openMenuButtonSize,
+                      height: openMenuButtonSize,
+                    }}
+                    onClick={() => {
+                      if (
+                        (isLeftColumn && openMenuIndex === i) ||
+                        (!isLeftColumn &&
+                          openMenuIndex === i + NUM_OF_PLAYERS / 2)
+                      ) {
+                        this.setState({ openMenuIndex: null as any });
+                      } else {
+                        this.setState({
+                          openMenuIndex: isLeftColumn
+                            ? i
+                            : i + NUM_OF_PLAYERS / 2,
+                        });
+                      }
+                    }}
+                  >
+                    <img
+                      src={menuIcon}
+                      style={{
+                        position: "fixed",
+                        transform: "translate(-50%, -50%)",
+                        width: openMenuButtonSize * 0.7,
+                        height: openMenuButtonSize * 0.7,
+                        filter: "contrast(0.5) brightness(3)",
+                      }}
+                    />
+                  </button>
+                </div>
+              ) : (
+                <div />
+              )}
             </div>
           </li>
         ))}
@@ -69,60 +148,164 @@ class PlayerListComponent extends React.Component<
 
   render() {
     let { width, height, playerList } = this.props;
-    let tileWidth: number = width / 2;
-    let tileHeight: number = (height / NUM_OF_PLAYERS) * 2;
-    let verticalLineHeight: number = height;
-    let verticalLineMargin: number = 0;
+    let { openMenuIndex } = this.state;
+
+    let tileAreaHeight: number = height / (NUM_OF_PLAYERS / 2);
+    let tileAreaWidth: number = width / 2;
+    let tileHeight: number = tileAreaHeight * 0.9;
+    let tileMargin = tileHeight * 0.1;
+    let tileWidth: number = tileAreaWidth - tileMargin * 2;
+
     let fontSize: number = tileHeight * 0.4;
-    let connectedPlayers =
-      playerList == null ? [] : playerList.getConnectedUsers();
-    let players: User[] = [
-      ...connectedPlayers,
-      ...Array(NUM_OF_PLAYERS - connectedPlayers.length).fill(null),
-    ];
+
+    let areTeamsPrearranged: boolean =
+      playerList != null && playerList.areTeamsPrearranged;
+
+    let leftColumnPlayers: User[];
+    let rightColumnPlayers: User[];
+    if (playerList == null) {
+      leftColumnPlayers = [...Array(NUM_OF_PLAYERS / 2)].fill(null);
+      rightColumnPlayers = [...Array(NUM_OF_PLAYERS / 2)].fill(null);
+    } else if (areTeamsPrearranged) {
+      let whiteTeamPlayers: User[] = playerList.getUsersByAssignedColor(
+        PieceColor.white
+      );
+      let blackTeamPlayers: User[] = playerList.getUsersByAssignedColor(
+        PieceColor.black
+      );
+      leftColumnPlayers = [
+        ...whiteTeamPlayers,
+        ...Array(NUM_OF_PLAYERS / 2 - whiteTeamPlayers.length).fill(null),
+      ];
+      rightColumnPlayers = [
+        ...blackTeamPlayers,
+        ...Array(NUM_OF_PLAYERS / 2 - blackTeamPlayers.length).fill(null),
+      ];
+    } else {
+      let connectedPlayers: User[] = playerList.getConnectedUsers();
+      let players = [
+        ...connectedPlayers,
+        ...Array(NUM_OF_PLAYERS - connectedPlayers.length).fill(null),
+      ];
+      leftColumnPlayers = players.slice(0, NUM_OF_PLAYERS / 2);
+      rightColumnPlayers = players.slice(NUM_OF_PLAYERS / 2);
+    }
+
+    let menuButtonWidth: number = tileWidth * 0.3;
+    let menuButtonHeight: number = tileHeight * 0.7;
+    let openMenuPlayer: User = null as any;
+    let menuOptions: string[] = [];
+    if (openMenuIndex != null) {
+      if (openMenuIndex < NUM_OF_PLAYERS / 2) {
+        openMenuPlayer = leftColumnPlayers[openMenuIndex];
+      } else {
+        openMenuPlayer = rightColumnPlayers[openMenuIndex - NUM_OF_PLAYERS / 2];
+      }
+      if (openMenuPlayer != null) {
+        if (openMenuPlayer.id != Authentication.currentUser.id) {
+          menuOptions.push(KICK_MENU_TITLE);
+        }
+        if (areTeamsPrearranged) {
+          menuOptions.push(CHANGE_TEAM_MENU_TITLE);
+        }
+      }
+    }
+
     return (
       <div
         className="highlighted-area"
         style={{
-          position: "fixed",
-          zIndex: 0,
+          zIndex: 2,
           width: width,
           height: height,
-          border: "3px solid #555",
         }}
       >
         {/* left row */}
         {this.tileList(
-          players.slice(0, NUM_OF_PLAYERS / 2),
+          true,
+          leftColumnPlayers,
           tileWidth,
           tileHeight,
-          fontSize
+          tileMargin,
+          fontSize,
+          areTeamsPrearranged ? PieceColor.white : (null as any)
         )}
         {/* right row */}
         <div
           style={{
             position: "absolute",
-            left: tileWidth,
+            left: width / 2,
           }}
         >
           {this.tileList(
-            players.slice(NUM_OF_PLAYERS / 2),
+            false,
+            rightColumnPlayers,
             tileWidth,
             tileHeight,
-            fontSize
+            tileMargin,
+            fontSize,
+            areTeamsPrearranged ? PieceColor.black : (null as any)
           )}
         </div>
-        {/* horizontal line */}
-        <div
-          style={{
-            position: "relative",
-            left: tileWidth,
-            top: verticalLineMargin,
-            height: verticalLineHeight,
-            borderLeft: "2px solid #555",
-            zIndex: 2,
-          }}
-        />
+        {/* menu */}
+        {openMenuPlayer != null && menuOptions.length !== 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              left:
+                (Math.floor(openMenuIndex / (NUM_OF_PLAYERS / 2)) + 0.59) *
+                tileAreaWidth,
+              top:
+                ((openMenuIndex % (NUM_OF_PLAYERS / 2)) + 0.3) * tileAreaHeight,
+              width: menuButtonWidth,
+              height: menuButtonHeight * menuOptions.length,
+              zIndex: 2,
+              background: "#222222",
+              border: "1px solid #aaa",
+              borderRadius: 5,
+            }}
+          >
+            <ul className="no-bullets">
+              {menuOptions.map((option: string, i: number) => (
+                <li key={Math.random()}>
+                  <button
+                    className="clear-button"
+                    style={{
+                      width: menuButtonWidth,
+                      height: menuButtonHeight,
+                      textAlign: "center",
+                    }}
+                    onClick={() => {
+                      switch (option) {
+                        case KICK_MENU_TITLE: {
+                          if (Authentication.serverFlowEngine != null) {
+                            Authentication.serverFlowEngine.kickPlayer(
+                              openMenuPlayer
+                            );
+                          }
+                          break;
+                        }
+                        case CHANGE_TEAM_MENU_TITLE: {
+                          if (Authentication.serverFlowEngine != null) {
+                            Authentication.serverFlowEngine.changePlayerTeam(
+                              openMenuPlayer
+                            );
+                          }
+                          break;
+                        }
+                      }
+                      this.setState({ openMenuIndex: null as any });
+                    }}
+                  >
+                    <div className="menu-option">{option}</div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div />
+        )}
       </div>
     );
   }

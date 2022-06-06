@@ -78,6 +78,10 @@ export class GameServer {
     }
   }
 
+  disconnectFromUser(userIndex: number) {
+    this.clients[userIndex].close();
+  }
+
   destroyConenctions(): void {
     for (let serverPeer of this.serverPeers) {
       if (serverPeer != null) {

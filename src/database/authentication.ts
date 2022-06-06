@@ -82,7 +82,7 @@ export class Authentication {
           Authentication.clientFlowEngine = new ClientFlowEngine(
             Authentication.currentUser
           );
-          Authentication.clientFlowEngine.attemptToConnect(createdLobby.id, 0, {
+          Authentication.clientFlowEngine.attemptToConnect(createdLobby, 0, {
             onSuccess: () => {
               callback(LobbyCreationStatus.success);
             },
@@ -109,12 +109,12 @@ export class Authentication {
   }
 
   static joinLobby(
-    lobbyID: string,
+    lobby: Lobby,
     callback: (status: LobbyJoiningStatus) => void
   ) {
     Authentication.mongodbClient.joinLobby(
       Authentication.currentUser.id,
-      lobbyID,
+      lobby.id,
       async (status: LobbyJoiningStatus, serverIndex: number) => {
         let connectionStatus: LobbyJoiningStatus = status;
         if (status === LobbyJoiningStatus.success) {
@@ -122,7 +122,7 @@ export class Authentication {
             Authentication.currentUser
           );
           Authentication.clientFlowEngine.attemptToConnect(
-            lobbyID,
+            lobby,
             serverIndex,
             {
               onSuccess: () => {

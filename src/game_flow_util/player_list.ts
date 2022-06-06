@@ -8,7 +8,7 @@ interface Player {
 }
 
 interface PlayerListFields {
-  areTeamsPrearranged: boolean;
+  _areTeamsPrearranged: boolean;
   players: Player[];
 }
 
@@ -18,12 +18,16 @@ export class PlayerList {
     assignedColor: null as any,
   }));
 
-  constructor(private areTeamsPrearranged: boolean) {}
+  constructor(private _areTeamsPrearranged: boolean) {}
 
   setFromJSON(jsonString: string) {
     let playerListFields: PlayerListFields = JSON.parse(jsonString);
-    this.areTeamsPrearranged = playerListFields.areTeamsPrearranged;
+    this._areTeamsPrearranged = playerListFields._areTeamsPrearranged;
     this.players = playerListFields.players;
+  }
+
+  get areTeamsPrearranged(): boolean {
+    return this._areTeamsPrearranged;
   }
 
   getUserAt(userIndex: number): User {
@@ -46,7 +50,7 @@ export class PlayerList {
 
   setPlayer(userIndex: number, user: User): void {
     let assignedColor = null as any;
-    if (this.areTeamsPrearranged) {
+    if (this._areTeamsPrearranged) {
       let whiteTeamSize: number = this.getUsersByAssignedColor(
         PieceColor.white
       ).length;
@@ -59,22 +63,46 @@ export class PlayerList {
     this.players[userIndex] = { user: user, assignedColor: assignedColor };
   }
 
-  removePlayer(userIndex: number): void {
+  indexOf(user: User): number {
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.players[i].user != null && this.players[i].user.id === user.id) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  removePlayerAtIndex(userIndex: number): void {
     this.players[userIndex] = { user: null as any, assignedColor: null as any };
   }
 
-  swapTeam(userIndex: number): void {
-    if (this.areTeamsPrearranged) {
-      this.players[userIndex].assignedColor = reverseColor(
-        this.players[userIndex].assignedColor
-      );
+  removePlayer(user: User) {
+    let userIndex: number = this.indexOf(user);
+    if (userIndex !== -1) {
+      this.removePlayerAtIndex(userIndex);
+    }
+  }
+
+  changePlayerTeam(player: User): void {
+    if (this._areTeamsPrearranged) {
+      let userIndex: number = this.indexOf(player);
+      if (
+        userIndex !== -1 &&
+        this.getUsersByAssignedColor(this.players[userIndex].assignedColor)
+          .length <
+          NUM_OF_PLAYERS / 2
+      ) {
+        this.players[userIndex].assignedColor = reverseColor(
+          this.players[userIndex].assignedColor
+        );
+      }
     }
   }
 
   generateRoleAssignments(): number[] {
     console.log("called");
     if (
-      this.areTeamsPrearranged &&
+      this._areTeamsPrearranged &&
       this.getUsersByAssignedColor(PieceColor.white).length ==
         NUM_OF_PLAYERS / 2 &&
       this.getUsersByAssignedColor(PieceColor.black).length ==
@@ -103,7 +131,7 @@ export class PlayerList {
       }
       return [...roleAssignments];
     } else if (
-      !this.areTeamsPrearranged &&
+      !this._areTeamsPrearranged &&
       this.getConnectedUsers().length == NUM_OF_PLAYERS
     ) {
       let roleAssignments: number[] = [...Array(NUM_OF_PLAYERS)].map(

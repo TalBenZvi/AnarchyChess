@@ -96,6 +96,19 @@ ul.row {
   outline: inherit;
 }
 
+.menu-option {
+  background: none;
+  color: #ccc;
+  border: none;
+  padding: 0;
+  font: inherit;
+  outline: inherit;
+}
+
+.menu-option:hover{
+  font-weight: bold;
+}
+
 .app-button {
   color: inherit;
   padding: 0;
@@ -135,6 +148,27 @@ ul.row {
 .image-button:active {
   filter: contrast(50%);
 }
+
+.small-button {
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  border: none;
+  background: #444444;
+  border-radius: 5px;
+  font-family: "MS PGothic";
+  color: #ccc;
+}
+
+.small-button:hover {
+  background: #505050;
+}
+
+.small-button:active {
+  background: #444444;
+} 
 
 .navbar-title {
   position: absolute;

@@ -69,7 +69,7 @@ class LobbyPage
 
   private fillwithBots = async () => {
     this.setState({ isBotDialogOpen: false });
-    this.isGameStarting = true;
+    this.isGameStarting = false;
     let playerList = Authentication.serverFlowEngine.players;
     let numOfRequiredBots = playerList.filter(
       (player: User) => player == null
@@ -85,7 +85,7 @@ class LobbyPage
     for (let i = 0; i < NUM_OF_PLAYERS; i++) {
       if (playerList[i] == null) {
         bots[nextAvailableBotIndex].attemptToConnect(
-          Authentication.serverFlowEngine.gameID,
+          Authentication.serverFlowEngine.lobby,
           i,
           {
             onFailure: () => {
@@ -109,7 +109,7 @@ class LobbyPage
       playerList == null ? 0 : playerList.getConnectedUsers().length;
     let isHost: boolean =
       Authentication.serverFlowEngine != null &&
-      this.props.match.params.id === Authentication.serverFlowEngine.gameID;
+      this.props.match.params.id === Authentication.serverFlowEngine.lobby.id;
     return (
       <div className="background">
         <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
@@ -117,14 +117,16 @@ class LobbyPage
         <div
           style={{
             position: "absolute",
-            top: 110,
-            left: 50,
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
           }}
         >
           <PlayerListComponent
-            width={500}
+            width={800}
             height={750}
             playerList={playerList}
+            isHost={isHost}
           />
         </div>
         {/* leave / close lobby button */}
@@ -134,7 +136,7 @@ class LobbyPage
             position: "absolute",
             width: 150,
             height: 50,
-            left: 590,
+            left: 100,
             top: 110,
             fontSize: 20,
           }}

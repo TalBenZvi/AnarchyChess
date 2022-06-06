@@ -29,7 +29,7 @@ class AuthenticatedHomePage extends React.Component<
       return (
         <Redirect
           push
-          to={`/lobby/${Authentication.serverFlowEngine.gameID}`}
+          to={`/lobby/${Authentication.serverFlowEngine.lobby.id}`}
         />
       );
     }

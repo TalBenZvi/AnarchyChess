@@ -5,7 +5,7 @@ import {
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
 import { Move, Square, Piece, Position } from "../game_flow_util/game_elements";
-import { User } from "../database/database_util";
+import { Lobby, User } from "../database/database_util";
 import { OptionalConnectionCallbacks } from "../game_flow_util/communication";
 import { PlayerList } from "../game_flow_util/player_list";
 
@@ -19,12 +19,12 @@ export class BaseBot implements ClientFlowEngineObserver {
 
   // returns whether or not the connection was successfull
   attemptToConnect(
-    gameID: string,
+    lobby: Lobby,
     serverIndex: number,
     optionalConnectionCallbacks: OptionalConnectionCallbacks
   ) {
     this.clientFlowEngine.attemptToConnect(
-      gameID,
+      lobby,
       serverIndex,
       optionalConnectionCallbacks
     );
