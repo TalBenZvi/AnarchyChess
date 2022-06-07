@@ -150,6 +150,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               style={{
                 position: "fixed",
                 left: "10%",
+                top: "10%",
                 transform: "translate(-50%, 0%)",
                 fontSize: fontSize,
                 fontWeight: "bold",
@@ -160,7 +161,8 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             <div
               style={{
                 position: "fixed",
-                left: "35%",
+                left: "30%",
+                top: "10%",
                 transform: "translate(-50%, 0%)",
                 fontSize: fontSize,
                 fontWeight: "bold",
@@ -171,13 +173,26 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             <div
               style={{
                 position: "fixed",
-                left: "60%",
+                left: "50%",
+                top: "10%",
                 transform: "translate(-50%, 0%)",
                 fontSize: fontSize,
                 fontWeight: "bold",
               }}
             >
               Capacity
+            </div>
+            <div
+              style={{
+                position: "fixed",
+                left: "70%",
+                top: "10%",
+                transform: "translate(-50%, 0%)",
+                fontSize: fontSize,
+                fontWeight: "bold",
+              }}
+            >
+              Prearranged Teams
             </div>
           </div>
         )}
@@ -370,7 +385,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                   <div
                     style={{
                       position: "fixed",
-                      left: "34%",
+                      left: "29%",
                       transform: "translate(-50%, 0%)",
                     }}
                   >
@@ -380,12 +395,37 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                   <div
                     style={{
                       position: "fixed",
-                      left: "61%",
+                      left: "50%",
                       transform: "translate(-50%, 0%)",
                     }}
                   >{`${
                     lobby.memberIDs.filter((id: string) => id !== "").length
                   } / ${NUM_OF_PLAYERS}`}</div>
+                  {/* prearranged teams indicator */}
+                  {lobby.areTeamsPrearranged ? (
+                    <div
+                      style={{
+                        position: "fixed",
+                        left: "71%",
+                        top: "50%",
+                        transform: "translate(-50%, 0%)",
+                      }}
+                    >
+                      <img
+                          src={checkmarkIcon}
+                          style={{
+                            position: "absolute",
+                            transform: "translate(-50%, -50%)",
+                            width: tileHeight * 0.5,
+                            height: tileHeight * 0.5,
+                            filter: "contrast(0.5) brightness(3)",
+                          }}
+                        />
+                    </div>
+                  ) : (
+                    <div />
+                  )}
+
                   {/* lock icon */}
                   {lobby.password == null ||
                   selectedLobby == lobby ||
