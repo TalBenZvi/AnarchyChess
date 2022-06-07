@@ -8,7 +8,7 @@ const PROMOTION_TYPES: PieceType[] = [
   PieceType.queen,
 ];
 // in seconds
-const MOVE_INTERVAL: number = 2;
+const MOVE_INTERVAL: number = 1;
 
 export class RandomBot extends BaseBot {
   private playerIndex: number = null as any;

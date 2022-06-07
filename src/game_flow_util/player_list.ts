@@ -100,7 +100,10 @@ export class PlayerList {
   }
 
   generateRoleAssignments(): number[] {
-    console.log("called");
+    //temp
+    // return [1, ...[...Array(31)].map((_, i: number) => {
+    //   return i < 1 ? i : i + 1;
+    // })];
     if (
       this._areTeamsPrearranged &&
       this.getUsersByAssignedColor(PieceColor.white).length ==

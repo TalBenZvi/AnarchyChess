@@ -15,6 +15,9 @@ import { BaseBot } from "../bots/base_bot";
 import { RandomBot } from "../bots/random_bot";
 import { Authentication } from "../database/authentication";
 import { PlayerList } from "../game_flow_util/player_list";
+import { TestBot } from "../bots/test_bot";
+
+const NUM_OF_RANDOM_BOTS: number = 3;
 
 interface LobbyPageProps {}
 
@@ -69,18 +72,24 @@ class LobbyPage
 
   private fillwithBots = async () => {
     this.setState({ isBotDialogOpen: false });
-    this.isGameStarting = false;
+    this.isGameStarting = true;
     let playerList = Authentication.serverFlowEngine.players;
     let numOfRequiredBots = playerList.filter(
       (player: User) => player == null
     ).length;
     let bots: BaseBot[] = [...Array(numOfRequiredBots)].map(
-      (_, i) =>
-        new BaseBot({
+      (_, i) => {
+        let user: User = {
           id: (i + 1).toString(),
           username: `bot_${i + 1}`,
-        })
-    );
+        };
+        if (i < NUM_OF_RANDOM_BOTS) {
+          return new RandomBot(user);
+        } else {
+          return new BaseBot(user);
+        }
+      }
+    )
     let nextAvailableBotIndex: number = 0;
     for (let i = 0; i < NUM_OF_PLAYERS; i++) {
       if (playerList[i] == null) {

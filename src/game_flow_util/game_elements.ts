@@ -232,6 +232,9 @@ export abstract class Piece {
   abstract findLegalMoves(position: Position, currentSquare: Square): Move[];
 
   locateMove(position: Position, currentSquare: Square, move: Move): Move {
+    if (move == null) {
+      return null as any;
+    }
     for (let legalMove of this.findLegalMoves(position, currentSquare)) {
       if (legalMove.row === move.row && legalMove.column === move.column) {
         return legalMove;
@@ -664,7 +667,7 @@ export class Position {
     }
   }
 
-  private static get startPlayerLocations(): Square[] {
+   static get startPlayerLocations(): Square[] {
     return [...Array(BOARD_SIZE)]
       .map((_, j) => new Square(0, j))
       .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(1, j)))

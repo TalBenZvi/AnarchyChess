@@ -91,7 +91,8 @@ export class GameServer {
   }
 
   startGame(roleAssignemnts: number[], initialPlayerCooldowns: number[]): void {
-    if (this.gameStatus === GameStatus.waitingForPlayers) {
+    //temp
+    if (this.gameStatus === GameStatus.waitingForPlayers || true) {
       this.gameStatus = GameStatus.running;
       console.log("game started");
       if (this.clients.length >= NUM_OF_PLAYERS) {

@@ -8,6 +8,7 @@ import ClientPage from "./pages/client_page";
 import TestPage from "./pages/test_page";
 
 import { shuffle } from "./game_flow_util/communication";
+import { Position } from "./game_flow_util/game_elements";
 
 function App() {
   return (

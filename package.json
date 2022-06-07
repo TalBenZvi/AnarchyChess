@@ -53,7 +53,7 @@
     "peer-js-start-new": "node peerjs_server/peer_server.js",
     "start": "npm-run-all -p start-js peer-js-start",
     "build-js": "react-scripts build",
-    "build": "npm-run-all build-js ",
+    "build": "npm-run-all peer-js-start build-js ",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

@@ -55,8 +55,12 @@ class DeathScreen
 
   notify(eventType: ClientEventType, eventInfo: Map<ClientEventInfo, any>) {
     switch (eventType) {
-      case ClientEventType.gameStarted: {
+      case ClientEventType.roleAssigned: {
         this.playerIndex = eventInfo.get(ClientEventInfo.playerIndex);
+        break;
+      }
+      case ClientEventType.gameStarted: {
+        this.hide();
         break;
       }
       case ClientEventType.death: {

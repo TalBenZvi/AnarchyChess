@@ -142,7 +142,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
           Lobbies
         </div>
         {/* column titles */}
-        {isWaitingForResponse ? (
+        {isWaitingForResponse || lobbies.length === 0 ? (
           <div />
         ) : (
           <div>

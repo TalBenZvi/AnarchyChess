@@ -40,6 +40,7 @@ export class ServerFlowEngine implements ServerObserver {
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
   private isAlive: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(true);
+  private respawnTimeouts: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
 
   constructor() {
     this.gameServer = new GameServer(this);
@@ -80,12 +81,19 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   startGame(): void {
+    for (let respawnTimeout of this.respawnTimeouts) {
+      clearTimeout(respawnTimeout);
+    }
+    this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
+    this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
+    this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
+    this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
     this.position.setToStartingPosition();
-    this.isGameRunning = true;
     this.roleAssignemnts = this.playerList.generateRoleAssignments();
     let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
       (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
     );
+    this.isGameRunning = true;
     this.gameServer.startGame(
       [...this.roleAssignemnts],
       initialPlayerCooldowns
@@ -94,12 +102,12 @@ export class ServerFlowEngine implements ServerObserver {
 
   private killPlayer(playerIndex: number): number {
     this.isAlive[playerIndex] = false;
+    this.isOnCooldown[playerIndex] = false;
+    this.moveRequests[playerIndex] = null as any;
     let respawnTimer: number =
       Position.getStartPieceByPlayer(playerIndex).respawnTimer;
     this.position.killPlayer(playerIndex);
-    this.isOnCooldown[playerIndex] = false;
-    this.moveRequests[playerIndex] = null as any;
-    setTimeout(() => {
+    this.respawnTimeouts[playerIndex] = setTimeout(() => {
       this.respawnPlayer(playerIndex);
     }, respawnTimer * 1000);
     return respawnTimer;
@@ -244,7 +252,7 @@ export class ServerFlowEngine implements ServerObserver {
 
   private handleConnection(userIndex: number, user: User) {
     this.playerList.setPlayer(userIndex, user);
-    this.sendPlayerListUpdates()
+    this.sendPlayerListUpdates();
   }
 
   private handleDisconnection(userIndex: number) {
@@ -280,9 +288,11 @@ export class ServerFlowEngine implements ServerObserver {
             reviver
           );
           let playerIndex: number = this.roleAssignemnts[userIndex];
-          this.moveRequests[playerIndex] = moveRequest;
-          if (!this.isOnCooldown[playerIndex] && this.isAlive[playerIndex]) {
-            this.registerMove(playerIndex, moveRequest, requestArrivalTime);
+          if (this.isAlive[playerIndex]) {
+            this.moveRequests[playerIndex] = moveRequest;
+            if (!this.isOnCooldown[playerIndex]) {
+              this.registerMove(playerIndex, moveRequest, requestArrivalTime);
+            }
           }
         }
         break;

@@ -86,7 +86,7 @@ class PromotionScreen
 
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
     switch (eventType) {
-      case ClientEventType.gameStarted: {
+      case ClientEventType.roleAssigned: {
         this.playerIndex = info.get(ClientEventInfo.playerIndex);
         break;
       }

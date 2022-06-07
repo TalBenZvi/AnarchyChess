@@ -375,7 +375,7 @@ class BoardArea {
         }
       }
     } else {
-      if (!this.selectedMove.isPointInBounds(x, y)) {
+      if (this.selectedMove.isPointInBounds(x, y)) {
         this.props.clientFlowEngine.sendMove(null as any);
       }
     }
@@ -528,6 +528,8 @@ class ChessBoard
 
   playerIndex: number = null as any;
   selectedMove: Square = null as any;
+  isOnCooldown: boolean = false;
+  cooldownTimeout: any = null;
 
   canvasRef = null as any;
   boardArea: BoardArea = null as any;
@@ -537,7 +539,7 @@ class ChessBoard
     super(props);
     this.canvasRef = React.createRef();
   }
-  
+
   private renderFunction = () => {
     if (this.shouldUpdateBoard) {
       this.shouldUpdateBoard = false;
@@ -546,7 +548,7 @@ class ChessBoard
     }
     requestAnimationFrame(this.renderFunction);
   };
-  
+
   componentDidMount() {
     const canvas = this.canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -561,7 +563,7 @@ class ChessBoard
     if (clientFlowEngine != null) {
       if (clientFlowEngine.playerIndex != null) {
         this.assignRole(clientFlowEngine.playerIndex);
-      }      
+      }
       clientFlowEngine.addObserver(this);
     }
     requestAnimationFrame(this.renderFunction);
@@ -575,7 +577,6 @@ class ChessBoard
   }
 
   private setPovColor(povColor: PieceColor): void {
-
     this.boardArea.setPovColor(povColor);
     this.shouldUpdateBoard = true;
   }
@@ -606,11 +607,18 @@ class ChessBoard
     this.shouldUpdateBoard = true;
   }
 
-  //change
-  private startCooldownTimer(
-    cooldownCompletionTime: number,
-    color: PieceColor
-  ): void {
+  private startCooldownTimer(cooldownCompletionTime: number): void {
+    if (this.cooldownTimeout != null) {
+      clearTimeout(this.cooldownTimeout);
+    }
+    if (cooldownCompletionTime == null) {
+      this.isOnCooldown = false;
+    } else {
+      this.isOnCooldown = true;
+      this.cooldownTimeout = setTimeout(() => {
+        this.isOnCooldown = false;
+      }, cooldownCompletionTime - new Date().getTime());
+    }
     this.boardArea.startCooldownTimer(cooldownCompletionTime);
   }
 
@@ -637,10 +645,13 @@ class ChessBoard
     this.shouldUpdateBoard = true;
   }
 
-  private promotePlayer(playerIndex: number, promotionPiece: Piece): void {
+  private promotePlayer = (
+    playerIndex: number,
+    promotionPiece: Piece
+  ): void => {
     this.boardArea.promotePlayer(playerIndex, promotionPiece);
     this.shouldUpdateBoard = true;
-  }
+  };
 
   private assignRole(playerIndex: number) {
     if (this.boardArea != null) {
@@ -654,11 +665,9 @@ class ChessBoard
   }
 
   private startGame(initialCooldown: number): void {
-    let position: Position = this.props.clientFlowEngine.getPosition();
-    this.setAvailableMoves(
-      position.findAvaillableMovesForPlayer(this.playerIndex)
-    );
-    this.startCooldownTimer(initialCooldown, PieceColor.white);
+    this.startCooldownTimer(initialCooldown);
+    this.setSelectedMove(null as any);
+    this.updateRespawnPreviewAndAvailableMoves();
   }
 
   private updateRespawnPreviewAndAvailableMoves() {
@@ -683,45 +692,28 @@ class ChessBoard
     let position: Position = this.props.clientFlowEngine.getPosition();
     if (movingPlayerIndex === this.playerIndex) {
       this.setPlayerSquare(new Square(move.row, move.column));
-      //change
-      this.startCooldownTimer(
-        new Date().getTime() + cooldown * 1000,
-        PieceColor.white
-      );
-      this.setSelectedMove(null as any);
+      this.startCooldownTimer(new Date().getTime() + cooldown * 1000);
     }
     this.movePlayer(movingPlayerIndex, move.row, move.column);
     let availableMoves: Move[] = position.findAvaillableMovesForPlayer(
       this.playerIndex
     );
     this.setAvailableMoves(availableMoves);
-    if (this.selectedMove != null) {
-      let isSelectedMoveAvailable = false;
-      for (let availableMove of availableMoves) {
-        if (
-          availableMove.row === this.selectedMove.row &&
-          availableMove.column === this.selectedMove.column
-        ) {
-          isSelectedMoveAvailable = true;
-        }
-      }
-      if (!isSelectedMoveAvailable) {
-        this.setSelectedMove(null as any);
-      }
-    }
     this.updateRespawnPreviewAndAvailableMoves();
   }
 
-  private async promote(promotingPlayerIndex: number, promotionPiece: Piece) {
-    await new Promise((f) => setTimeout(f, 140));
-    this.promotePlayer(promotingPlayerIndex, promotionPiece);
+  private promote(promotingPlayerIndex: number, promotionPiece: Piece) {
+    setTimeout(() => {
+      this.promotePlayer(promotingPlayerIndex, promotionPiece);
+      this.updateRespawnPreviewAndAvailableMoves();
+    }, PIECE_TRAVEL_TIME * 1000 * 1.3);
   }
 
   private kill(dyingPlayerIndex: number) {
     this.killPlayer(dyingPlayerIndex);
     if (dyingPlayerIndex == this.playerIndex) {
       this.setPlayerSquare(null as any);
-      this.startCooldownTimer(null as any, null as any);
+      this.startCooldownTimer(null as any);
       this.updateRespawnPreviewAndAvailableMoves();
     }
   }
@@ -741,6 +733,7 @@ class ChessBoard
 
   private moveSent(sentMove: Move) {
     if (
+      this.isOnCooldown &&
       !(
         sentMove != null &&
         sentMove.isPromotion &&

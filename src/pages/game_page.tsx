@@ -88,6 +88,22 @@ class GamePage extends React.Component<any, any> {
         <PromotionScreen clientFlowEngine={Authentication.clientFlowEngine} />
         {/* game start screen */}
         <GameStartScreen clientFlowEngine={Authentication.clientFlowEngine} />
+        {/*temp*/}
+        <button
+          className="small-button"
+          style={{
+            position: "absolute",
+            left: 100,
+            top: 800,
+            width: 200,
+            height: 100,
+          }}
+          onClick={() => {
+            Authentication.serverFlowEngine.startGame();
+          }}
+        >
+          Restart
+        </button>
       </div>
     );
   }

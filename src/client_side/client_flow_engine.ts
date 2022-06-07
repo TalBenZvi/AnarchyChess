@@ -25,7 +25,8 @@ import { Lobby, User } from "../database/database_util";
 import { PlayerList } from "../game_flow_util/player_list";
 
 // in seconds
-export const GAME_START_DELAY: number = 3;
+//temp
+export const GAME_START_DELAY: number = 1;
 
 export enum ClientEventType {
   disconnection,
@@ -71,9 +72,10 @@ export class ClientFlowEngine implements GameClientObserver {
   private gameClient: GameClient;
   private currentLobby: Lobby = null as any;
 
+  isGameRunning: boolean = false;
   private position: Position = null as any;
   private _playerIndex: number = null as any;
-  isGameRunning: boolean = false;
+  private selectedMove: Square = null as any;
 
   private observers: ClientFlowEngineObserver[] = [];
 
@@ -142,11 +144,26 @@ export class ClientFlowEngine implements GameClientObserver {
   sendMove(move: Move): void {
     if (!(move != null && move.isPromotion && move.promotionType == null)) {
       this.gameClient.sendMove(move);
+      this.selectedMove =
+        move == null ? (null as any) : new Square(move.row, move.column);
     }
     this.notifyObservers(
       ClientEventType.moveSent,
       new Map<ClientEventInfo, any>([[ClientEventInfo.sentMove, move]])
     );
+  }
+
+  private reexamineSelectedMove() {
+    if (
+      this.selectedMove != null &&
+      this.position.locateMoveForPlayer(
+        this._playerIndex,
+        new Move(this.selectedMove.row, this.selectedMove.column)
+      ) == null
+    ) {
+      this.selectedMove = null as any;
+      this.sendMove(null as any);
+    }
   }
 
   private killPlayer(dyingPlayerIndex: number, deathTimer: number): void {
@@ -163,9 +180,7 @@ export class ClientFlowEngine implements GameClientObserver {
   private updatePlayerList(playerList: PlayerList): void {
     this.notifyObservers(
       ClientEventType.playerListUpdate,
-      new Map<ClientEventInfo, any>([
-        [ClientEventInfo.playerList, playerList],
-      ])
+      new Map<ClientEventInfo, any>([[ClientEventInfo.playerList, playerList]])
     );
   }
 
@@ -200,7 +215,6 @@ export class ClientFlowEngine implements GameClientObserver {
       respawningPlayerIndex,
       new Square(respawnSquare.row, respawnSquare.column)
     );
-
     this.notifyObservers(
       ClientEventType.respawn,
       new Map<ClientEventInfo, any>([
@@ -208,30 +222,25 @@ export class ClientFlowEngine implements GameClientObserver {
         [ClientEventInfo.respawnSquare, respawnSquare],
       ])
     );
+    this.reexamineSelectedMove();
   }
 
-  private async registerEvent(event: Event) {
+  private registerEvent(event: Event) {
     this.receivedEventIndices.push(event.index);
     switch (event.type) {
       // player list update
       case EventType.playerListUpdate: {
         let playerList: PlayerList = new PlayerList(false);
-        playerList.setFromJSON(
-          event.info.get(EventInfo.playerList) as string
-        );
+        playerList.setFromJSON(event.info.get(EventInfo.playerList) as string);
         this.updatePlayerList(playerList);
         break;
       }
       // game started
       case EventType.gameStarted: {
-        let playerIndex: number = JSON.parse(
-          event.info.get(EventInfo.playerIndex) as string,
-          reviver
+        this.startGame(
+          parseInt(event.info.get(EventInfo.playerIndex) as string),
+          parseFloat(event.info.get(EventInfo.initialCooldown) as string)
         );
-        let initialCooldown: number = JSON.parse(
-          event.info.get(EventInfo.initialCooldown) as string
-        );
-        this.startGame(playerIndex, initialCooldown);
         break;
       }
       // move
@@ -332,17 +341,15 @@ export class ClientFlowEngine implements GameClientObserver {
             );
           }
         }
+        this.reexamineSelectedMove();
         break;
       }
       // respawn
       case EventType.respawn: {
-        let respawningPlayerIndex: number = parseInt(
-          event.info.get(EventInfo.playerIndex) as string
+        this.respawnPlayer(
+          parseInt(event.info.get(EventInfo.playerIndex) as string),
+          JSON.parse(event.info.get(EventInfo.respawnSquare) as string)
         );
-        let respawnSquare: Square = JSON.parse(
-          event.info.get(EventInfo.respawnSquare) as string
-        );
-        this.respawnPlayer(respawningPlayerIndex, respawnSquare);
         break;
       }
     }
