@@ -242,3 +242,14 @@ ul.row {
   50%  {opacity: 0.7;}
   100% {opacity: 0.5;}
 }
+
+.fading-in-screen {
+  animation-name: fade-in;
+  animation-duration: 0.2s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fade-in {
+  0%   {opacity: 0;}
+  100% {opacity: 1;}
+}

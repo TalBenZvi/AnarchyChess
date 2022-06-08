@@ -67,6 +67,10 @@ class DeathScreen
         this.hide();
         break;
       }
+      case ClientEventType.gameEnded: {
+        this.hide();
+        break;
+      }
       case ClientEventType.death: {
         if (
           eventInfo.get(ClientEventInfo.dyingPlayerIndex) ===

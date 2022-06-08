@@ -42,8 +42,8 @@ const pieceCooldowns: Map<PieceType, number> = new Map([
   [PieceType.pawn, 1],
   [PieceType.knight, 2],
   [PieceType.bishop, 2],
-  [PieceType.rook, 3],
-  [PieceType.queen, 4],
+  [PieceType.rook, 2.5],
+  [PieceType.queen, 3],
   [PieceType.king, 0.75],
 ]);
 

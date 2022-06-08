@@ -71,7 +71,7 @@ class GamePage extends React.Component<any, any> {
           style={{
             position: "absolute",
             top: "10%",
-            left: "72%",
+            left: "80%",
           }}
         >
           <GraveYard

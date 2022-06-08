@@ -103,10 +103,10 @@ class GameStartScreen
         : WHITE_OUTLINE_COLOR;
     return (
       <div
+        className="fading-in-screen"
         style={{
           position: "absolute",
           boxShadow: "0 0 0 100vmax rgba(80, 80, 80, 0.7)",
-          //color: "titleColor",
           background: "gray",
           zIndex: 3,
           fontWeight: "bold",

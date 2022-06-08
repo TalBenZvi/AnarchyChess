@@ -52,7 +52,7 @@ const FPS: number = 60;
 const PIECE_TRAVEL_TIME: number = 0.2;
 const PIECE_DYING_TIME: number = 0.15;
 const PIECE_RESPAWNING_TIME: number = 0.15;
-const WIPEOUT_BOARD_TRAVEL_TIME = 2;
+const WIPEOUT_BOARD_TRAVEL_TIME = 1;
 const DEAD_PIECE_ELEVATION_FACTOR: number = 1;
 const WHITE_TIMER_COLOR: string = "#eeeeee";
 const BLACK_TIMER_COLOR: string = "#333333";
@@ -714,7 +714,9 @@ class ChessBoard
     if (this.isGameRunning) {
       this.setAvailableMoves([]);
       this.setSelectedMove(null as any);
-      if (winningColor !== Position.getStartPieceByPlayer(this.playerIndex).color) {
+      if (
+        winningColor !== Position.getStartPieceByPlayer(this.playerIndex).color
+      ) {
         this.setPlayerSquare(null as any);
       }
       this.playWipeoutAnimation(
@@ -777,6 +779,7 @@ class ChessBoard
       if (dyingPlayerIndex == this.playerIndex) {
         this.setPlayerSquare(null as any);
         this.startCooldownTimer(null as any);
+        this.setSelectedMove(null as any);
         this.updateRespawnPreviewAndAvailableMoves();
       }
       if (
@@ -809,8 +812,7 @@ class ChessBoard
     if (this.isGameRunning) {
       if (
         this.isOnCooldown &&
-        sentMove != null &&
-        !sentMove.isMissingPromotionType()
+        (sentMove == null || !sentMove.isMissingPromotionType())
       ) {
         this.selectedMove =
           sentMove == null

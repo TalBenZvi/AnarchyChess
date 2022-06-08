@@ -31,7 +31,9 @@ import { Lobby, User } from "../database/database_util";
 import { Authentication } from "../database/authentication";
 import { PlayerList } from "../game_flow_util/player_list";
 
-const COOLDOWN_VARIANCE = 0.2;
+const COOLDOWN_VARIANCE: number = 0.2;
+// in seconds
+const GAME_INTERVAL: number = 3;
 
 export class ServerFlowEngine implements ServerObserver {
   private gameServer: GameServer;
@@ -123,6 +125,9 @@ export class ServerFlowEngine implements ServerObserver {
       this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
       this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
       this.gameServer.endGame(winningColor);
+      setTimeout(() => {
+        this.startGame();
+      }, GAME_INTERVAL * 1000);
     }
   }
 

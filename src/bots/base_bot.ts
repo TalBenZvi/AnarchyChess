@@ -4,7 +4,13 @@ import {
   ClientEventType,
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
-import { Move, Square, Piece, Position } from "../game_flow_util/game_elements";
+import {
+  Move,
+  Square,
+  Piece,
+  Position,
+  PieceColor,
+} from "../game_flow_util/game_elements";
 import { Lobby, User } from "../database/database_util";
 import { OptionalConnectionCallbacks } from "../game_flow_util/communication";
 import { PlayerList } from "../game_flow_util/player_list";
@@ -50,6 +56,8 @@ export class BaseBot implements ClientFlowEngineObserver {
 
   protected onGameStart(initialCooldown: number): void {}
 
+  protected onGameEnd(winningColor: PieceColor): void {}
+
   protected onMoveReceived(
     movingPlayerIndex: number,
     destSquare: Square,
@@ -86,6 +94,10 @@ export class BaseBot implements ClientFlowEngineObserver {
       }
       case ClientEventType.gameStarted: {
         this.onGameStart(info.get(ClientEventInfo.initialCooldown));
+        break;
+      }
+      case ClientEventType.gameEnded: {
+        this.onGameEnd(info.get(ClientEventInfo.winningColor));
         break;
       }
       case ClientEventType.move: {

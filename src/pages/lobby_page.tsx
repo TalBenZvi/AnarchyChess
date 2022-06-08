@@ -17,7 +17,7 @@ import { Authentication } from "../database/authentication";
 import { PlayerList } from "../game_flow_util/player_list";
 import { TestBot } from "../bots/test_bot";
 
-const NUM_OF_RANDOM_BOTS: number = 0;
+const NUM_OF_RANDOM_BOTS: number = 3;
 
 interface LobbyPageProps {}
 

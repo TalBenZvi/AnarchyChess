@@ -1,5 +1,5 @@
 import { BaseBot } from "./base_bot";
-import { PieceType, Move } from "../game_flow_util/game_elements";
+import { PieceType, Move, PieceColor } from "../game_flow_util/game_elements";
 
 const PROMOTION_TYPES: PieceType[] = [
   PieceType.knight,
@@ -8,17 +8,18 @@ const PROMOTION_TYPES: PieceType[] = [
   PieceType.queen,
 ];
 // in seconds
-const MOVE_INTERVAL: number = 1;
+const MOVE_INTERVAL_TIME: number = 1;
 
 export class RandomBot extends BaseBot {
   private playerIndex: number = null as any;
+  private moveInterval: any = null;
 
   protected onRoleAssignment(playerIndex: number): void {
     this.playerIndex = playerIndex;
   }
 
   protected onGameStart(initialCooldown: number) {
-    setInterval(() => {
+    this.moveInterval = setInterval(() => {
       let position = this.getPosition();
       let availableMoves: Move[] = position.findAvaillableMovesForPlayer(
         this.playerIndex
@@ -32,6 +33,12 @@ export class RandomBot extends BaseBot {
         }
         this.playMove(chosenMove);
       }
-    }, MOVE_INTERVAL * 1000);
+    }, MOVE_INTERVAL_TIME * 1000);
+  }
+
+  protected onGameEnd(winningColor: PieceColor): void {
+    if (this.moveInterval != null) {
+      clearInterval(this.moveInterval);
+    }
   }
 }

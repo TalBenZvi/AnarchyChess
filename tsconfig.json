@@ -21,7 +21,7 @@
     "jsx": "react",
     "types": [
       "node",
-      "webpack-env" // here
+      "webpack-env"
     ]
   },
   "include": [

@@ -25,8 +25,7 @@ import { Lobby, User } from "../database/database_util";
 import { PlayerList } from "../game_flow_util/player_list";
 
 // in seconds
-//temp
-export const GAME_START_DELAY: number = 1;
+export const GAME_START_DELAY: number = 2;
 
 export enum ClientEventType {
   disconnection,
@@ -146,7 +145,7 @@ export class ClientFlowEngine implements GameClientObserver {
 
   sendMove(move: Move): void {
     if (this.isGameRunning) {
-      if (move != null && !move.isMissingPromotionType()) {
+      if (move == null || !move.isMissingPromotionType()) {
         this.gameClient.sendMove(move);
         this.selectedMove =
           move == null ? (null as any) : new Square(move.row, move.column);
@@ -359,7 +358,7 @@ export class ClientFlowEngine implements GameClientObserver {
               ClientEventType.move,
               new Map<ClientEventInfo, any>([
                 [ClientEventInfo.movingPlayerIndex, movingRookIndex],
-                [ClientEventInfo.destSquare, new Square(move.row, move.column)],
+                [ClientEventInfo.destSquare, new Square(startRow, destColumn)],
                 [ClientEventInfo.cooldown, 0],
               ])
             );

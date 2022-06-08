@@ -90,6 +90,10 @@ class PromotionScreen
         this.playerIndex = info.get(ClientEventInfo.playerIndex);
         break;
       }
+      case ClientEventType.gameEnded: {
+        this.hide();
+        break;
+      }
       case ClientEventType.moveSent: {
         let move: Move = info.get(ClientEventInfo.sentMove);
         if (move != null && move.isPromotion && move.promotionType == null) {
