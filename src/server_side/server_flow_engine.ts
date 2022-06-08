@@ -112,7 +112,7 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
-  private endGame(winningColor: PieceColor) {
+  endGame(winningColor: PieceColor) {
     if (this.gameStatus === GameStatus.running) {
       this.gameStatus = GameStatus.betweenRounds;
       for (let respawnTimeout of this.respawnTimeouts) {

@@ -14,13 +14,22 @@ import {
   Piece,
   Bishop,
   Position,
+  colorToString,
+  reverseColor,
 } from "../game_flow_util/game_elements";
 
-const WHITE_TITLE_COLOR: string = "#d2d2d2";
-const BLACK_TITLE_COLOR: string = "#111111";
+const TITLE_COLORS: Map<PieceColor, string> = new Map([
+  [PieceColor.white, "#d2d2d2"],
+  [PieceColor.black, "#111111"],
+]);
 
-const WHITE_OUTLINE_COLOR: string = "#888888";
-const BLACK_OUTLINE_COLOR: string = "#111111";
+const OUTLINE_COLORS: Map<PieceColor, string> = new Map([
+  [PieceColor.white, "#888888"],
+  [PieceColor.black, "#111111"],
+]);
+
+const VICTORY_COLOR: string = "#dddddd";
+const DEFEAT_COLOR: string = "#000";
 
 interface GameEndScreenProps {
   clientFlowEngine: ClientFlowEngine;
@@ -34,7 +43,7 @@ class GameEndScreen
   extends React.Component<GameEndScreenProps, GameEndScreenState>
   implements ClientFlowEngineObserver
 {
-  state = { winningColor: PieceColor.black };
+  state = { winningColor: null as any };
   private playerColor: PieceColor = null as any;
 
   componentDidMount() {
@@ -84,37 +93,39 @@ class GameEndScreen
     if (winningColor == null) {
       return <div />;
     }
-    let titleColor: string =
-      winningColor === PieceColor.white ? WHITE_TITLE_COLOR : BLACK_TITLE_COLOR;
-    let outlineColor: string =
-      winningColor === PieceColor.white
-        ? BLACK_OUTLINE_COLOR
-        : WHITE_OUTLINE_COLOR;
+    let isVictory: boolean = winningColor === this.playerColor;
+    let titleColor: string = TITLE_COLORS.get(winningColor) as string;
+    let outlineColor: string = OUTLINE_COLORS.get(
+      reverseColor(winningColor)
+    ) as string;
+    let backgroundColor: string = isVictory ? VICTORY_COLOR : DEFEAT_COLOR;
     return (
-      <div
-        style={{
-          position: "absolute",
-          boxShadow: "0 0 0 100vmax rgba(80, 80, 80, 0.7)",
-          background: "gray",
-          zIndex: 3,
-          fontWeight: "bold",
-        }}
-      >
+      <div>
+        <div
+          className="flashing-screen"
+          style={{
+            boxShadow: `0 0 0 100vmax ${backgroundColor}`,
+          }}
+        />
         <p
           className="centered-title"
           style={{
             position: "fixed",
-            left: "50%",
+            left: 0,
             top: "50%",
-            transform: "translate(-50%, -150%)",
+            transform: "translate(0%, -150%)",
+            width: "100%",
             zIndex: 3,
+            opacity: 1,
             fontSize: 200,
+            textAlign: "center",
+            fontWeight: "bold",
             WebkitTextFillColor: titleColor,
             WebkitTextStroke: "1px",
             WebkitTextStrokeColor: outlineColor,
           }}
         >
-          {this.playerColor === winningColor ? "VICTORY" : "DEFEAT"}
+          {isVictory ? "VICTORY" : "DEFEAT"}
         </p>
       </div>
     );

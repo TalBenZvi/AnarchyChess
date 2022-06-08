@@ -105,7 +105,7 @@ ul.row {
   outline: inherit;
 }
 
-.menu-option:hover{
+.menu-option:hover {
   font-weight: bold;
 }
 
@@ -168,7 +168,7 @@ ul.row {
 
 .small-button:active {
   background: #444444;
-} 
+}
 
 .navbar-title {
   position: absolute;
@@ -227,4 +227,18 @@ ul.row {
 
 .checked-checkbox:hover {
   background: #dddddd;
+}
+
+.flashing-screen {
+  position: absolute;
+  z-index: 3;
+  animation-name: flash;
+  animation-duration: 0.35s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes flash {
+  0%   {opacity: 0;}
+  50%  {opacity: 0.7;}
+  100% {opacity: 0.5;}
 }

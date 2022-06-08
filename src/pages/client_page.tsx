@@ -10,6 +10,7 @@ import {
   ClientEventType,
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
+import GameEndScreen from "../components/game_end_screen";
 
 enum LobbyState {
   open,
@@ -113,6 +114,8 @@ class ClientPage
             }
           }
         })()}
+        {/* temp */}
+        {/* <GameEndScreen clientFlowEngine={Authentication.clientFlowEngine} /> */}
       </div>
     );
   }

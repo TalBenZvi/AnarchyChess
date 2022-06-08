@@ -97,6 +97,36 @@ class GamePage extends React.Component<any, any> {
           style={{
             position: "absolute",
             left: 100,
+            top: 500,
+            width: 200,
+            height: 100,
+          }}
+          onClick={() => {
+            Authentication.serverFlowEngine.endGame(PieceColor.white);
+          }}
+        >
+          White Win
+        </button>
+        <button
+          className="small-button"
+          style={{
+            position: "absolute",
+            left: 100,
+            top: 650,
+            width: 200,
+            height: 100,
+          }}
+          onClick={() => {
+            Authentication.serverFlowEngine.endGame(PieceColor.black);
+          }}
+        >
+          Black Win
+        </button>
+        <button
+          className="small-button"
+          style={{
+            position: "absolute",
+            left: 100,
             top: 800,
             width: 200,
             height: 100,
