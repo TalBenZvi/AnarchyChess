@@ -10,6 +10,7 @@ export interface Event {
 export enum EventType {
   playerListUpdate,
   gameStarted,
+  gameEnded,
   move,
   respawn,
 }
@@ -17,9 +18,11 @@ export enum EventType {
 export enum EventInfo {
   // playerListUpdate
   playerList,
-  // game started
+  // gameStarted
   initialCooldown,
   playerIndex,
+  // gameEnded
+  winningColor,
   // move
   movingPlayerIndex,
   move,
@@ -52,6 +55,7 @@ export enum GameStatus {
   inactive,
   waitingForPlayers,
   running,
+  betweenRounds,
 }
 
 export interface OptionalConnectionCallbacks {

@@ -12,6 +12,7 @@ import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import ChessBoard from "../components/chess_board";
 import { Authentication } from "../database/authentication";
 import { BaseBot } from "../bots/base_bot";
+import GameEndScreen from "../components/game_end_screen";
 
 interface GamePageProps {}
 
@@ -70,7 +71,7 @@ class GamePage extends React.Component<any, any> {
           style={{
             position: "absolute",
             top: "10%",
-            right: 18,
+            left: "80%",
           }}
         >
           <GraveYard
@@ -88,6 +89,8 @@ class GamePage extends React.Component<any, any> {
         <PromotionScreen clientFlowEngine={Authentication.clientFlowEngine} />
         {/* game start screen */}
         <GameStartScreen clientFlowEngine={Authentication.clientFlowEngine} />
+        {/* game end screen */}
+        <GameEndScreen clientFlowEngine={Authentication.clientFlowEngine} />
         {/*temp*/}
         <button
           className="small-button"

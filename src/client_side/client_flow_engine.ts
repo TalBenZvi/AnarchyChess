@@ -33,6 +33,7 @@ export enum ClientEventType {
   playerListUpdate,
   roleAssigned,
   gameStarted,
+  gameEnded,
   move,
   promotion,
   death,
@@ -47,6 +48,8 @@ export enum ClientEventInfo {
   playerIndex,
   // gameStarted
   initialCooldown,
+  //gameEnded
+  winningColor,
   // move
   movingPlayerIndex,
   destSquare,
@@ -142,15 +145,17 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   sendMove(move: Move): void {
-    if (!(move != null && move.isPromotion && move.promotionType == null)) {
-      this.gameClient.sendMove(move);
-      this.selectedMove =
-        move == null ? (null as any) : new Square(move.row, move.column);
+    if (this.isGameRunning) {
+      if (move != null && !move.isMissingPromotionType()) {
+        this.gameClient.sendMove(move);
+        this.selectedMove =
+          move == null ? (null as any) : new Square(move.row, move.column);
+      }
+      this.notifyObservers(
+        ClientEventType.moveSent,
+        new Map<ClientEventInfo, any>([[ClientEventInfo.sentMove, move]])
+      );
     }
-    this.notifyObservers(
-      ClientEventType.moveSent,
-      new Map<ClientEventInfo, any>([[ClientEventInfo.sentMove, move]])
-    );
   }
 
   private reexamineSelectedMove() {
@@ -188,7 +193,6 @@ export class ClientFlowEngine implements GameClientObserver {
     this.isGameRunning = true;
     this._playerIndex = playerIndex;
     this.gameClient.playerIndex = playerIndex;
-    this.gameClient.gameStatus = GameStatus.running;
     this.position = new Position(`client ${playerIndex}`);
     this.position.setToStartingPosition();
     this.notifyObservers(
@@ -205,6 +209,19 @@ export class ClientFlowEngine implements GameClientObserver {
         ])
       );
     }, GAME_START_DELAY * 1000);
+  }
+
+  private endGame(winningColor: PieceColor) {
+    this.notifyObservers(
+      ClientEventType.gameEnded,
+      new Map<ClientEventInfo, any>([
+        [ClientEventInfo.winningColor, winningColor],
+      ])
+    );
+    this.isGameRunning = false;
+    this.selectedMove = null as any;
+    this._playerIndex = null as any;
+    this.gameClient.playerIndex = null as any;
   }
 
   private respawnPlayer(
@@ -240,6 +257,13 @@ export class ClientFlowEngine implements GameClientObserver {
         this.startGame(
           parseInt(event.info.get(EventInfo.playerIndex) as string),
           parseFloat(event.info.get(EventInfo.initialCooldown) as string)
+        );
+        break;
+      }
+      // game ended
+      case EventType.gameEnded: {
+        this.endGame(
+          JSON.parse(event.info.get(EventInfo.winningColor) as string),
         );
         break;
       }

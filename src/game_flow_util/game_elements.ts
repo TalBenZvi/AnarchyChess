@@ -4,6 +4,9 @@ export const BOARD_SIZE = 8;
 
 export const NUM_OF_PLAYERS = 32;
 
+export const WHITE_KING_PLAYER_INDEX = 4;
+export const BLACK_KING_PLAYER_INDEX = 28;
+
 export enum PieceType {
   pawn,
   knight,
@@ -50,7 +53,7 @@ const pieceRespawnTimers: Map<PieceType, number> = new Map([
   [PieceType.bishop, 4],
   [PieceType.rook, 5],
   [PieceType.queen, 7],
-  [PieceType.king, 8],
+  [PieceType.king, 999],
 ]);
 
 class MoveOffset {
@@ -120,21 +123,8 @@ export class Move {
     }
   }
 
-  toJson(): string {
-    return JSON.stringify(this, (key, value) => {
-      if (
-        [
-          "isPromotion",
-          "isCapture",
-          "isEnPassant",
-          "isCastle",
-          "castleSide",
-        ].indexOf(key) > -1
-      ) {
-        return undefined;
-      }
-      return value;
-    });
+  isMissingPromotionType(): boolean {
+    return this.isPromotion && this.promotionType == null;
   }
 }
 
@@ -667,7 +657,7 @@ export class Position {
     }
   }
 
-   static get startPlayerLocations(): Square[] {
+  static get startPlayerLocations(): Square[] {
     return [...Array(BOARD_SIZE)]
       .map((_, j) => new Square(0, j))
       .concat([...Array(BOARD_SIZE)].map((_, j) => new Square(1, j)))

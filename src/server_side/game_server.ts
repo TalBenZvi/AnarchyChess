@@ -1,4 +1,8 @@
-import { NUM_OF_PLAYERS, Move } from "../game_flow_util/game_elements";
+import {
+  NUM_OF_PLAYERS,
+  Move,
+  PieceColor,
+} from "../game_flow_util/game_elements";
 import {
   Event,
   EventInfo,
@@ -92,9 +96,12 @@ export class GameServer {
 
   startGame(roleAssignemnts: number[], initialPlayerCooldowns: number[]): void {
     //temp
-    if (this.gameStatus === GameStatus.waitingForPlayers || true) {
+    if (
+      this.gameStatus === GameStatus.waitingForPlayers ||
+      this.gameStatus === GameStatus.betweenRounds ||
+      true
+    ) {
       this.gameStatus = GameStatus.running;
-      console.log("game started");
       if (this.clients.length >= NUM_OF_PLAYERS) {
         this.clients = this.clients.slice(0, NUM_OF_PLAYERS);
         for (let i = 0; i < this.clients.length; i++) {
@@ -114,6 +121,19 @@ export class GameServer {
           );
         }
       }
+    }
+  }
+
+  endGame(winningColor: PieceColor) {
+    if (this.gameStatus === GameStatus.running) {
+      this.gameStatus = GameStatus.betweenRounds;
+      this.broadcastEvent({
+        index: null as any,
+        type: EventType.gameEnded,
+        info: new Map<EventInfo, string>([
+          [EventInfo.winningColor, JSON.stringify(winningColor)],
+        ]),
+      });
     }
   }
 

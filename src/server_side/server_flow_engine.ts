@@ -13,6 +13,8 @@ import {
   Piece,
   PieceType,
   CastleSide,
+  WHITE_KING_PLAYER_INDEX,
+  BLACK_KING_PLAYER_INDEX,
 } from "../game_flow_util/game_elements";
 import {
   Event,
@@ -23,6 +25,7 @@ import {
   RequestType,
   RequestInfo,
   reviver,
+  GameStatus,
 } from "../game_flow_util/communication";
 import { Lobby, User } from "../database/database_util";
 import { Authentication } from "../database/authentication";
@@ -35,7 +38,7 @@ export class ServerFlowEngine implements ServerObserver {
   private _lobby: Lobby = null as any;
   private playerList: PlayerList = null as any;
   private position: Position = new Position("server");
-  private isGameRunning: boolean = false;
+  private gameStatus: GameStatus = GameStatus.inactive;
   private roleAssignemnts: number[] = null as any;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
@@ -55,9 +58,12 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   acceptConnections(lobby: Lobby): void {
-    this._lobby = lobby;
-    this.gameServer.acceptConnections(lobby.id);
-    this.playerList = new PlayerList(lobby.areTeamsPrearranged);
+    if (this.gameStatus === GameStatus.inactive) {
+      this.gameStatus = GameStatus.waitingForPlayers;
+      this._lobby = lobby;
+      this.gameServer.acceptConnections(lobby.id);
+      this.playerList = new PlayerList(lobby.areTeamsPrearranged);
+    }
   }
 
   destroyConnections(): void {
@@ -81,23 +87,43 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   startGame(): void {
-    for (let respawnTimeout of this.respawnTimeouts) {
-      clearTimeout(respawnTimeout);
+    if (
+      this.gameStatus === GameStatus.waitingForPlayers ||
+      this.gameStatus === GameStatus.betweenRounds
+    ) {
+      this.gameStatus = GameStatus.running;
+      //temp
+      for (let respawnTimeout of this.respawnTimeouts) {
+        clearTimeout(respawnTimeout);
+      }
+      this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
+      this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
+      this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
+      this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
+      this.position.setToStartingPosition();
+      this.roleAssignemnts = this.playerList.generateRoleAssignments();
+      let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
+        (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
+      );
+      this.gameServer.startGame(
+        [...this.roleAssignemnts],
+        initialPlayerCooldowns
+      );
     }
-    this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
-    this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
-    this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
-    this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
-    this.position.setToStartingPosition();
-    this.roleAssignemnts = this.playerList.generateRoleAssignments();
-    let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
-      (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
-    );
-    this.isGameRunning = true;
-    this.gameServer.startGame(
-      [...this.roleAssignemnts],
-      initialPlayerCooldowns
-    );
+  }
+
+  private endGame(winningColor: PieceColor) {
+    if (this.gameStatus === GameStatus.running) {
+      this.gameStatus = GameStatus.betweenRounds;
+      for (let respawnTimeout of this.respawnTimeouts) {
+        clearTimeout(respawnTimeout);
+      }
+      this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
+      this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
+      this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
+      this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
+      this.gameServer.endGame(winningColor);
+    }
   }
 
   private killPlayer(playerIndex: number): number {
@@ -170,6 +196,7 @@ export class ServerFlowEngine implements ServerObserver {
       );
       // move is valid
       if (move != null) {
+        let winningColor: PieceColor = null as any;
         let event: Event = {
           index: null as any,
           type: EventType.move,
@@ -180,15 +207,18 @@ export class ServerFlowEngine implements ServerObserver {
         // isCapture
         if (move.isCapture) {
           let dyingPlayerIndex = this.position.playerAt(move.row, move.column);
-          // temp
-          if (
-            this.position.getPieceByPlayer(dyingPlayerIndex).type ===
-            PieceType.king
-          ) {
-            return;
-          }
           let respawnTimer: number = this.killPlayer(dyingPlayerIndex);
           event.info.set(EventInfo.respawnTimer, respawnTimer.toString());
+          switch (dyingPlayerIndex) {
+            case WHITE_KING_PLAYER_INDEX: {
+              winningColor = PieceColor.black;
+              break;
+            }
+            case BLACK_KING_PLAYER_INDEX: {
+              winningColor = PieceColor.white;
+              break;
+            }
+          }
         }
         // isEnpassant
         if (move.isEnPassant) {
@@ -230,6 +260,9 @@ export class ServerFlowEngine implements ServerObserver {
         );
         event.info.set(EventInfo.cooldown, cooldown.toString());
         this.gameServer.broadcastEvent(event);
+        if (winningColor != null) {
+          this.endGame(winningColor);
+        }
       }
     }
   }
@@ -282,7 +315,7 @@ export class ServerFlowEngine implements ServerObserver {
       }
       // move
       case RequestType.move: {
-        if (this.isGameRunning) {
+        if (this.gameStatus == GameStatus.running) {
           let moveRequest: Move = JSON.parse(
             request.info.get(RequestInfo.move) as string,
             reviver

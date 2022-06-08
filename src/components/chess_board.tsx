@@ -693,6 +693,7 @@ class ChessBoard
     if (movingPlayerIndex === this.playerIndex) {
       this.setPlayerSquare(new Square(move.row, move.column));
       this.startCooldownTimer(new Date().getTime() + cooldown * 1000);
+      this.setSelectedMove(null as any);
     }
     this.movePlayer(movingPlayerIndex, move.row, move.column);
     let availableMoves: Move[] = position.findAvaillableMovesForPlayer(
@@ -734,11 +735,8 @@ class ChessBoard
   private moveSent(sentMove: Move) {
     if (
       this.isOnCooldown &&
-      !(
-        sentMove != null &&
-        sentMove.isPromotion &&
-        sentMove.promotionType == null
-      )
+      sentMove != null &&
+      !sentMove.isMissingPromotionType()
     ) {
       this.selectedMove =
         sentMove == null

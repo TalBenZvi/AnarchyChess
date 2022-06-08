@@ -7,6 +7,10 @@ import {
   ClientEventType,
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
+import {
+  BLACK_KING_PLAYER_INDEX,
+  WHITE_KING_PLAYER_INDEX,
+} from "../game_flow_util/game_elements";
 
 const FONT_COLOR: string = "#900000";
 
@@ -65,7 +69,10 @@ class DeathScreen
       }
       case ClientEventType.death: {
         if (
-          eventInfo.get(ClientEventInfo.dyingPlayerIndex) === this.playerIndex
+          eventInfo.get(ClientEventInfo.dyingPlayerIndex) ===
+            this.playerIndex &&
+          this.playerIndex !== WHITE_KING_PLAYER_INDEX &&
+          this.playerIndex !== BLACK_KING_PLAYER_INDEX
         ) {
           this.show(eventInfo.get(ClientEventInfo.deathTimer));
         }

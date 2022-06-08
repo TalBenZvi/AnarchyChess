@@ -8,6 +8,7 @@ import {
   colorToString,
   typeToString,
   Position,
+  PieceType,
 } from "../game_flow_util/game_elements";
 import {
   ClientFlowEngine,
@@ -70,8 +71,9 @@ class GraveYard
       clientFlowEngine.addObserver(this);
       if (clientFlowEngine.playerIndex != null) {
         this.setPovColor(
-          Position.getStartPieceByPlayer(this.props.clientFlowEngine.playerIndex)
-            .color
+          Position.getStartPieceByPlayer(
+            this.props.clientFlowEngine.playerIndex
+          ).color
         );
       }
     }
@@ -183,12 +185,15 @@ class GraveYard
         break;
       }
       case ClientEventType.death: {
-        this.addPiece(
-          Position.getStartPieceByPlayer(
-            info.get(ClientEventInfo.dyingPlayerIndex)
-          ),
-          new Date().getTime() + info.get(ClientEventInfo.deathTimer) * 1000
+        let dyingPiece: Piece = Position.getStartPieceByPlayer(
+          info.get(ClientEventInfo.dyingPlayerIndex)
         );
+        if (dyingPiece.type !== PieceType.king) {
+          this.addPiece(
+            dyingPiece,
+            new Date().getTime() + info.get(ClientEventInfo.deathTimer) * 1000
+          );
+        }
         break;
       }
     }

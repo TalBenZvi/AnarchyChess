@@ -13,7 +13,7 @@ import {
   EventType,
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
-  OptionalConnectionCallbacks
+  OptionalConnectionCallbacks,
 } from "../game_flow_util/communication";
 import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
@@ -43,7 +43,6 @@ export interface GameClientObserver {
 export class GameClient {
   private clientPeer: any = null;
   private serverConnection: any = null;
-  gameStatus: GameStatus = GameStatus.inactive;
   playerIndex: number = null as any;
 
   constructor(private observer: GameClientObserver, private user: User) {}
@@ -52,65 +51,63 @@ export class GameClient {
   async attemptToConnect(
     gameID: string,
     serverIndex: number,
-    optionalConnectionCallbacks: OptionalConnectionCallbacks,
+    optionalConnectionCallbacks: OptionalConnectionCallbacks
   ) {
-    if (this.gameStatus === GameStatus.inactive) {
-      this.clientPeer = new Peer(`${gameID}_client_${this.user.id}`, {
-        host: "localhost",
-        port: PEERJS_SERVER_PORT,
-        path: "/myapp",
-      });
-      let numOfTries: number = 0;
-      let requestInterval = setInterval(() => {
-        this.serverConnection = this.clientPeer.connect(
-          `${gameID}_server_${serverIndex}`
-        );
-        if (this.serverConnection != undefined) {
-          this.serverConnection.on("open", () => {
-            clearInterval(requestInterval);
-            // listen for events
-            this.serverConnection.on("data", (eventData: any) => {
-              let event: Event = JSON.parse(eventData.toString(), reviver);
-              this.observer.notify(
-                ClientNotificationType.receivedEvent,
-                new Map<ClientNotificationInfo, any>([
-                  [ClientNotificationInfo.event, event],
-                ])
-              );
-            });
-            // when disconnected from server
-            this.serverConnection.on("close", () => {
-              this.observer.notify(
-                ClientNotificationType.disconnectedFromServer,
-                new Map<ClientNotificationInfo, any>()
-              );
-            });
-            // request connection
-            this.serverConnection.send(
-              JSON.stringify(
-                {
-                  type: RequestType.connection,
-                  info: new Map<RequestInfo, string>([
-                    [RequestInfo.user, JSON.stringify(this.user)],
-                  ]),
-                },
-                replacer
-              )
+    this.clientPeer = new Peer(`${gameID}_client_${this.user.id}`, {
+      host: "localhost",
+      port: PEERJS_SERVER_PORT,
+      path: "/myapp",
+    });
+    let numOfTries: number = 0;
+    let requestInterval = setInterval(() => {
+      this.serverConnection = this.clientPeer.connect(
+        `${gameID}_server_${serverIndex}`
+      );
+      if (this.serverConnection != undefined) {
+        this.serverConnection.on("open", () => {
+          clearInterval(requestInterval);
+          // listen for events
+          this.serverConnection.on("data", (eventData: any) => {
+            let event: Event = JSON.parse(eventData.toString(), reviver);
+            this.observer.notify(
+              ClientNotificationType.receivedEvent,
+              new Map<ClientNotificationInfo, any>([
+                [ClientNotificationInfo.event, event],
+              ])
             );
-            if (optionalConnectionCallbacks.onSuccess != undefined) {
-              optionalConnectionCallbacks.onSuccess();
-            }
           });
-          numOfTries++;
-          if (numOfTries >= MAX_CONNECTION_TRIES) {
-            clearInterval(requestInterval);
-            if (optionalConnectionCallbacks.onFailure != undefined) {
-              optionalConnectionCallbacks.onFailure();
-            }
+          // when disconnected from server
+          this.serverConnection.on("close", () => {
+            this.observer.notify(
+              ClientNotificationType.disconnectedFromServer,
+              new Map<ClientNotificationInfo, any>()
+            );
+          });
+          // request connection
+          this.serverConnection.send(
+            JSON.stringify(
+              {
+                type: RequestType.connection,
+                info: new Map<RequestInfo, string>([
+                  [RequestInfo.user, JSON.stringify(this.user)],
+                ]),
+              },
+              replacer
+            )
+          );
+          if (optionalConnectionCallbacks.onSuccess != undefined) {
+            optionalConnectionCallbacks.onSuccess();
+          }
+        });
+        numOfTries++;
+        if (numOfTries >= MAX_CONNECTION_TRIES) {
+          clearInterval(requestInterval);
+          if (optionalConnectionCallbacks.onFailure != undefined) {
+            optionalConnectionCallbacks.onFailure();
           }
         }
-      }, DELAY_BETWEEN_TRIES)
-    }
+      }
+    }, DELAY_BETWEEN_TRIES);
   }
 
   destroyConenction(): void {
@@ -120,7 +117,7 @@ export class GameClient {
   }
 
   private sendRequest(request: Request): void {
-    if (this.gameStatus === GameStatus.running && this.playerIndex != null) {
+    if (this.playerIndex != null) {
       this.serverConnection.send(JSON.stringify(request, replacer));
     }
   }

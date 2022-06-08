@@ -101,9 +101,9 @@ export class PlayerList {
 
   generateRoleAssignments(): number[] {
     //temp
-    // return [1, ...[...Array(31)].map((_, i: number) => {
-    //   return i < 1 ? i : i + 1;
-    // })];
+    return [20, ...[...Array(31)].map((_, i: number) => {
+      return i < 20 ? i : i + 1;
+    })];
     if (
       this._areTeamsPrearranged &&
       this.getUsersByAssignedColor(PieceColor.white).length ==
