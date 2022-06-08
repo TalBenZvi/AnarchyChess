@@ -13,6 +13,9 @@ import {
   Square,
   Piece,
   Position,
+  WHITE_KING_PLAYER_INDEX,
+  BLACK_KING_PLAYER_INDEX,
+  reverseColor,
 } from "../game_flow_util/game_elements";
 import {
   ClientFlowEngine,
@@ -49,12 +52,14 @@ const FPS: number = 60;
 const PIECE_TRAVEL_TIME: number = 0.2;
 const PIECE_DYING_TIME: number = 0.15;
 const PIECE_RESPAWNING_TIME: number = 0.15;
+const WIPEOUT_BOARD_TRAVEL_TIME = 2;
 const DEAD_PIECE_ELEVATION_FACTOR: number = 1;
 const WHITE_TIMER_COLOR: string = "#eeeeee";
 const BLACK_TIMER_COLOR: string = "#333333";
 
 class CanvasPiece {
   private image: any;
+  color: PieceColor;
   opacity: number = 1;
   isMoving: boolean = false;
   isDying: boolean = false;
@@ -67,6 +72,7 @@ class CanvasPiece {
     public y: number,
     public size: number
   ) {
+    this.color = piece.color;
     this.image = PIECE_IMAGES.get(piece.color)?.get(piece.type);
   }
 
@@ -180,6 +186,8 @@ class BoardArea {
   private playerSquare: Square = null as any;
   private availableMoves: Move[] = [];
 
+  private isWipeoutAnimationPlaying: boolean = false;
+
   constructor(private ctx: any, private props: ChessBoardProps) {
     this.povColor = props.povColor;
     this.squareSize = Math.floor(props.size / BOARD_SIZE);
@@ -288,7 +296,7 @@ class BoardArea {
     }
   }
 
-  killPlayer(playerIndex: number): void {
+  killPlayer = (playerIndex: number): void => {
     let dyingPiece: CanvasPiece = this.canvasPieces[playerIndex];
     if (dyingPiece != null) {
       dyingPiece.isDying = true;
@@ -304,7 +312,7 @@ class BoardArea {
         this.canvasPieces[playerIndex] = null as any;
       }, PIECE_DYING_TIME * 1000);
     }
-  }
+  };
 
   setRespawnPreview(respawnPreviewSquare: Square, respawnPiece: Piece): void {
     if (respawnPreviewSquare == null) {
@@ -367,6 +375,25 @@ class BoardArea {
     }
   }
 
+  playWipeoutAnimation(originSquare: Square, dyingTeamColor: PieceColor) {
+    this.isWipeoutAnimationPlaying = true;
+    let originX: number =
+      this.fitColumnIndexToPOV(originSquare.column) * this.squareSize;
+    let originY: number =
+      this.fitRowIndexToPOV(originSquare.row) * this.squareSize;
+    for (let i = 0; i < this.canvasPieces.length; i++) {
+      let canvasPiece: CanvasPiece = this.canvasPieces[i];
+      if (canvasPiece != null && canvasPiece.color === dyingTeamColor) {
+        setTimeout(() => {
+          this.killPlayer(i);
+        }, (Math.sqrt(Math.pow(canvasPiece.x - originX, 2) + Math.pow(canvasPiece.y - originY, 2)) / this.props.size) * WIPEOUT_BOARD_TRAVEL_TIME * 1000);
+      }
+    }
+    setTimeout(() => {
+      this.isWipeoutAnimationPlaying = false;
+    }, 2 * WIPEOUT_BOARD_TRAVEL_TIME * 1000);
+  }
+
   mouseClicked(x: number, y: number) {
     if (this.selectedMove == null) {
       for (let i = 0; i < this.availableMoves.length; i++) {
@@ -399,9 +426,8 @@ class BoardArea {
 
   // return wehther or not there's a need for an update
   draw(): boolean {
-    let shouldUpdate: boolean = false;
-    let { size, lightColor, darkColor, povColor, clientFlowEngine } =
-      this.props;
+    let shouldUpdate: boolean = this.isWipeoutAnimationPlaying;
+    let { size, lightColor, darkColor } = this.props;
     let coordinateIndexFontSize: number = size * 0.035;
     // squares
     for (let i = 0; i < BOARD_SIZE; i++) {
@@ -526,10 +552,12 @@ class ChessBoard
 {
   state = {};
 
+  isGameRunning: boolean = false;
   playerIndex: number = null as any;
   selectedMove: Square = null as any;
   isOnCooldown: boolean = false;
   cooldownTimeout: any = null;
+  kingDeathSquare: Square = null as any;
 
   canvasRef = null as any;
   boardArea: BoardArea = null as any;
@@ -653,7 +681,17 @@ class ChessBoard
     this.shouldUpdateBoard = true;
   };
 
+  private playWipeoutAnimation(
+    originSquare: Square,
+    dyingTeamColor: PieceColor
+  ) {
+    this.boardArea.playWipeoutAnimation(originSquare, dyingTeamColor);
+    this.shouldUpdateBoard = true;
+  }
+
   private assignRole(playerIndex: number) {
+    this.isGameRunning = true;
+    this.kingDeathSquare = null as any;
     if (this.boardArea != null) {
       this.playerIndex = playerIndex;
       let position: Position = this.props.clientFlowEngine.getPosition();
@@ -665,84 +703,121 @@ class ChessBoard
   }
 
   private startGame(initialCooldown: number): void {
-    this.startCooldownTimer(initialCooldown);
-    this.setSelectedMove(null as any);
-    this.updateRespawnPreviewAndAvailableMoves();
+    if (this.isGameRunning) {
+      this.startCooldownTimer(initialCooldown);
+      this.setSelectedMove(null as any);
+      this.updateRespawnPreviewAndAvailableMoves();
+    }
+  }
+
+  private endGame(winningColor: PieceColor) {
+    if (this.isGameRunning) {
+      this.setAvailableMoves([]);
+      this.setSelectedMove(null as any);
+      if (winningColor !== Position.getStartPieceByPlayer(this.playerIndex).color) {
+        this.setPlayerSquare(null as any);
+      }
+      this.playWipeoutAnimation(
+        this.kingDeathSquare == null ? new Square(0, 0) : this.kingDeathSquare,
+        reverseColor(winningColor)
+      );
+      this.isGameRunning = false;
+    }
   }
 
   private updateRespawnPreviewAndAvailableMoves() {
-    let position: Position = this.props.clientFlowEngine.getPosition();
-    let isPlayerAlive: boolean = position.isPlayerAlive(this.playerIndex);
-    this.setRespawnPreview(
-      isPlayerAlive
-        ? (null as any)
-        : position.getRespawnSquareForPlayer(this.playerIndex),
-      isPlayerAlive
-        ? (null as any)
-        : Position.getStartPieceByPlayer(this.playerIndex)
-    );
-    this.setAvailableMoves(
-      isPlayerAlive
-        ? position.findAvaillableMovesForPlayer(this.playerIndex)
-        : []
-    );
+    if (this.isGameRunning) {
+      let position: Position = this.props.clientFlowEngine.getPosition();
+      let isPlayerAlive: boolean = position.isPlayerAlive(this.playerIndex);
+      this.setRespawnPreview(
+        isPlayerAlive
+          ? (null as any)
+          : position.getRespawnSquareForPlayer(this.playerIndex),
+        isPlayerAlive
+          ? (null as any)
+          : Position.getStartPieceByPlayer(this.playerIndex)
+      );
+      this.setAvailableMoves(
+        isPlayerAlive
+          ? position.findAvaillableMovesForPlayer(this.playerIndex)
+          : []
+      );
+    }
   }
 
   private move(movingPlayerIndex: number, move: Move, cooldown: number): void {
-    let position: Position = this.props.clientFlowEngine.getPosition();
-    if (movingPlayerIndex === this.playerIndex) {
-      this.setPlayerSquare(new Square(move.row, move.column));
-      this.startCooldownTimer(new Date().getTime() + cooldown * 1000);
-      this.setSelectedMove(null as any);
+    if (this.isGameRunning) {
+      let position: Position = this.props.clientFlowEngine.getPosition();
+      if (movingPlayerIndex === this.playerIndex) {
+        this.setPlayerSquare(new Square(move.row, move.column));
+        this.startCooldownTimer(new Date().getTime() + cooldown * 1000);
+        this.setSelectedMove(null as any);
+      }
+      this.movePlayer(movingPlayerIndex, move.row, move.column);
+      let availableMoves: Move[] = position.findAvaillableMovesForPlayer(
+        this.playerIndex
+      );
+      this.setAvailableMoves(availableMoves);
+      this.updateRespawnPreviewAndAvailableMoves();
     }
-    this.movePlayer(movingPlayerIndex, move.row, move.column);
-    let availableMoves: Move[] = position.findAvaillableMovesForPlayer(
-      this.playerIndex
-    );
-    this.setAvailableMoves(availableMoves);
-    this.updateRespawnPreviewAndAvailableMoves();
   }
 
   private promote(promotingPlayerIndex: number, promotionPiece: Piece) {
-    setTimeout(() => {
-      this.promotePlayer(promotingPlayerIndex, promotionPiece);
-      this.updateRespawnPreviewAndAvailableMoves();
-    }, PIECE_TRAVEL_TIME * 1000 * 1.3);
+    if (this.isGameRunning) {
+      setTimeout(() => {
+        this.promotePlayer(promotingPlayerIndex, promotionPiece);
+        this.updateRespawnPreviewAndAvailableMoves();
+      }, PIECE_TRAVEL_TIME * 1000 * 1.3);
+    }
   }
 
   private kill(dyingPlayerIndex: number) {
-    this.killPlayer(dyingPlayerIndex);
-    if (dyingPlayerIndex == this.playerIndex) {
-      this.setPlayerSquare(null as any);
-      this.startCooldownTimer(null as any);
-      this.updateRespawnPreviewAndAvailableMoves();
+    if (this.isGameRunning) {
+      this.killPlayer(dyingPlayerIndex);
+      if (dyingPlayerIndex == this.playerIndex) {
+        this.setPlayerSquare(null as any);
+        this.startCooldownTimer(null as any);
+        this.updateRespawnPreviewAndAvailableMoves();
+      }
+      if (
+        dyingPlayerIndex === WHITE_KING_PLAYER_INDEX ||
+        dyingPlayerIndex === BLACK_KING_PLAYER_INDEX
+      ) {
+        this.kingDeathSquare = this.props.clientFlowEngine
+          .getPosition()
+          .getPlayerLocation(dyingPlayerIndex);
+      }
     }
   }
 
   private respawn(respawningPlayerIndex: number, respawnSquare: Square) {
-    this.respawnPlayer(
-      respawningPlayerIndex,
-      respawnSquare.row,
-      respawnSquare.column,
-      Position.getStartPieceByPlayer(respawningPlayerIndex)
-    );
-    if (respawningPlayerIndex === this.playerIndex) {
-      this.setPlayerSquare(respawnSquare);
+    if (this.isGameRunning) {
+      this.respawnPlayer(
+        respawningPlayerIndex,
+        respawnSquare.row,
+        respawnSquare.column,
+        Position.getStartPieceByPlayer(respawningPlayerIndex)
+      );
+      if (respawningPlayerIndex === this.playerIndex) {
+        this.setPlayerSquare(respawnSquare);
+      }
+      this.updateRespawnPreviewAndAvailableMoves();
     }
-    this.updateRespawnPreviewAndAvailableMoves();
   }
 
   private moveSent(sentMove: Move) {
-    if (
-      this.isOnCooldown &&
-      sentMove != null &&
-      !sentMove.isMissingPromotionType()
-    ) {
-      this.selectedMove =
-        sentMove == null
-          ? (null as any)
-          : new Square(sentMove.row, sentMove.column);
-      this.setSelectedMove(this.selectedMove);
+    if (this.isGameRunning) {
+      if (
+        this.isOnCooldown &&
+        sentMove != null &&
+        !sentMove.isMissingPromotionType()
+      ) {
+        this.selectedMove =
+          sentMove == null
+            ? (null as any)
+            : new Square(sentMove.row, sentMove.column);
+        this.setSelectedMove(this.selectedMove);
+      }
     }
   }
 
@@ -754,6 +829,10 @@ class ChessBoard
       }
       case ClientEventType.gameStarted: {
         this.startGame(info.get(ClientEventInfo.initialCooldown));
+        break;
+      }
+      case ClientEventType.gameEnded: {
+        this.endGame(info.get(ClientEventInfo.winningColor));
         break;
       }
       case ClientEventType.move: {

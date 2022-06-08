@@ -101,8 +101,8 @@ export class PlayerList {
 
   generateRoleAssignments(): number[] {
     //temp
-    return [9, ...[...Array(31)].map((_, i: number) => {
-      return i < 9 ? i : i + 1;
+    return [10, ...[...Array(31)].map((_, i: number) => {
+      return i < 10 ? i : i + 1;
     })];
     if (
       this._areTeamsPrearranged &&

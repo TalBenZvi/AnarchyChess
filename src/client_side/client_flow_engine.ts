@@ -172,7 +172,6 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   private killPlayer(dyingPlayerIndex: number, deathTimer: number): void {
-    this.position.killPlayer(dyingPlayerIndex);
     this.notifyObservers(
       ClientEventType.death,
       new Map<ClientEventInfo, any>([
@@ -180,6 +179,7 @@ export class ClientFlowEngine implements GameClientObserver {
         [ClientEventInfo.deathTimer, deathTimer],
       ])
     );
+    this.position.killPlayer(dyingPlayerIndex);
   }
 
   private updatePlayerList(playerList: PlayerList): void {
@@ -263,7 +263,7 @@ export class ClientFlowEngine implements GameClientObserver {
       // game ended
       case EventType.gameEnded: {
         this.endGame(
-          JSON.parse(event.info.get(EventInfo.winningColor) as string),
+          JSON.parse(event.info.get(EventInfo.winningColor) as string)
         );
         break;
       }
