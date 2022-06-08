@@ -184,6 +184,12 @@ class GraveYard
         }
         break;
       }
+      case ClientEventType.gameEnded: {
+        if (this._isMounted) {
+          this.clear();
+        }
+        break;
+      }
       case ClientEventType.death: {
         let dyingPiece: Piece = Position.getStartPieceByPlayer(
           info.get(ClientEventInfo.dyingPlayerIndex)
