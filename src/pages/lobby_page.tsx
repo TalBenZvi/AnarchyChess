@@ -9,13 +9,14 @@ import {
   ClientEventType,
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
-import { User } from "../database/database_util";
+import { Lobby, User } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { BaseBot } from "../bots/base_bot";
 import { RandomBot } from "../bots/random_bot";
 import { Authentication } from "../database/authentication";
 import { PlayerList } from "../game_flow_util/player_list";
 import { TestBot } from "../bots/test_bot";
+import LobbyCard from "../components/lobby_card";
 
 const NUM_OF_RANDOM_BOTS: number = 3;
 
@@ -77,19 +78,17 @@ class LobbyPage
     let numOfRequiredBots = playerList.filter(
       (player: User) => player == null
     ).length;
-    let bots: BaseBot[] = [...Array(numOfRequiredBots)].map(
-      (_, i) => {
-        let user: User = {
-          id: (i + 1).toString(),
-          username: `bot_${i + 1}`,
-        };
-        if (i < NUM_OF_RANDOM_BOTS) {
-          return new RandomBot(user);
-        } else {
-          return new BaseBot(user);
-        }
+    let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
+      let user: User = {
+        id: (i + 1).toString(),
+        username: `bot_${i + 1}`,
+      };
+      if (i < NUM_OF_RANDOM_BOTS) {
+        return new RandomBot(user);
+      } else {
+        return new BaseBot(user);
       }
-    )
+    });
     let nextAvailableBotIndex: number = 0;
     for (let i = 0; i < NUM_OF_PLAYERS; i++) {
       if (playerList[i] == null) {
@@ -116,6 +115,10 @@ class LobbyPage
     }
     let numOfConnectedPlayers: number =
       playerList == null ? 0 : playerList.getConnectedUsers().length;
+    let lobby: Lobby =
+      Authentication.clientFlowEngine == null
+        ? (null as any)
+        : Authentication.clientFlowEngine.currentLobby;
     let isHost: boolean =
       Authentication.serverFlowEngine != null &&
       this.props.match.params.id === Authentication.serverFlowEngine.lobby.id;
@@ -137,6 +140,17 @@ class LobbyPage
             playerList={playerList}
             isHost={isHost}
           />
+        </div>
+        {/* lobby card */}
+        <div
+          style={{
+            position: "absolute",
+            right: "4%",
+            top: "50%",
+            transform: "translate(0%, -50%)",
+          }}
+        >
+          <LobbyCard width={400} height={600} lobby={lobby} />
         </div>
         {/* leave / close lobby button */}
         <button

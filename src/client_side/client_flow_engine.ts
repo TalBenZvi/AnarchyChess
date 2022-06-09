@@ -72,7 +72,7 @@ export interface ClientFlowEngineObserver {
 
 export class ClientFlowEngine implements GameClientObserver {
   private gameClient: GameClient;
-  private currentLobby: Lobby = null as any;
+  private _currentLobby: Lobby = null as any;
 
   isGameRunning: boolean = false;
   private position: Position = null as any;
@@ -91,6 +91,10 @@ export class ClientFlowEngine implements GameClientObserver {
 
   get playerIndex(): number {
     return this._playerIndex;
+  }
+
+  get currentLobby(): Lobby {
+    return {...this._currentLobby};
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -118,7 +122,7 @@ export class ClientFlowEngine implements GameClientObserver {
     serverIndex: number,
     optionalConnectionCallbacks: OptionalConnectionCallbacks
   ) {
-    this.currentLobby = lobby;
+    this._currentLobby = lobby;
     this.gameClient.attemptToConnect(lobby.id, serverIndex, {
       onSuccess: () => {
         if (optionalConnectionCallbacks.onSuccess != undefined) {
