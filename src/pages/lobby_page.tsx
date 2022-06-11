@@ -150,29 +150,20 @@ class LobbyPage
             transform: "translate(0%, -50%)",
           }}
         >
-          <LobbyCard width={400} height={600} lobby={lobby} />
+          <LobbyCard
+            width={400}
+            height={600}
+            lobby={lobby}
+            isHost={isHost}
+            onClose={() => {
+              Authentication.leaveLobby();
+              if (isHost) {
+                Authentication.closeLobby();
+              }
+              this.setState({ shouldRedirectToHome: true });
+            }}
+          />
         </div>
-        {/* leave / close lobby button */}
-        <button
-          className="app-button"
-          style={{
-            position: "absolute",
-            width: 150,
-            height: 50,
-            left: 100,
-            top: 110,
-            fontSize: 20,
-          }}
-          onClick={() => {
-            Authentication.leaveLobby();
-            if (isHost) {
-              Authentication.closeLobby();
-            }
-            this.setState({ shouldRedirectToHome: true });
-          }}
-        >
-          {isHost ? "Close Lobby" : "Leave"}
-        </button>
         {/* start game button */}
         {isHost ? (
           <button
