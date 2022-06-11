@@ -30,7 +30,7 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
   render() {
     let { width, height, lobby, isHost, onClose } = this.props;
     let titleFontSize: number = width * 0.14;
-    let fontSize: number = width * 0.07;
+    let fontSize: number = width * 0.06;
     let iconSize = width * 0.08;
     let lobbyAttributeTitles: string[] = [];
     if (lobby != null) {
@@ -49,6 +49,21 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
           height: height,
         }}
       >
+        {/* leave / close lobby button */}
+        <button
+          className="app-button"
+          style={{
+            position: "absolute",
+            width: 150,
+            height: 50,
+            right: 20,
+            bottom: 20,
+            fontSize: fontSize * 0.85,
+          }}
+          onClick={onClose}
+        >
+          {isHost ? "Close Lobby" : "Leave"}
+        </button>
         {lobby == null ? (
           <div />
         ) : (
@@ -104,8 +119,7 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
                   style={{
                     height: height * 0.1,
                     fontSize: fontSize,
-                    fontWeight: "bold",
-                    // border: "1px solid black",
+                    // fontWeight: "bold",
                   }}
                 >
                   <img
@@ -124,23 +138,9 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
                 </li>
               ))}
             </ul>
-            {/* leave / close lobby button */}
-            <button
-              className="app-button"
-              style={{
-                position: "absolute",
-                width: 150,
-                height: 50,
-                right: 20,
-                bottom: 20,
-                fontSize: fontSize * 0.75,
-              }}
-              onClick={onClose}
-            >
-              {isHost ? "Close Lobby" : "Leave"}
-            </button>
           </div>
         )}
+        
       </div>
     );
   }

@@ -18,6 +18,8 @@ import { PlayerList } from "../game_flow_util/player_list";
 import { TestBot } from "../bots/test_bot";
 import LobbyCard from "../components/lobby_card";
 
+import appIcon from "../assets/page_design/clean_app_icon.png";
+
 const NUM_OF_RANDOM_BOTS: number = 3;
 
 interface LobbyPageProps {}
@@ -125,18 +127,28 @@ class LobbyPage
     return (
       <div className="background">
         <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
+        <div className="centered">
+          <img
+            src={appIcon}
+            style={{
+              width: 900,
+              height: 900,
+              filter: "opacity(0.03)",
+            }}
+          />
+        </div>
         {/* player list */}
         <div
           style={{
             position: "absolute",
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
+            left: 50,
+            bottom: 50,
+            transform: "translate(0%, 0%)",
           }}
         >
           <PlayerListComponent
-            width={800}
-            height={750}
+            width={600}
+            height={700}
             playerList={playerList}
             isHost={isHost}
           />
@@ -145,14 +157,14 @@ class LobbyPage
         <div
           style={{
             position: "absolute",
-            right: "4%",
-            top: "50%",
-            transform: "translate(0%, -50%)",
+            right: 50,
+            bottom: 180,
+            transform: "translate(0%, 0%)",
           }}
         >
           <LobbyCard
             width={400}
-            height={600}
+            height={570}
             lobby={lobby}
             isHost={isHost}
             onClose={() => {
@@ -173,7 +185,7 @@ class LobbyPage
               width: 200,
               height: 80,
               right: 50,
-              bottom: 30,
+              bottom: 50,
               fontSize: 30,
             }}
             onClick={() => {

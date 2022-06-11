@@ -7,22 +7,10 @@ import { PlayerList } from "../game_flow_util/player_list";
 
 import menuIcon from "../assets/page_design/menu_icon.png";
 
-const TILE_COLORS: Map<PieceColor, string> = new Map([
-  [null as any, "#272727"],
-  [PieceColor.white, "#bbbbbb"],
-  [PieceColor.black, "#151515"],
-]);
-
 const TILE_FONT_COLORS: Map<PieceColor, string> = new Map([
   [null as any, "#ccc"],
-  [PieceColor.white, "#111111"],
-  [PieceColor.black, "#ccc"],
-]);
-
-const TILE_BORDER_COLORS: Map<PieceColor, string> = new Map([
-  [null as any, "#252525"],
-  [PieceColor.white, "#9f9f9f"],
-  [PieceColor.black, "#111111"],
+  [PieceColor.white, "#bbbbbb"],
+  [PieceColor.black, "#050505"],
 ]);
 
 const KICK_MENU_TITLE: string = "Kick";
@@ -80,11 +68,11 @@ class PlayerListComponent extends React.Component<
                 paddingLeft: tileMargin * 2,
                 boxSizing: "border-box",
                 zIndex: 1,
-                background: TILE_COLORS.get(color),
-                border: `3px solid ${TILE_BORDER_COLORS.get(color)}`,
+                background: "#272727",
+                border: "3px solid #252525",
                 borderRadius: "5px",
                 color: TILE_FONT_COLORS.get(color),
-                lineHeight: `${tileHeight}px`,
+                lineHeight: `${tileHeight * 0.8}px`,
                 fontSize: fontSize,
                 fontWeight:
                   player != null &&
@@ -156,7 +144,7 @@ class PlayerListComponent extends React.Component<
     let tileMargin = tileHeight * 0.1;
     let tileWidth: number = tileAreaWidth - tileMargin * 2;
 
-    let fontSize: number = tileHeight * 0.4;
+    let fontSize: number = tileHeight * 0.5;
 
     let areTeamsPrearranged: boolean =
       playerList != null && playerList.areTeamsPrearranged;
@@ -191,7 +179,7 @@ class PlayerListComponent extends React.Component<
       rightColumnPlayers = players.slice(NUM_OF_PLAYERS / 2);
     }
 
-    let menuButtonWidth: number = tileWidth * 0.3;
+    let menuButtonWidth: number = tileWidth * 0.4;
     let menuButtonHeight: number = tileHeight * 0.7;
     let openMenuPlayer: User = null as any;
     let menuOptions: string[] = [];
@@ -253,7 +241,7 @@ class PlayerListComponent extends React.Component<
             style={{
               position: "absolute",
               left:
-                (Math.floor(openMenuIndex / (NUM_OF_PLAYERS / 2)) + 0.59) *
+                (Math.floor(openMenuIndex / (NUM_OF_PLAYERS / 2)) + 0.48) *
                 tileAreaWidth,
               top:
                 ((openMenuIndex % (NUM_OF_PLAYERS / 2)) + 0.3) * tileAreaHeight,
