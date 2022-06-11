@@ -13,6 +13,7 @@ import ChessBoard from "../components/chess_board";
 import { Authentication } from "../database/authentication";
 import { BaseBot } from "../bots/base_bot";
 import GameEndScreen from "../components/game_end_screen";
+import ScoreBoard from "../components/scoreboard";
 
 interface GamePageProps {}
 
@@ -77,7 +78,6 @@ class GamePage extends React.Component<any, any> {
           <GraveYard
             width={500}
             height={800}
-            backgroundColor="#454545"
             tileColor="#808080"
             povColor={PieceColor.white}
             clientFlowEngine={Authentication.clientFlowEngine}
@@ -91,52 +91,20 @@ class GamePage extends React.Component<any, any> {
         <GameStartScreen clientFlowEngine={Authentication.clientFlowEngine} />
         {/* game end screen */}
         <GameEndScreen clientFlowEngine={Authentication.clientFlowEngine} />
-        {/*temp*/}
-        <button
-          className="small-button"
+        {/* scoreboard */}
+        <div
           style={{
             position: "absolute",
-            left: 100,
-            top: 500,
-            width: 200,
-            height: 100,
-          }}
-          onClick={() => {
-            Authentication.serverFlowEngine.endGame(PieceColor.white);
+            left: "5%",
+            top: "15%",
           }}
         >
-          White Win
-        </button>
-        <button
-          className="small-button"
-          style={{
-            position: "absolute",
-            left: 100,
-            top: 650,
-            width: 200,
-            height: 100,
-          }}
-          onClick={() => {
-            Authentication.serverFlowEngine.endGame(PieceColor.black);
-          }}
-        >
-          Black Win
-        </button>
-        <button
-          className="small-button"
-          style={{
-            position: "absolute",
-            left: 100,
-            top: 800,
-            width: 200,
-            height: 100,
-          }}
-          onClick={() => {
-            Authentication.serverFlowEngine.startGame();
-          }}
-        >
-          Restart
-        </button>
+          <ScoreBoard
+            width={350}
+            height={220}
+            clientFlowEngine={Authentication.clientFlowEngine}
+          />
+        </div>
       </div>
     );
   }

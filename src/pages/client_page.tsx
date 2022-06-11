@@ -30,7 +30,7 @@ class ClientPage
   implements ClientFlowEngineObserver
 {
   state = {
-    lobbyState: LobbyState.open,
+    lobbyState: LobbyState.running,
   };
 
   componentDidMount() {

@@ -40,7 +40,6 @@ interface GraveYardItem {
 interface GraveYardProps {
   width: number;
   height: number;
-  backgroundColor: string;
   tileColor: string;
   povColor: PieceColor;
   clientFlowEngine: ClientFlowEngine;
@@ -292,11 +291,10 @@ class GraveYard
     ).slice(2 * ROW_SIZE, 3 * ROW_SIZE);
     return (
       <div
+        className="highlighted-area"
         style={{
           width: this.props.width,
           height: this.props.height,
-          backgroundColor: this.props.backgroundColor,
-          borderRadius: 20,
         }}
       >
         <ul className="no-bullets">
