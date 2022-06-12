@@ -1,3 +1,5 @@
+import Peer from "peerjs";
+
 import {
   NUM_OF_PLAYERS,
   Move,
@@ -14,7 +16,7 @@ import {
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
 } from "../game_flow_util/communication";
-import Peer from "peerjs";
+
 
 export enum ServerNotificationType {
   playerConnected,
@@ -84,6 +86,7 @@ export class GameServer {
 
   disconnectFromUser(userIndex: number) {
     this.clients[userIndex].close();
+    // this.serverPeers[userIndex].disconnect();
   }
 
   destroyConenctions(): void {

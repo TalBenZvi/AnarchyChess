@@ -68,7 +68,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
       ).length;
       let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
         let user: User = {
-          id: (i + 1).toString(),
+          id: `${i}_${new Date().getTime()}`,
           username: `bot_${i + 1}`,
         };
         if (i < NUM_OF_RANDOM_BOTS) {

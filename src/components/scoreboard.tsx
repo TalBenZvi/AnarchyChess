@@ -33,13 +33,11 @@ class ScoreBoard
   implements ClientFlowEngineObserver
 {
   state = {
-    whiteTeamScore: 1,
+    whiteTeamScore: 0,
     blackTeamScore: 0,
   };
-  private _isMounted: boolean = false;
 
   componentDidMount() {
-    this._isMounted = true;
     let clientFlowEngine: ClientFlowEngine = this.props.clientFlowEngine;
     if (clientFlowEngine != null) {
       clientFlowEngine.addObserver(this);
@@ -55,7 +53,12 @@ class ScoreBoard
 
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
     switch (eventType) {
-      case ClientEventType.roleAssigned: {
+      case ClientEventType.gameEnded: {
+        if (info.get(ClientEventInfo.winningColor) === PieceColor.white) {
+          this.setState({ whiteTeamScore: this.state.whiteTeamScore + 1 });
+        } else {
+          this.setState({ blackTeamScore: this.state.blackTeamScore + 1 });
+        }
         break;
       }
     }

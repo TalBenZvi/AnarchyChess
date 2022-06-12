@@ -88,20 +88,23 @@ export class ServerFlowEngine implements ServerObserver {
     this.sendPlayerListUpdates();
   }
 
+  private resetGameplayElements(): void {
+    for (let respawnTimeout of this.respawnTimeouts) {
+      clearTimeout(respawnTimeout);
+    }
+    this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
+    this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
+    this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
+    this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
+  }
+
   startGame(): void {
     if (
       this.gameStatus === GameStatus.waitingForPlayers ||
       this.gameStatus === GameStatus.betweenRounds
     ) {
       this.gameStatus = GameStatus.running;
-      //temp
-      for (let respawnTimeout of this.respawnTimeouts) {
-        clearTimeout(respawnTimeout);
-      }
-      this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
-      this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
-      this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
-      this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
+      this.resetGameplayElements();
       this.position.setToStartingPosition();
       this.roleAssignemnts = this.playerList.generateRoleAssignments();
       let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
@@ -114,20 +117,30 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
-  endGame(winningColor: PieceColor) {
+  endGame(winningColor: PieceColor): void {
     if (this.gameStatus === GameStatus.running) {
       this.gameStatus = GameStatus.betweenRounds;
-      for (let respawnTimeout of this.respawnTimeouts) {
-        clearTimeout(respawnTimeout);
-      }
-      this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
-      this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
-      this.isAlive = [...Array(NUM_OF_PLAYERS)].fill(true);
-      this.respawnTimeouts = [...Array(NUM_OF_PLAYERS)].fill(null);
+      this.resetGameplayElements();
       this.gameServer.endGame(winningColor);
       setTimeout(() => {
         this.startGame();
       }, GAME_INTERVAL * 1000);
+    }
+  }
+
+  returnToLobby(): void {
+    if (
+      this.gameStatus === GameStatus.running ||
+      this.gameStatus === GameStatus.betweenRounds
+    ) {
+      this.gameStatus = GameStatus.waitingForPlayers;
+      this.position = new Position();
+      this.resetGameplayElements();
+      this.gameServer.broadcastEvent({
+        index: null as any,
+        type: EventType.returnToLobby,
+        info: new Map<EventInfo, string>(),
+      });
     }
   }
 
@@ -289,8 +302,10 @@ export class ServerFlowEngine implements ServerObserver {
   }
 
   private handleConnection(userIndex: number, user: User) {
-    this.playerList.setPlayer(userIndex, user);
-    this.sendPlayerListUpdates();
+    if (this.gameStatus === GameStatus.waitingForPlayers) {
+      this.playerList.setPlayer(userIndex, user);
+      this.sendPlayerListUpdates();
+    }
   }
 
   private handleDisconnection(userIndex: number) {

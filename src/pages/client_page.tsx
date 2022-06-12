@@ -73,6 +73,10 @@ class ClientPage
         this.setState({ lobbyState: LobbyState.running });
         break;
       }
+      case ClientEventType.returnToLobby: {
+        this.setState({ lobbyState: LobbyState.open });
+        break;
+      }
     }
   }
 
@@ -116,6 +120,11 @@ class ClientPage
             case LobbyState.running: {
               return (
                 <GamePage
+                  lobby={
+                    Authentication.clientFlowEngine == null
+                      ? (null as any)
+                      : Authentication.clientFlowEngine.currentLobby
+                  }
                   isHost={isHost}
                   playerList={playerList}
                   clientFlowEngine={Authentication.clientFlowEngine}

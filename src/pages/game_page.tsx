@@ -14,8 +14,12 @@ import GameEndScreen from "../components/game_end_screen";
 import ScoreBoard from "../components/scoreboard";
 import PlayerListComponent from "../components/player_list_component";
 import { PlayerList } from "../game_flow_util/player_list";
+import { Lobby } from "../database/database_util";
+
+import exitIcon from "../assets/page_design/exit_icon.png";
 
 interface GamePageProps {
+  lobby: Lobby;
   isHost: boolean;
   playerList: PlayerList;
   clientFlowEngine: ClientFlowEngine;
@@ -50,16 +54,25 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
   };
 
   render() {
-    let { playerList, isHost, clientFlowEngine, serverFlowEngine } = this.props;
+    let { lobby, playerList, isHost, clientFlowEngine, serverFlowEngine } =
+      this.props;
     let { windowWidth, windowHeight } = this.state;
+
     let margin = 50;
+
     let boardSize: number = windowHeight * 0.85;
+
     let graveyardWidth: number = (windowWidth - boardSize) / 2 - 2 * margin;
     let graveyardHeight = boardSize * 0.985;
+
     let scoreBoardWidth: number = graveyardWidth;
     let scoreBoardHeight: number = 220;
+
     let playerListWidth: number = graveyardWidth;
     let playerListHeight: number = boardSize - scoreBoardHeight - margin;
+
+    let exitButtonSize: number = 50;
+
     return (
       /* background */
       <div className="background">
@@ -112,20 +125,24 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
         {/* game end screen */}
         <GameEndScreen clientFlowEngine={clientFlowEngine} />
         {/* scoreboard */}
-        <div
-          style={{
-            position: "absolute",
-            left: (windowWidth - boardSize) / 4,
-            top: "10%",
-            transform: "translate(-50%, 0%)",
-          }}
-        >
-          <ScoreBoard
-            width={scoreBoardWidth}
-            height={scoreBoardHeight}
-            clientFlowEngine={clientFlowEngine}
-          />
-        </div>
+        {(lobby != null && lobby.areTeamsPrearranged) || true ? (
+          <div
+            style={{
+              position: "absolute",
+              left: graveyardWidth + margin,
+              top: "10%",
+              transform: "translate(-100%, 0%)",
+            }}
+          >
+            <ScoreBoard
+              width={scoreBoardWidth}
+              height={scoreBoardHeight}
+              clientFlowEngine={clientFlowEngine}
+            />
+          </div>
+        ) : (
+          <div />
+        )}
         {/* player list */}
         <div
           style={{
@@ -142,10 +159,42 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
               clientFlowEngine == null ? (null as any) : clientFlowEngine.user
             }
             playerList={playerList}
-            isHost={isHost}
-            serverFlowEngine={serverFlowEngine}
+            isHost={false}
+            serverFlowEngine={null as any}
           />
         </div>
+        {/* exit button */}
+        {isHost || true ? (
+          <button
+            className="app-button"
+            style={{
+              position: "absolute",
+              left: margin + playerListWidth + 5,
+              bottom: margin,
+              transform: "translate(-100%, 0%)",
+              width: exitButtonSize,
+              height: exitButtonSize,
+            }}
+            onClick={() => {
+              if (serverFlowEngine != null) {
+                serverFlowEngine.returnToLobby();
+              }
+            }}
+          >
+            <img
+              src={exitIcon}
+              style={{
+                position: "fixed",
+                transform: "translate(-50%, -50%)",
+                width: exitButtonSize * 0.8,
+                height: exitButtonSize * 0.8,
+                filter: "contrast(0.5) brightness(3)",
+              }}
+            />
+          </button>
+        ) : (
+          <div />
+        )}
       </div>
     );
   }

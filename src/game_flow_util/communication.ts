@@ -2,7 +2,7 @@ export const PEERJS_SERVER_IP: string = "127.0.0.1";
 export const PEERJS_SERVER_PORT: number = 3030;
 
 export interface Event {
-  index: number
+  index: number;
   type: EventType;
   info: Map<EventInfo, string>;
 }
@@ -11,6 +11,7 @@ export enum EventType {
   playerListUpdate,
   gameStarted,
   gameEnded,
+  returnToLobby,
   move,
   respawn,
 }
@@ -80,7 +81,7 @@ export function replacer(key: any, value: any) {
       dataType: "Map",
       value: Array.from(value.entries()),
     };
-  /*
+    /*
   } else if (value instanceof Piece) {
     return `{${colorToString.get(value.color)} ${typeToString.get(value.type)}}`;
     */

@@ -88,8 +88,9 @@ export class PlayerList {
       let userIndex: number = this.indexOf(player);
       if (
         userIndex !== -1 &&
-        this.getUsersByAssignedColor(this.players[userIndex].assignedColor)
-          .length <
+        this.getUsersByAssignedColor(
+          reverseColor(this.players[userIndex].assignedColor)
+        ).length <
           NUM_OF_PLAYERS / 2
       ) {
         this.players[userIndex].assignedColor = reverseColor(

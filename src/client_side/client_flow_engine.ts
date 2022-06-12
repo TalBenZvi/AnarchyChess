@@ -33,6 +33,7 @@ export enum ClientEventType {
   roleAssigned,
   gameStarted,
   gameEnded,
+  returnToLobby,
   move,
   promotion,
   death,
@@ -218,12 +219,23 @@ export class ClientFlowEngine implements GameClientObserver {
     }, GAME_START_DELAY * 1000);
   }
 
-  private endGame(winningColor: PieceColor) {
+  private endGame(winningColor: PieceColor): void {
     this.notifyObservers(
       ClientEventType.gameEnded,
       new Map<ClientEventInfo, any>([
         [ClientEventInfo.winningColor, winningColor],
       ])
+    );
+    this.isGameRunning = false;
+    this.selectedMove = null as any;
+    this._playerIndex = null as any;
+    this.gameClient.playerIndex = null as any;
+  }
+
+  private returnToLobby(): void {
+    this.notifyObservers(
+      ClientEventType.returnToLobby,
+      new Map<ClientEventInfo, any>()
     );
     this.isGameRunning = false;
     this.selectedMove = null as any;
@@ -272,6 +284,11 @@ export class ClientFlowEngine implements GameClientObserver {
         this.endGame(
           JSON.parse(event.info.get(EventInfo.winningColor) as string)
         );
+        break;
+      }
+      // return to lobby
+      case EventType.returnToLobby: {
+        this.returnToLobby();
         break;
       }
       // move
