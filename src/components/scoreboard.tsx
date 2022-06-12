@@ -72,27 +72,30 @@ class ScoreBoard
           height: height,
         }}
       >
+        {/* title */}
         <div
           className="centered-title"
           style={{
             position: "absolute",
-            fontSize: width * 0.1,
+            fontSize: height * 0.2,
             fontWeight: "bold",
           }}
         >
           Scoreboard
         </div>
+        {/* score */}
         <div
           className="row"
           style={{
             position: "absolute",
             left: "50%",
-            bottom: 30,
-            transform: "translate(-50%, 0%)",
-            fontSize: width * 0.27,
+            bottom: "40%",
+            transform: "translate(-50%, 50%)",
+            fontSize: height * 0.5,
             fontWeight: "bold",
           }}
         >
+          {/* white score */}
           <div
             style={{
               position: "relative",
@@ -103,6 +106,7 @@ class ScoreBoard
           >
             {`${whiteTeamScore}`}
           </div>
+          {/* hyphen */}
           <div
             style={{
               position: "relative",
@@ -113,6 +117,7 @@ class ScoreBoard
           >
             {" - "}
           </div>
+          {/* black score */}
           <div
             style={{
               position: "relative",

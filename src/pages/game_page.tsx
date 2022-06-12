@@ -56,6 +56,10 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
     let boardSize: number = windowHeight * 0.85;
     let graveyardWidth: number = (windowWidth - boardSize) / 2 - 2 * margin;
     let graveyardHeight = boardSize * 0.985;
+    let scoreBoardWidth: number = graveyardWidth;
+    let scoreBoardHeight: number = 220;
+    let playerListWidth: number = graveyardWidth;
+    let playerListHeight: number = boardSize - scoreBoardHeight - margin;
     return (
       /* background */
       <div className="background">
@@ -117,8 +121,8 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
           }}
         >
           <ScoreBoard
-            width={350}
-            height={220}
+            width={scoreBoardWidth}
+            height={scoreBoardHeight}
             clientFlowEngine={clientFlowEngine}
           />
         </div>
@@ -127,14 +131,16 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
           style={{
             position: "absolute",
             left: (windowWidth - boardSize) / 4,
-            top: "10%",
+            bottom: margin,
             transform: "translate(-50%, 0%)",
           }}
         >
           <PlayerListComponent
-            width={350}
-            height={220}
-            currentUser={clientFlowEngine.user}
+            width={playerListWidth}
+            height={playerListHeight}
+            currentUser={
+              clientFlowEngine == null ? (null as any) : clientFlowEngine.user
+            }
             playerList={playerList}
             isHost={isHost}
             serverFlowEngine={serverFlowEngine}
