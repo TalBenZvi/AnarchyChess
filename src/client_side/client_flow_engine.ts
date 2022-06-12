@@ -85,8 +85,8 @@ export class ClientFlowEngine implements GameClientObserver {
   public shouldStopSimulation: boolean = false;
   private receivedEventIndices: number[] = [];
 
-  constructor(private user: User) {
-    this.gameClient = new GameClient(this, user);
+  constructor(private _user: User) {
+    this.gameClient = new GameClient(this, _user);
   }
 
   get playerIndex(): number {
@@ -94,7 +94,11 @@ export class ClientFlowEngine implements GameClientObserver {
   }
 
   get currentLobby(): Lobby {
-    return {...this._currentLobby};
+    return { ...this._currentLobby };
+  }
+
+  get user(): User {
+    return this._user;
   }
 
   addObserver(observer: ClientFlowEngineObserver) {

@@ -76,7 +76,7 @@ class ScoreBoard
           className="centered-title"
           style={{
             position: "absolute",
-            fontSize: width * 0.13,
+            fontSize: width * 0.1,
             fontWeight: "bold",
           }}
         >
@@ -87,9 +87,9 @@ class ScoreBoard
           style={{
             position: "absolute",
             left: "50%",
-            bottom: 0,
+            bottom: 30,
             transform: "translate(-50%, 0%)",
-            fontSize: width * 0.32,
+            fontSize: width * 0.27,
             fontWeight: "bold",
           }}
         >

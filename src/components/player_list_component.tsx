@@ -1,11 +1,11 @@
 import * as React from "react";
 
-import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
 import { NUM_OF_PLAYERS, PieceColor } from "../game_flow_util/game_elements";
 import { PlayerList } from "../game_flow_util/player_list";
 
 import menuIcon from "../assets/page_design/menu_icon.png";
+import { ServerFlowEngine } from "../server_side/server_flow_engine";
 
 const TILE_FONT_COLORS: Map<PieceColor, string> = new Map([
   [null as any, "#ccc"],
@@ -19,8 +19,10 @@ const CHANGE_TEAM_MENU_TITLE: string = "Change Team";
 interface PlayerListProps {
   width: number;
   height: number;
-  playerList: PlayerList;
+  currentUser: User;
   isHost: boolean;
+  playerList: PlayerList;
+  serverFlowEngine: ServerFlowEngine;
 }
 
 interface PlayerListState {
@@ -45,6 +47,7 @@ class PlayerListComponent extends React.Component<
     color: PieceColor
   ) {
     let { openMenuIndex } = this.state;
+    let { isHost, currentUser } = this.props;
     let openMenuButtonSize = tileHeight * 0.6;
     return (
       <ul
@@ -75,15 +78,14 @@ class PlayerListComponent extends React.Component<
                 lineHeight: `${tileHeight * 0.8}px`,
                 fontSize: fontSize,
                 fontWeight:
-                  player != null &&
-                  player.username === Authentication.currentUser.username
+                  player != null && player.username === currentUser.username
                     ? "bold"
                     : "normal",
               }}
             >
               {player == null ? "" : player.username}
               {/* open menu button */}
-              {this.props.isHost && player != null ? (
+              {isHost && player != null ? (
                 <div>
                   <button
                     className="small-button"
@@ -135,7 +137,8 @@ class PlayerListComponent extends React.Component<
   }
 
   render() {
-    let { width, height, playerList } = this.props;
+    let { width, height, currentUser, playerList, serverFlowEngine } =
+      this.props;
     let { openMenuIndex } = this.state;
 
     let tileAreaHeight: number = height / (NUM_OF_PLAYERS / 2);
@@ -190,7 +193,7 @@ class PlayerListComponent extends React.Component<
         openMenuPlayer = rightColumnPlayers[openMenuIndex - NUM_OF_PLAYERS / 2];
       }
       if (openMenuPlayer != null) {
-        if (openMenuPlayer.id != Authentication.currentUser.id) {
+        if (openMenuPlayer.id != currentUser.id) {
           menuOptions.push(KICK_MENU_TITLE);
         }
         if (areTeamsPrearranged) {
@@ -266,18 +269,14 @@ class PlayerListComponent extends React.Component<
                     onClick={() => {
                       switch (option) {
                         case KICK_MENU_TITLE: {
-                          if (Authentication.serverFlowEngine != null) {
-                            Authentication.serverFlowEngine.kickPlayer(
-                              openMenuPlayer
-                            );
+                          if (serverFlowEngine != null) {
+                            serverFlowEngine.kickPlayer(openMenuPlayer);
                           }
                           break;
                         }
                         case CHANGE_TEAM_MENU_TITLE: {
-                          if (Authentication.serverFlowEngine != null) {
-                            Authentication.serverFlowEngine.changePlayerTeam(
-                              openMenuPlayer
-                            );
+                          if (serverFlowEngine != null) {
+                            serverFlowEngine.changePlayerTeam(openMenuPlayer);
                           }
                           break;
                         }

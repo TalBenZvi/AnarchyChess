@@ -1,5 +1,4 @@
 import * as React from "react";
-import { withRouter } from "react-router";
 import { Redirect } from "react-router";
 
 import NavBar from "../components/navbar";
@@ -8,34 +7,37 @@ import {
   ClientFlowEngineObserver,
   ClientEventType,
   ClientEventInfo,
+  ClientFlowEngine,
 } from "../client_side/client_flow_engine";
 import { Lobby, User } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { BaseBot } from "../bots/base_bot";
 import { RandomBot } from "../bots/random_bot";
-import { Authentication } from "../database/authentication";
 import { PlayerList } from "../game_flow_util/player_list";
 import { TestBot } from "../bots/test_bot";
 import LobbyCard from "../components/lobby_card";
 
 import appIcon from "../assets/page_design/clean_app_icon.png";
+import { ServerFlowEngine } from "../server_side/server_flow_engine";
 
 const NUM_OF_RANDOM_BOTS: number = 3;
 
-interface LobbyPageProps {}
+interface LobbyPageProps {
+  lobby: Lobby;
+  isHost: boolean;
+  playerList: PlayerList;
+  clientFlowEngine: ClientFlowEngine;
+  serverFlowEngine: ServerFlowEngine;
+  onClose: () => void;
+}
 
 interface LobbyPageState {
-  playerList: PlayerList;
   isBotDialogOpen: boolean;
   shouldRedirectToHome: boolean;
 }
 
-class LobbyPage
-  extends React.Component<any, any>
-  implements ClientFlowEngineObserver
-{
+class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
   state: LobbyPageState = {
-    playerList: null as any,
     isBotDialogOpen: false,
     shouldRedirectToHome: false,
   };
@@ -50,83 +52,68 @@ class LobbyPage
     this._isMounted = false;
   }
 
-  constructor(props: any) {
-    super(props);
-    if (Authentication.clientFlowEngine != null) {
-      Authentication.clientFlowEngine.addObserver(this);
+  private async startGame() {
+    if (this.props.serverFlowEngine != null) {
+      this.props.serverFlowEngine.startGame();
     }
   }
 
-  notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {
-    if (eventType === ClientEventType.playerListUpdate && this._isMounted) {
-      let playerList: PlayerList = info.get(ClientEventInfo.playerList);
-      let numOfConnectedPlayers: number =
-        playerList == null ? 0 : playerList.getConnectedUsers().length;
-      if (numOfConnectedPlayers == NUM_OF_PLAYERS && this.isGameStarting) {
-        this.startGame();
-      }
-      this.setState({ playerList: playerList });
-    }
-  }
-
-  private startGame(): void {
-    Authentication.serverFlowEngine.startGame();
-  }
-
-  private fillwithBots = async () => {
-    this.setState({ isBotDialogOpen: false });
-    this.isGameStarting = true;
-    let playerList = Authentication.serverFlowEngine.players;
-    let numOfRequiredBots = playerList.filter(
-      (player: User) => player == null
-    ).length;
-    let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
-      let user: User = {
-        id: (i + 1).toString(),
-        username: `bot_${i + 1}`,
-      };
-      if (i < NUM_OF_RANDOM_BOTS) {
-        return new RandomBot(user);
-      } else {
-        return new BaseBot(user);
-      }
-    });
-    let nextAvailableBotIndex: number = 0;
-    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-      if (playerList[i] == null) {
-        bots[nextAvailableBotIndex].attemptToConnect(
-          Authentication.serverFlowEngine.lobby,
-          i,
-          {
+  private fillwithBots = () => {
+    if (this.props.serverFlowEngine != null) {
+      this.setState({ isBotDialogOpen: false });
+      this.isGameStarting = true;
+      let playerList = this.props.serverFlowEngine.players;
+      let numOfRequiredBots = playerList.filter(
+        (player: User) => player == null
+      ).length;
+      let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
+        let user: User = {
+          id: (i + 1).toString(),
+          username: `bot_${i + 1}`,
+        };
+        if (i < NUM_OF_RANDOM_BOTS) {
+          return new RandomBot(user);
+        } else {
+          return new BaseBot(user);
+        }
+      });
+      let nextAvailableBotIndex: number = 0;
+      for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+        if (playerList[i] == null) {
+          bots[nextAvailableBotIndex].attemptToConnect(this.props.lobby, i, {
             onFailure: () => {
               for (let bot of bots) {
                 bot.disconnect();
               }
             },
-          }
-        );
-        nextAvailableBotIndex++;
+          });
+          nextAvailableBotIndex++;
+        }
       }
     }
   };
 
   render() {
-    let { playerList, isBotDialogOpen, shouldRedirectToHome } = this.state;
+    let {
+      isHost,
+      lobby,
+      playerList,
+      onClose,
+      clientFlowEngine,
+      serverFlowEngine,
+    } = this.props;
+    let { isBotDialogOpen, shouldRedirectToHome } = this.state;
     if (shouldRedirectToHome) {
       return <Redirect push to="/" />;
     }
     let numOfConnectedPlayers: number =
       playerList == null ? 0 : playerList.getConnectedUsers().length;
-    let lobby: Lobby =
-      Authentication.clientFlowEngine == null
-        ? (null as any)
-        : Authentication.clientFlowEngine.currentLobby;
-    let isHost: boolean =
-      Authentication.serverFlowEngine != null &&
-      this.props.match.params.id === Authentication.serverFlowEngine.lobby.id;
+    if (numOfConnectedPlayers == NUM_OF_PLAYERS && this.isGameStarting) {
+      this.startGame();
+    }
     return (
       <div className="background">
-        <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
+        <NavBar currentRoute={`/lobby/${lobby == null ? "" : lobby.id}`} />
         <div className="centered">
           <img
             src={appIcon}
@@ -149,8 +136,12 @@ class LobbyPage
           <PlayerListComponent
             width={600}
             height={700}
-            playerList={playerList}
+            currentUser={
+              clientFlowEngine == null ? (null as any) : clientFlowEngine.user
+            }
             isHost={isHost}
+            playerList={playerList}
+            serverFlowEngine={serverFlowEngine}
           />
         </div>
         {/* lobby card */}
@@ -168,10 +159,7 @@ class LobbyPage
             lobby={lobby}
             isHost={isHost}
             onClose={() => {
-              Authentication.leaveLobby();
-              if (isHost) {
-                Authentication.closeLobby();
-              }
+              onClose();
               this.setState({ shouldRedirectToHome: true });
             }}
           />
@@ -268,4 +256,4 @@ class LobbyPage
   }
 }
 
-export default withRouter(LobbyPage);
+export default LobbyPage;

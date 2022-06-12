@@ -20,9 +20,6 @@ function App() {
         <Route path="/lobby/:id" exact>
           <ClientPage />
         </Route>
-        <Route path="/game" exact>
-          <GamePage />
-        </Route>
         <Route path="/test" exact>
           <TestPage />
         </Route>

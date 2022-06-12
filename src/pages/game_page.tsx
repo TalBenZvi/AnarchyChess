@@ -1,5 +1,4 @@
 import React from "react";
-import { withRouter } from "react-router";
 
 import NavBar from "../components/navbar";
 import GraveYard from "../components/graveyard";
@@ -10,27 +9,29 @@ import { PieceColor, NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import ChessBoard from "../components/chess_board";
-import { Authentication } from "../database/authentication";
 import { BaseBot } from "../bots/base_bot";
 import GameEndScreen from "../components/game_end_screen";
 import ScoreBoard from "../components/scoreboard";
+import PlayerListComponent from "../components/player_list_component";
+import { PlayerList } from "../game_flow_util/player_list";
 
-interface GamePageProps {}
+interface GamePageProps {
+  isHost: boolean;
+  playerList: PlayerList;
+  clientFlowEngine: ClientFlowEngine;
+  serverFlowEngine: ServerFlowEngine;
+}
 
 interface GamePageState {
   windowWidth: number;
   windowHeight: number;
 }
 
-class GamePage extends React.Component<any, any> {
+class GamePage extends React.Component<GamePageProps, GamePageState> {
   state = {
     windowWidth: window.innerWidth,
     windowHeight: window.innerHeight,
   };
-
-  constructor(props: any) {
-    super(props);
-  }
 
   componentDidMount() {
     this.updateWindowDimensions();
@@ -49,6 +50,7 @@ class GamePage extends React.Component<any, any> {
   };
 
   render() {
+    let { playerList, isHost, clientFlowEngine, serverFlowEngine } = this.props;
     let { windowWidth, windowHeight } = this.state;
     let margin = 50;
     let boardSize: number = windowHeight * 0.85;
@@ -57,7 +59,13 @@ class GamePage extends React.Component<any, any> {
     return (
       /* background */
       <div className="background">
-        <NavBar currentRoute={`/lobby/${this.props.match.params.id}`} />
+        <NavBar
+          currentRoute={`/lobby/${
+            clientFlowEngine == null || clientFlowEngine.currentLobby == null
+              ? ""
+              : clientFlowEngine.currentLobby.id
+          }`}
+        />
         {/* board */}
         <div
           style={{
@@ -72,7 +80,7 @@ class GamePage extends React.Component<any, any> {
             lightColor="#ff6666"
             darkColor="#353535"
             povColor={PieceColor.white}
-            clientFlowEngine={Authentication.clientFlowEngine}
+            clientFlowEngine={clientFlowEngine}
           />
         </div>
         {/* graveyard */}
@@ -88,29 +96,48 @@ class GamePage extends React.Component<any, any> {
             height={graveyardHeight}
             tileColor="#808080"
             povColor={PieceColor.white}
-            clientFlowEngine={Authentication.clientFlowEngine}
+            clientFlowEngine={clientFlowEngine}
           />
         </div>
         {/* death screen */}
-        <DeathScreen clientFlowEngine={Authentication.clientFlowEngine} />
+        <DeathScreen clientFlowEngine={clientFlowEngine} />
         {/* promotion screen */}
-        <PromotionScreen clientFlowEngine={Authentication.clientFlowEngine} />
+        <PromotionScreen clientFlowEngine={clientFlowEngine} />
         {/* game start screen */}
-        <GameStartScreen clientFlowEngine={Authentication.clientFlowEngine} />
+        <GameStartScreen clientFlowEngine={clientFlowEngine} />
         {/* game end screen */}
-        <GameEndScreen clientFlowEngine={Authentication.clientFlowEngine} />
+        <GameEndScreen clientFlowEngine={clientFlowEngine} />
         {/* scoreboard */}
         <div
           style={{
             position: "absolute",
-            left: "5%",
-            top: "15%",
+            left: (windowWidth - boardSize) / 4,
+            top: "10%",
+            transform: "translate(-50%, 0%)",
           }}
         >
           <ScoreBoard
             width={350}
             height={220}
-            clientFlowEngine={Authentication.clientFlowEngine}
+            clientFlowEngine={clientFlowEngine}
+          />
+        </div>
+        {/* player list */}
+        <div
+          style={{
+            position: "absolute",
+            left: (windowWidth - boardSize) / 4,
+            top: "10%",
+            transform: "translate(-50%, 0%)",
+          }}
+        >
+          <PlayerListComponent
+            width={350}
+            height={220}
+            currentUser={clientFlowEngine.user}
+            playerList={playerList}
+            isHost={isHost}
+            serverFlowEngine={serverFlowEngine}
           />
         </div>
       </div>
@@ -118,4 +145,4 @@ class GamePage extends React.Component<any, any> {
   }
 }
 
-export default withRouter(GamePage);
+export default GamePage;
