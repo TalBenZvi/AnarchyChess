@@ -48,13 +48,6 @@ class ClientPage
     }
   }
 
-  disconnect(): void {
-    setTimeout(() => {
-      this.setState({ lobbyState: LobbyState.closed });
-    }, 4000);
-    this.setState({ lobbyState: LobbyState.closing });
-  }
-
   startGame(): void {
     this.setState({ lobbyState: LobbyState.running });
   }
@@ -66,7 +59,7 @@ class ClientPage
         break;
       }
       case ClientEventType.disconnection: {
-        this.disconnect();
+        this.setState({ lobbyState: LobbyState.closing });
         break;
       }
       case ClientEventType.roleAssigned: {
@@ -92,7 +85,7 @@ class ClientPage
       <div className="background">
         {(() => {
           switch (lobbyState) {
-            /* open for players */
+            // open for players
             case LobbyState.open: {
               return (
                 <LobbyPage
@@ -116,7 +109,7 @@ class ClientPage
                 />
               );
             }
-            /* game running */
+            // game running
             case LobbyState.running: {
               return (
                 <GamePage
@@ -134,7 +127,7 @@ class ClientPage
                 />
               );
             }
-            /* lobby closing */
+            // lobby closing
             case LobbyState.closing: {
               return (
                 <div
@@ -146,13 +139,31 @@ class ClientPage
                   <div
                     className="centered-title"
                     style={{
-                      top: "45%",
+                      top: "30%",
                       zIndex: 2,
                       fontSize: 50,
                     }}
                   >
-                    Disconnected from host, returning to home...
+                    Disconnected From Host
                   </div>
+                  <button
+                    className="app-button"
+                    style={{
+                      position: "absolute",
+                      top: "60%",
+                      transform: "translate(-50%, -50%)",
+                      left: "50%",
+                      zIndex: 2,
+                      width: 250,
+                      height: 70,
+                      fontSize: 25,
+                    }}
+                    onClick = {() => {
+                      this.setState({ lobbyState: LobbyState.closed });
+                    }}
+                  >
+                    Return to Home
+                  </button>
                 </div>
               );
             }

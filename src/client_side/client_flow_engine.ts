@@ -409,6 +409,7 @@ export class ClientFlowEngine implements GameClientObserver {
   ): void {
     switch (notification) {
       case ClientNotificationType.disconnectedFromServer: {
+        this.gameClient.destroyConenction();
         this.notifyObservers(
           ClientEventType.disconnection,
           new Map<ClientEventInfo, any>()
