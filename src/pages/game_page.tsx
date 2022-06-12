@@ -125,7 +125,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
         {/* game end screen */}
         <GameEndScreen clientFlowEngine={clientFlowEngine} />
         {/* scoreboard */}
-        {(lobby != null && lobby.areTeamsPrearranged) || true ? (
+        {lobby != null && lobby.areTeamsPrearranged ? (
           <div
             style={{
               position: "absolute",
@@ -164,7 +164,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
           />
         </div>
         {/* exit button */}
-        {isHost || true ? (
+        {isHost ? (
           <button
             className="app-button"
             style={{
