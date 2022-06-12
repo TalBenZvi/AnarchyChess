@@ -17,35 +17,43 @@ import ScoreBoard from "../components/scoreboard";
 
 interface GamePageProps {}
 
-interface GamePageState {}
+interface GamePageState {
+  windowWidth: number;
+  windowHeight: number;
+}
 
 class GamePage extends React.Component<any, any> {
-  state = {};
+  state = {
+    windowWidth: window.innerWidth,
+    windowHeight: window.innerHeight,
+  };
 
-  /*
-  constructor(gamePageProps: any) {
-    super(gamePageProps);
-    
-    Authentication.serverFlowEngine = new ServerFlowEngine();
-    Authentication.serverFlowEngine.acceptConnections("testGameID");
-    Authentication.clientFlowEngine = new ClientFlowEngine(
-      Authentication.currentUser
-    );
-    Authentication.clientFlowEngine.attemptToConnect("testGameID", 0, {});
-
-    for (let i = 1; i < 20; i++) {
-      let bot = new BaseBot({
-        id: i.toString(),
-        username: `bot_${i}`,
-      });
-      bot.attemptToConnect(Authentication.serverFlowEngine.gameID, i, {});
-    }
-    console.log("here1");
-    setTimeout(() => console.log("here2"), 10000);
+  constructor(props: any) {
+    super(props);
   }
-  */
+
+  componentDidMount() {
+    this.updateWindowDimensions();
+    window.addEventListener("resize", this.updateWindowDimensions);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.updateWindowDimensions);
+  }
+
+  updateWindowDimensions = () => {
+    this.setState({
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+    });
+  };
 
   render() {
+    let { windowWidth, windowHeight } = this.state;
+    let margin = 50;
+    let boardSize: number = windowHeight * 0.85;
+    let graveyardWidth: number = (windowWidth - boardSize) / 2 - 2 * margin;
+    let graveyardHeight = boardSize * 0.985;
     return (
       /* background */
       <div className="background">
@@ -60,7 +68,7 @@ class GamePage extends React.Component<any, any> {
           }}
         >
           <ChessBoard
-            size={800}
+            size={boardSize}
             lightColor="#ff6666"
             darkColor="#353535"
             povColor={PieceColor.white}
@@ -72,12 +80,12 @@ class GamePage extends React.Component<any, any> {
           style={{
             position: "absolute",
             top: "10%",
-            left: "80%",
+            right: 50,
           }}
         >
           <GraveYard
-            width={500}
-            height={800}
+            width={graveyardWidth}
+            height={graveyardHeight}
             tileColor="#808080"
             povColor={PieceColor.white}
             clientFlowEngine={Authentication.clientFlowEngine}
