@@ -1,46 +1,21 @@
-# Getting Started with Create React App
+# Anarchy Chess
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## A Real-time, Team Based Chess Game
 
-## Available Scripts
+Anarchy Chess is a game that brings the classical game of chess into the MOBA genre (Multiplayer Online Battle Arena).
+The game is played in teams of 16 vs 16 players as each player only controls one piece.
+Focus on playing your assigned role and cooperate with your allies in order to take down the enemy king while defending your own.
 
-In the project directory, you can run:
+- No turns, instead each player has their own cooldown for playing moves. Move your piece according to your turn timer while every other piece moves according to its own, _simultaneously_
 
-### `npm start`
+- A piece that died (was captured) will respawn on its original square after a death timer. The graveyard will display the remaining timers for all dead pieces
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- A piece's turn cooldown and respawn timer are longer the stronger the piece is (a pawn is faster than a queen) so no piece should feel stronger than another
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- Play with all the existing mechanics including castling, promotion and en-passant and experience their special properties in the real-time environment
 
-### `npm test`
+- No checks, mates or stalemates. In order to win just capture the enemy king (it's already difficult enough since this is the fastest piece)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- After a round ends a new one will begin shortly where you'll be randomly assigned a different piece. Compete to see which team can score the most points or just play for fun
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- A lobby is meant for 32 player overall but if you're struggling to find traction you can fill the rest of the spots with bots
