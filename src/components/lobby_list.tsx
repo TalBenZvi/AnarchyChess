@@ -50,7 +50,11 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     Authentication.getLobbies((lobbies: Lobby[]) => {
       this.setState({ isWaitingForResponse: false, lobbies: lobbies });
     });
-    this.setState({ isWaitingForResponse: true });
+    this.setState({
+      isWaitingForResponse: true,
+      selectedLobby: null as any,
+      selectedLobbyForPassword: null as any,
+    });
   };
 
   private joinLobby = (lobby: Lobby) => {
@@ -113,13 +117,15 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     if (targetLobbyID != null) {
       return <Redirect push to={`/lobby/${targetLobbyID}`} />;
     }
-    let displayedLobbies: Lobby[] = lobbies
-      .filter(
-        (lobby: Lobby) =>
-          lobby.name.includes(searchQuery) ||
-          lobby.creatorName.includes(searchQuery)
-      )
-      .slice(page * LOBBIES_IN_A_PAGE, (page + 1) * LOBBIES_IN_A_PAGE);
+    lobbies = lobbies.filter(
+      (lobby: Lobby) =>
+        lobby.name.includes(searchQuery) ||
+        lobby.creatorName.includes(searchQuery)
+    );
+    let displayedLobbies: Lobby[] = lobbies.slice(
+      page * LOBBIES_IN_A_PAGE,
+      (page + 1) * LOBBIES_IN_A_PAGE
+    );
     let tileWidth: number = width * 0.95;
     let tileHeight: number = (height / LOBBIES_IN_A_PAGE) * 0.75;
     let tileMargin: number = (height / LOBBIES_IN_A_PAGE) * 0.08;
@@ -206,29 +212,6 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             </div>
           </div>
         )}
-        {/* search input */}
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={this.setSearchQuery}
-          spellCheck={false}
-          className="clear-text"
-          style={{
-            position: "fixed",
-            left: "24%",
-            top: margin * 1.6,
-            transform: "translate(0%, -50%)",
-            width: height * 0.2,
-            height: height * 0.06,
-            paddingLeft: 5,
-            fontSize: fontSize,
-            borderRadius: 5,
-            border: "2px solid #ccc",
-            zIndex: 1,
-            background: "#222222",
-          }}
-        />
         {/* refresh button */}
         <button
           className="app-button"
@@ -307,6 +290,29 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
           </div>
         ) : (
           <div>
+            {/* search input */}
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={this.setSearchQuery}
+              spellCheck={false}
+              className="clear-text"
+              style={{
+                position: "fixed",
+                left: "24%",
+                top: margin * 1.6,
+                transform: "translate(0%, -50%)",
+                width: height * 0.2,
+                height: height * 0.06,
+                paddingLeft: 5,
+                fontSize: fontSize,
+                borderRadius: 5,
+                border: "2px solid #ccc",
+                zIndex: 1,
+                background: "#222222",
+              }}
+            />
             {/* 'no lobbies' text */}
             {lobbies.length === 0 ? (
               <div

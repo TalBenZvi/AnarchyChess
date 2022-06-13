@@ -97,7 +97,7 @@ class LobbyCreationForm extends React.Component<
     setFunction: (event: any) => void,
     top: number
   ): any {
-    let isPassword = fieldName == "Password";
+    let isPassword = fieldName === "Password";
     return (
       <label>
         {/* text input*/}
@@ -125,6 +125,20 @@ class LobbyCreationForm extends React.Component<
             width: 440,
           }}
         />
+        {/* requirement */}
+        {value === "" ? (
+          <div
+            style={{
+              position: "absolute",
+              top: top + 50,
+              fontSize: 13,
+            }}
+          >
+            * Must not be empty
+          </div>
+        ) : (
+          <div />
+        )}
         {/* reveal password icon */}
         {isPassword ? (
           <img
@@ -190,8 +204,8 @@ class LobbyCreationForm extends React.Component<
   render() {
     let {
       name,
-      password,
       isPrivate,
+      password,
       areTeamsPrearranged,
       isWaitingForResponse,
     } = this.state;
@@ -229,7 +243,11 @@ class LobbyCreationForm extends React.Component<
           <input
             type="submit"
             value="Create Lobby"
-            disabled={isWaitingForResponse}
+            disabled={
+              isWaitingForResponse ||
+              name === "" ||
+              (isPrivate && password === "")
+            }
             className="app-button"
             style={{
               position: "absolute",
@@ -257,8 +275,8 @@ class LobbyCreationForm extends React.Component<
             top: 550,
           }}
         >
-          *Teams will be decided before the game starts and won't change between
-          rounds
+          * Teams will be decided before the game starts and won't change
+          between rounds
         </div>
         {/* loading icon */}
         {isWaitingForResponse ? (
