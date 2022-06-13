@@ -21,8 +21,8 @@ interface LoginFormState {
 
 class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
   state = {
-    usernameOrEmail: "fff",
-    password: "qwerqwer",
+    usernameOrEmail: "",
+    password: "",
     isPasswordShown: false,
     isWaitingForResponse: false,
   };

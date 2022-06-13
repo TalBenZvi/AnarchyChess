@@ -22,6 +22,7 @@ interface LobbyListProps {
 
 interface LobbyListState {
   lobbies: Lobby[];
+  searchQuery: string;
   page: number;
   isWaitingForResponse: boolean;
   selectedLobby: Lobby;
@@ -32,6 +33,7 @@ interface LobbyListState {
 class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   state = {
     lobbies: [],
+    searchQuery: "",
     page: 0,
     isWaitingForResponse: true,
     selectedLobby: null as any,
@@ -89,6 +91,10 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     });
   };
 
+  private setSearchQuery = (event: any) => {
+    this.setState({ searchQuery: event.target.value });
+  };
+
   private setEnteredPassword = (event: any) => {
     this.enteredPassword = event.target.value;
   };
@@ -97,6 +103,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     let { width, height, onLobbyCreationSelection } = this.props;
     let {
       lobbies,
+      searchQuery,
       page,
       isWaitingForResponse,
       selectedLobby,
@@ -106,10 +113,13 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     if (targetLobbyID != null) {
       return <Redirect push to={`/lobby/${targetLobbyID}`} />;
     }
-    let displayedLobbies: Lobby[] = lobbies.slice(
-      page * LOBBIES_IN_A_PAGE,
-      (page + 1) * LOBBIES_IN_A_PAGE
-    );
+    let displayedLobbies: Lobby[] = lobbies
+      .filter(
+        (lobby: Lobby) =>
+          lobby.name.includes(searchQuery) ||
+          lobby.creatorName.includes(searchQuery)
+      )
+      .slice(page * LOBBIES_IN_A_PAGE, (page + 1) * LOBBIES_IN_A_PAGE);
     let tileWidth: number = width * 0.95;
     let tileHeight: number = (height / LOBBIES_IN_A_PAGE) * 0.75;
     let tileMargin: number = (height / LOBBIES_IN_A_PAGE) * 0.08;
@@ -196,6 +206,29 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             </div>
           </div>
         )}
+        {/* search input */}
+        <input
+          type="text"
+          placeholder="Search"
+          value={searchQuery}
+          onChange={this.setSearchQuery}
+          spellCheck={false}
+          className="clear-text"
+          style={{
+            position: "fixed",
+            left: "24%",
+            top: margin * 1.6,
+            transform: "translate(0%, -50%)",
+            width: height * 0.2,
+            height: height * 0.06,
+            paddingLeft: 5,
+            fontSize: fontSize,
+            borderRadius: 5,
+            border: "2px solid #ccc",
+            zIndex: 1,
+            background: "#222222",
+          }}
+        />
         {/* refresh button */}
         <button
           className="app-button"
@@ -238,6 +271,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
         >
           Create a Lobby
         </button>
+        {/* loading display */}
         {isWaitingForResponse ? (
           <div>
             {/* searching title */}
@@ -412,15 +446,15 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                       }}
                     >
                       <img
-                          src={checkmarkIcon}
-                          style={{
-                            position: "absolute",
-                            transform: "translate(-50%, -50%)",
-                            width: tileHeight * 0.5,
-                            height: tileHeight * 0.5,
-                            filter: "contrast(0.5) brightness(3)",
-                          }}
-                        />
+                        src={checkmarkIcon}
+                        style={{
+                          position: "absolute",
+                          transform: "translate(-50%, -50%)",
+                          width: tileHeight * 0.5,
+                          height: tileHeight * 0.5,
+                          filter: "contrast(0.5) brightness(3)",
+                        }}
+                      />
                     </div>
                   ) : (
                     <div />
