@@ -41,4 +41,10 @@ export class RandomBot extends BaseBot {
       clearInterval(this.moveInterval);
     }
   }
+
+  protected onReturnToLobby(): void {
+    if (this.moveInterval != null) {
+      clearInterval(this.moveInterval);
+    }
+  }
 }

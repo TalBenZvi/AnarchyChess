@@ -58,6 +58,8 @@ export class BaseBot implements ClientFlowEngineObserver {
 
   protected onGameEnd(winningColor: PieceColor): void {}
 
+  protected onReturnToLobby(): void {}
+
   protected onMoveReceived(
     movingPlayerIndex: number,
     destSquare: Square,
@@ -98,6 +100,10 @@ export class BaseBot implements ClientFlowEngineObserver {
       }
       case ClientEventType.gameEnded: {
         this.onGameEnd(info.get(ClientEventInfo.winningColor));
+        break;
+      }
+      case ClientEventType.returnToLobby: {
+        this.onReturnToLobby();
         break;
       }
       case ClientEventType.move: {
