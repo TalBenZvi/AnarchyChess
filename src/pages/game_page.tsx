@@ -17,6 +17,7 @@ import { PlayerList } from "../game_flow_util/player_list";
 import { Lobby } from "../database/database_util";
 
 import exitIcon from "../assets/page_design/exit_icon.png";
+import { SoundEffectsPlayer } from "../components/sound_effects_player";
 
 interface GamePageProps {
   lobby: Lobby;
@@ -36,10 +37,14 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
     windowWidth: window.innerWidth,
     windowHeight: window.innerHeight,
   };
+  private soundEffectsPlayer: SoundEffectsPlayer = null as any;
 
   componentDidMount() {
     this.updateWindowDimensions();
     window.addEventListener("resize", this.updateWindowDimensions);
+    this.soundEffectsPlayer = new SoundEffectsPlayer(
+      this.props.clientFlowEngine
+    );
   }
 
   componentWillUnmount() {

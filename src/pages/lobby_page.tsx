@@ -20,7 +20,7 @@ import LobbyCard from "../components/lobby_card";
 import appIcon from "../assets/page_design/clean_app_icon.png";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 
-const NUM_OF_RANDOM_BOTS: number = 3;
+const NUM_OF_RANDOM_BOTS: number = 1;
 
 interface LobbyPageProps {
   lobby: Lobby;

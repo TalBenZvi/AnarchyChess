@@ -109,7 +109,7 @@ export class BaseBot implements ClientFlowEngineObserver {
       case ClientEventType.move: {
         this.onMoveReceived(
           info.get(ClientEventInfo.movingPlayerIndex),
-          info.get(ClientEventInfo.destSquare),
+          info.get(ClientEventInfo.move),
           info.get(ClientEventInfo.cooldown)
         );
         break;

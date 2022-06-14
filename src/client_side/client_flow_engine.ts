@@ -52,7 +52,7 @@ export enum ClientEventInfo {
   winningColor,
   // move
   movingPlayerIndex,
-  destSquare,
+  move,
   cooldown,
   // promotion
   promotingPlayerIndex,
@@ -338,7 +338,7 @@ export class ClientFlowEngine implements GameClientObserver {
             ClientEventType.move,
             new Map<ClientEventInfo, any>([
               [ClientEventInfo.movingPlayerIndex, movingPlayerIndex],
-              [ClientEventInfo.destSquare, new Square(move.row, move.column)],
+              [ClientEventInfo.move, move],
               [ClientEventInfo.cooldown, cooldownTimer],
             ])
           );
@@ -383,7 +383,7 @@ export class ClientFlowEngine implements GameClientObserver {
               ClientEventType.move,
               new Map<ClientEventInfo, any>([
                 [ClientEventInfo.movingPlayerIndex, movingRookIndex],
-                [ClientEventInfo.destSquare, new Square(startRow, destColumn)],
+                [ClientEventInfo.move, new Square(startRow, destColumn)],
                 [ClientEventInfo.cooldown, 0],
               ])
             );

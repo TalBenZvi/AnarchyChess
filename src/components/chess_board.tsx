@@ -23,9 +23,6 @@ import {
   ClientEventType,
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
-import { Howl, Howler } from "howler";
-
-
 
 // load piece images
 const PIECE_IMAGES: Map<PieceColor, Map<PieceType, any>> = new Map();
@@ -59,11 +56,6 @@ const WIPEOUT_BOARD_TRAVEL_TIME = 1;
 const DEAD_PIECE_ELEVATION_FACTOR: number = 1;
 const WHITE_TIMER_COLOR: string = "#eeeeee";
 const BLACK_TIMER_COLOR: string = "#333333";
-
-
-
-
-const victoryTheme = require("../assets/gameplay_audio/victory_theme.mp3");
 
 class CanvasPiece {
   private image: any;
@@ -848,7 +840,7 @@ class ChessBoard
       case ClientEventType.move: {
         this.move(
           info.get(ClientEventInfo.movingPlayerIndex),
-          info.get(ClientEventInfo.destSquare),
+          info.get(ClientEventInfo.move),
           info.get(ClientEventInfo.cooldown)
         );
         break;
@@ -861,12 +853,6 @@ class ChessBoard
         break;
       }
       case ClientEventType.death: {
-        let sound = new Howl({
-          src: victoryTheme,
-        });
-        Howler.volume(1);
-        sound.play();
-      
         this.kill(info.get(ClientEventInfo.dyingPlayerIndex));
         break;
       }
