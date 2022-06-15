@@ -84,6 +84,14 @@ export class ServerFlowEngine implements ServerObserver {
     }
   }
 
+  kickAllBots() {
+    for (let player of this.playerList.getAllUsers()) {
+      if (player != null && player.id.includes("BOT")) {
+        this.kickPlayer(player);
+      }
+    }
+  }
+
   changePlayerTeam(player: User) {
     this.playerList.changePlayerTeam(player);
     this.sendPlayerListUpdates();

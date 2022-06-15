@@ -68,7 +68,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
       ).length;
       let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
         let user: User = {
-          id: `${i}_${new Date().getTime()}`,
+          id: `BOT_${i}_${new Date().getTime()}`,
           username: `bot_${i + 1}`,
         };
         if (i < NUM_OF_RANDOM_BOTS) {
@@ -170,7 +170,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
             className="app-button"
             style={{
               position: "absolute",
-              width: 200,
+              width: 190,
               height: 80,
               right: 50,
               bottom: 50,
@@ -185,6 +185,28 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
             }}
           >
             Start Game
+          </button>
+        ) : (
+          <div />
+        )}
+        {/* disconnect bots button */}
+        {isHost ? (
+          <button
+            className="app-button"
+            style={{
+              position: "absolute",
+              width: 190,
+              height: 80,
+              right: 455,
+              bottom: 50,
+              transform: "translate(100%, 0%)",
+              fontSize: 20,
+            }}
+            onClick={() => {
+              serverFlowEngine.kickAllBots();
+            }}
+          >
+            Disconnect All Bots
           </button>
         ) : (
           <div />
