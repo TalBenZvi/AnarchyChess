@@ -32,7 +32,7 @@ class ClientPage
   implements ClientFlowEngineObserver
 {
   state = {
-    lobbyState: LobbyState.open,
+    lobbyState: LobbyState.running,
     playerList: null as any,
   };
 

@@ -15,9 +15,11 @@ import ScoreBoard from "../components/scoreboard";
 import PlayerListComponent from "../components/player_list_component";
 import { PlayerList } from "../game_flow_util/player_list";
 import { Lobby } from "../database/database_util";
+import { SoundEffectsPlayer } from "../components/sound_effects_player";
 
 import exitIcon from "../assets/page_design/exit_icon.png";
-import { SoundEffectsPlayer } from "../components/sound_effects_player";
+import mutedIcon from "../assets/page_design/muted_icon.png";
+import unmutedIcon from "../assets/page_design/unmuted_icon.png";
 
 interface GamePageProps {
   lobby: Lobby;
@@ -76,7 +78,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
     let playerListWidth: number = graveyardWidth;
     let playerListHeight: number = boardSize - scoreBoardHeight - margin;
 
-    let exitButtonSize: number = 50;
+    let buttonSize: number = 50;
 
     return (
       /* background */
@@ -130,7 +132,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
         {/* game end screen */}
         <GameEndScreen clientFlowEngine={clientFlowEngine} />
         {/* scoreboard */}
-        {lobby != null && lobby.areTeamsPrearranged ? (
+        {(lobby != null && lobby.areTeamsPrearranged) || true ? (
           <div
             style={{
               position: "absolute",
@@ -148,6 +150,43 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
         ) : (
           <div />
         )}
+        {/* mute button */}
+        <button
+          className="app-button"
+          style={{
+            position: "absolute",
+            left: margin + scoreBoardWidth,
+            bottom: playerListHeight + 2 * margin - 10,
+            transform: "translate(-100%, 0%)",
+            width: buttonSize,
+            height: buttonSize,
+            zIndex: 2,
+          }}
+          onClick={() => {
+            if (this.soundEffectsPlayer.isMuted) {
+              this.soundEffectsPlayer.unmute();
+              this.setState({});
+            } else {
+              this.soundEffectsPlayer.mute();
+              this.setState({});
+            }
+          }}
+        >
+          <img
+            src={
+              this.soundEffectsPlayer != null && this.soundEffectsPlayer.isMuted
+                ? mutedIcon
+                : unmutedIcon
+            }
+            style={{
+              position: "fixed",
+              transform: "translate(-50%, -50%)",
+              width: buttonSize * 0.6,
+              height: buttonSize * 0.6,
+              filter: "contrast(0.5) brightness(3)",
+            }}
+          />
+        </button>
         {/* player list */}
         <div
           style={{
@@ -177,8 +216,8 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
               left: margin + playerListWidth + 5,
               bottom: margin,
               transform: "translate(-100%, 0%)",
-              width: exitButtonSize,
-              height: exitButtonSize,
+              width: buttonSize,
+              height: buttonSize,
             }}
             onClick={() => {
               if (serverFlowEngine != null) {
@@ -191,8 +230,8 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
               style={{
                 position: "fixed",
                 transform: "translate(-50%, -50%)",
-                width: exitButtonSize * 0.8,
-                height: exitButtonSize * 0.8,
+                width: buttonSize * 0.8,
+                height: buttonSize * 0.8,
                 filter: "contrast(0.5) brightness(3)",
               }}
             />

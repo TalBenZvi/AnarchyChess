@@ -70,27 +70,44 @@ const MAX_DISTANCE: number = Math.sqrt(2) * (BOARD_SIZE - 1);
 const MIDDLE_COORDINATE = (BOARD_SIZE - 1) / 2;
 
 export class SoundEffectsPlayer implements ClientFlowEngineObserver {
+  private _isMuted: boolean = false;
   private playerIndex: number = null as any;
   private playerRow: number = MIDDLE_COORDINATE;
   private playerColumn: number = MIDDLE_COORDINATE;
 
   constructor(private clientFlowEngine: ClientFlowEngine) {
     initializeStaticSounds();
-    clientFlowEngine.addObserver(this);
+    if (clientFlowEngine != null) {
+      clientFlowEngine.addObserver(this);
+    }
+  }
+
+  get isMuted(): boolean {
+    return this._isMuted;
+  }
+
+  mute(): void {
+    this._isMuted = true;
+  }
+
+  unmute(): void {
+    this._isMuted = false;
   }
 
   private playSound(sound: Sound, sourceSquare: Square) {
-    let relativeDistanceFromSource: number =
-      sourceSquare == null
-        ? 0
-        : Math.sqrt(
-            Math.pow(this.playerRow - sourceSquare.row, 2) +
-              Math.pow(this.playerColumn - sourceSquare.column, 2)
-          ) / MAX_DISTANCE;
-    let volume: number =
-      MAX_VOLUME * sound.volumeScalar * (1 - relativeDistanceFromSource);
-    Howler.volume(volume);
-    sound.audio.play();
+    if (!this._isMuted) {
+      let relativeDistanceFromSource: number =
+        sourceSquare == null
+          ? 0
+          : Math.sqrt(
+              Math.pow(this.playerRow - sourceSquare.row, 2) +
+                Math.pow(this.playerColumn - sourceSquare.column, 2)
+            ) / MAX_DISTANCE;
+      let volume: number =
+        MAX_VOLUME * sound.volumeScalar * (1 - relativeDistanceFromSource);
+      Howler.volume(volume);
+      sound.audio.play();
+    }
   }
 
   private playRandomSound(sounds: Sound[], sourceSquare: Square) {
