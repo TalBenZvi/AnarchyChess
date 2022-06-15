@@ -5,11 +5,10 @@ import GraveYard from "../components/graveyard";
 import DeathScreen from "../components/death_screen";
 import PromotionScreen from "../components/promotion_screen";
 import GameStartScreen from "../components/game_start_screen";
-import { PieceColor, NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
+import { PieceColor } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import ChessBoard from "../components/chess_board";
-import { BaseBot } from "../bots/base_bot";
 import GameEndScreen from "../components/game_end_screen";
 import ScoreBoard from "../components/scoreboard";
 import PlayerListComponent from "../components/player_list_component";
@@ -81,7 +80,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
     let buttonSize: number = 50;
 
     return (
-      /* background */
+      // background
       <div className="background">
         <NavBar
           currentRoute={`/lobby/${
@@ -132,7 +131,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
         {/* game end screen */}
         <GameEndScreen clientFlowEngine={clientFlowEngine} />
         {/* scoreboard */}
-        {(lobby != null && lobby.areTeamsPrearranged) || true ? (
+        {(lobby != null && lobby.areTeamsPrearranged) ? (
           <div
             style={{
               position: "absolute",
@@ -155,9 +154,9 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
           className="app-button"
           style={{
             position: "absolute",
-            left: margin + scoreBoardWidth,
-            bottom: playerListHeight + 2 * margin - 10,
-            transform: "translate(-100%, 0%)",
+            left: margin - 5,
+            bottom: playerListHeight + scoreBoardHeight + 2 * margin - 5,
+            transform: "translate(0%, 100%)",
             width: buttonSize,
             height: buttonSize,
             zIndex: 2,
@@ -185,6 +184,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
               height: buttonSize * 0.6,
               filter: "contrast(0.5) brightness(3)",
             }}
+            alt="mute / unmute"
           />
         </button>
         {/* player list */}
@@ -234,6 +234,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
                 height: buttonSize * 0.8,
                 filter: "contrast(0.5) brightness(3)",
               }}
+              alt="exit to lobby"
             />
           </button>
         ) : (

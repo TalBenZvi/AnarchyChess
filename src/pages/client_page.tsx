@@ -4,13 +4,11 @@ import { withRouter, Redirect } from "react-router";
 import { Authentication } from "../database/authentication";
 import LobbyPage from "./lobby_page";
 import GamePage from "./game_page";
-
 import {
   ClientFlowEngineObserver,
   ClientEventType,
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
-import GameEndScreen from "../components/game_end_screen";
 import { PlayerList } from "../game_flow_util/player_list";
 
 enum LobbyState {
@@ -19,8 +17,6 @@ enum LobbyState {
   closing,
   closed,
 }
-
-interface ClientPageProps {}
 
 interface ClientPageState {
   lobbyState: LobbyState;
@@ -31,8 +27,8 @@ class ClientPage
   extends React.Component<any, any>
   implements ClientFlowEngineObserver
 {
-  state = {
-    lobbyState: LobbyState.running,
+  state: ClientPageState = {
+    lobbyState: LobbyState.open,
     playerList: null as any,
   };
 
@@ -158,7 +154,7 @@ class ClientPage
                       height: 70,
                       fontSize: 25,
                     }}
-                    onClick = {() => {
+                    onClick={() => {
                       this.setState({ lobbyState: LobbyState.closed });
                     }}
                   >
@@ -167,7 +163,7 @@ class ClientPage
                 </div>
               );
             }
-            /* closed */
+            // closed
             case LobbyState.closed: {
               return <Redirect push to="/" />;
             }

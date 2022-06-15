@@ -4,7 +4,6 @@ import { Lobby } from "../database/database_util";
 
 import lockIcon from "../assets/page_design/lock_icon.png";
 import teamIcon from "../assets/page_design/team_icon.png";
-import { Authentication } from "../database/authentication";
 
 const PRIVATE_TITLE: string = "Private";
 const PREARRANGED_TEAMS_TITLE: string = "Prearranged Teams";
@@ -119,7 +118,6 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
                   style={{
                     height: height * 0.1,
                     fontSize: fontSize,
-                    // fontWeight: "bold",
                   }}
                 >
                   <img
@@ -133,6 +131,7 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
                       marginRight: 10,
                       filter: "contrast(0.5) brightness(3)",
                     }}
+                    alt="attribute"
                   />
                   {title}
                 </li>
@@ -140,7 +139,6 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
             </ul>
           </div>
         )}
-        
       </div>
     );
   }

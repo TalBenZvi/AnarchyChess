@@ -101,15 +101,11 @@ export class PlayerList {
   }
 
   generateRoleAssignments(): number[] {
-    //temp
-    // return [10, ...[...Array(31)].map((_, i: number) => {
-    //   return i < 10 ? i : i + 1;
-    // })];
     if (
       this._areTeamsPrearranged &&
-      this.getUsersByAssignedColor(PieceColor.white).length ==
+      this.getUsersByAssignedColor(PieceColor.white).length ===
         NUM_OF_PLAYERS / 2 &&
-      this.getUsersByAssignedColor(PieceColor.black).length ==
+      this.getUsersByAssignedColor(PieceColor.black).length ===
         NUM_OF_PLAYERS / 2
     ) {
       let playerIndicesByColor: Map<PieceColor, number[]> = new Map([
@@ -136,7 +132,7 @@ export class PlayerList {
       return [...roleAssignments];
     } else if (
       !this._areTeamsPrearranged &&
-      this.getConnectedUsers().length == NUM_OF_PLAYERS
+      this.getConnectedUsers().length === NUM_OF_PLAYERS
     ) {
       let roleAssignments: number[] = [...Array(NUM_OF_PLAYERS)].map(
         (_, i: number) => i

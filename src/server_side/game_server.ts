@@ -1,10 +1,6 @@
 import Peer from "peerjs";
 
-import {
-  NUM_OF_PLAYERS,
-  Move,
-  PieceColor,
-} from "../game_flow_util/game_elements";
+import { NUM_OF_PLAYERS, PieceColor } from "../game_flow_util/game_elements";
 import {
   Event,
   EventInfo,
@@ -15,8 +11,8 @@ import {
   Request,
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
+  PEERJS_SERVER_PATH,
 } from "../game_flow_util/communication";
-
 
 export enum ServerNotificationType {
   playerConnected,
@@ -54,7 +50,7 @@ export class GameServer {
         this.serverPeers[i] = new Peer(`${gameID}_server_${i}`, {
           host: PEERJS_SERVER_IP,
           port: PEERJS_SERVER_PORT,
-          path: "/myapp",
+          path: PEERJS_SERVER_PATH,
         });
         // listen for connections
         this.serverPeers[i].on("connection", (client: any) => {
@@ -80,13 +76,11 @@ export class GameServer {
           });
         });
       }
-      console.log("all servers connected");
     }
   }
 
   disconnectFromUser(userIndex: number) {
     this.clients[userIndex].close();
-    // this.serverPeers[userIndex].disconnect();
   }
 
   destroyConenctions(): void {
@@ -98,11 +92,9 @@ export class GameServer {
   }
 
   startGame(roleAssignemnts: number[], initialPlayerCooldowns: number[]): void {
-    //temp
     if (
       this.gameStatus === GameStatus.waitingForPlayers ||
-      this.gameStatus === GameStatus.betweenRounds ||
-      true
+      this.gameStatus === GameStatus.betweenRounds
     ) {
       this.gameStatus = GameStatus.running;
       if (this.clients.length >= NUM_OF_PLAYERS) {

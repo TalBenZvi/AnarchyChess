@@ -18,7 +18,7 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
   render() {
     let { redirectAddress } = this.state;
     let { currentRoute } = this.props;
-    if (redirectAddress != null && redirectAddress != currentRoute) {
+    if (redirectAddress != null && redirectAddress !== currentRoute) {
       return <Redirect push to={redirectAddress} />;
     }
     return (
@@ -27,7 +27,6 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
           position: "absolute",
           width: "100%",
           height: 100,
-          //background: "#333",
           color: "ccc",
           zIndex: 0,
         }}
@@ -46,6 +45,7 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
             Authentication.closeLobby();
             this.setState({ redirectAddress: "/" });
           }}
+          alt="logo"
         />
         {/* username */}
         <div
@@ -62,7 +62,7 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
           style={{
             right: "9%",
           }}
-          onClick = {() => {
+          onClick={() => {
             Authentication.logout();
             window.location.reload();
           }}

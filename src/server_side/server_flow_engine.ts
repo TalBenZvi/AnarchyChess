@@ -46,6 +46,7 @@ export class ServerFlowEngine implements ServerObserver {
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
   private isAlive: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(true);
   private respawnTimeouts: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
+  private newGameTimeout: NodeJS.Timeout = null as any;
 
   constructor() {
     this.gameServer = new GameServer(this);
@@ -76,7 +77,7 @@ export class ServerFlowEngine implements ServerObserver {
 
   kickPlayer(player: User): void {
     let userIndex = this.playerList.indexOf(player);
-    if (userIndex != -1) {
+    if (userIndex !== -1) {
       this.playerList.removePlayerAtIndex(userIndex);
       this.gameServer.disconnectFromUser(userIndex);
       this.sendPlayerListUpdates();
@@ -122,7 +123,7 @@ export class ServerFlowEngine implements ServerObserver {
       this.gameStatus = GameStatus.betweenRounds;
       this.resetGameplayElements();
       this.gameServer.endGame(winningColor);
-      setTimeout(() => {
+      this.newGameTimeout = setTimeout(() => {
         this.startGame();
       }, GAME_INTERVAL * 1000);
     }
@@ -133,6 +134,9 @@ export class ServerFlowEngine implements ServerObserver {
       this.gameStatus === GameStatus.running ||
       this.gameStatus === GameStatus.betweenRounds
     ) {
+      if (this.newGameTimeout != null) {
+        clearTimeout(this.newGameTimeout);
+      }
       this.gameStatus = GameStatus.waitingForPlayers;
       this.position = new Position();
       this.resetGameplayElements();
@@ -335,7 +339,7 @@ export class ServerFlowEngine implements ServerObserver {
       }
       // move
       case RequestType.move: {
-        if (this.gameStatus == GameStatus.running) {
+        if (this.gameStatus === GameStatus.running) {
           let moveRequest: Move = JSON.parse(
             request.info.get(RequestInfo.move) as string,
             reviver

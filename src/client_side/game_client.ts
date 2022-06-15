@@ -1,27 +1,22 @@
 import Peer from "peerjs";
 
-import { Move, NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
+import { Move } from "../game_flow_util/game_elements";
 import {
   Event,
-  GameStatus,
   reviver,
-  EventInfo,
   Request,
   replacer,
   RequestType,
   RequestInfo,
-  EventType,
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
   OptionalConnectionCallbacks,
+  PEERJS_SERVER_PATH,
 } from "../game_flow_util/communication";
-import { Authentication } from "../database/authentication";
 import { User } from "../database/database_util";
 
 const MAX_CONNECTION_TRIES = 20;
 // in millis
-//const DELAY_BETWEEN_TRIES = 1000;
-
 let DELAY_BETWEEN_TRIES = Math.random() * 500 + 500;
 
 export enum ClientNotificationType {
@@ -54,16 +49,16 @@ export class GameClient {
     optionalConnectionCallbacks: OptionalConnectionCallbacks
   ) {
     this.clientPeer = new Peer(`${gameID}_client_${this.user.id}`, {
-      host: "localhost",
+      host: PEERJS_SERVER_IP,
       port: PEERJS_SERVER_PORT,
-      path: "/myapp",
+      path: PEERJS_SERVER_PATH,
     });
     let numOfTries: number = 0;
     let requestInterval = setInterval(() => {
       this.serverConnection = this.clientPeer.connect(
         `${gameID}_server_${serverIndex}`
       );
-      if (this.serverConnection != undefined) {
+      if (this.serverConnection !== undefined) {
         this.serverConnection.on("open", () => {
           clearInterval(requestInterval);
           // listen for events
@@ -95,14 +90,14 @@ export class GameClient {
               replacer
             )
           );
-          if (optionalConnectionCallbacks.onSuccess != undefined) {
+          if (optionalConnectionCallbacks.onSuccess !== undefined) {
             optionalConnectionCallbacks.onSuccess();
           }
         });
         numOfTries++;
         if (numOfTries >= MAX_CONNECTION_TRIES) {
           clearInterval(requestInterval);
-          if (optionalConnectionCallbacks.onFailure != undefined) {
+          if (optionalConnectionCallbacks.onFailure !== undefined) {
             optionalConnectionCallbacks.onFailure();
           }
         }

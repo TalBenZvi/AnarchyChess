@@ -33,14 +33,14 @@ function initializeStaticSounds() {
     audio: new Howl({
       src: require("../assets/gameplay_audio/victory_theme.wav"),
     }),
-    volumeScalar: 0.6,
+    volumeScalar: 0.3,
   };
 
   DEFEAT_THEME_SOUND = {
     audio: new Howl({
       src: require("../assets/gameplay_audio/defeat_theme.wav"),
     }),
-    volumeScalar: 0.6,
+    volumeScalar: 0.3,
   };
 
   MOVE_SOUNDS = [];
