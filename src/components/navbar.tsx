@@ -60,7 +60,7 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
         <button
           className="navbar-button"
           style={{
-            right: "9%",
+            right: "12%",
           }}
           onClick={() => {
             Authentication.logout();

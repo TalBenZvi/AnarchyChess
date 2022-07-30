@@ -61,6 +61,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
   private fillwithBots = () => {
     if (this.props.serverFlowEngine != null) {
       this.setState({ isBotDialogOpen: false });
+      this.props.serverFlowEngine.kickAllBots();
       this.isGameStarting = true;
       let playerList = this.props.serverFlowEngine.players;
       let numOfRequiredBots = playerList.filter(
@@ -71,6 +72,8 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
           id: `BOT_${i}_${new Date().getTime()}`,
           username: `bot_${i + 1}`,
         };
+        //temp
+        return new TestBot(user);
         if (i < NUM_OF_RANDOM_BOTS) {
           return new RandomBot(user);
         } else {

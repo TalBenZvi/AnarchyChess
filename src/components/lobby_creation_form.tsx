@@ -126,7 +126,7 @@ class LobbyCreationForm extends React.Component<
           }}
         />
         {/* requirement */}
-        {value === "" ? (
+        {value.length < 1 || value.length > 15 ? (
           <div
             style={{
               position: "absolute",
@@ -134,7 +134,7 @@ class LobbyCreationForm extends React.Component<
               fontSize: 13,
             }}
           >
-            * Must not be empty
+            * Must be 1-15 characters long
           </div>
         ) : (
           <div />

@@ -37,45 +37,41 @@ export interface ServerObserver {
 export class GameServer {
   private serverPeers: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private clients: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
-  private gameStatus: GameStatus = GameStatus.inactive;
   private broadcastedEventsLog: Event[] = [];
 
   constructor(private observer: ServerObserver) {}
 
   acceptConnections(gameID: string): void {
-    if (this.gameStatus === GameStatus.inactive) {
-      this.broadcastedEventsLog = [];
-      this.gameStatus = GameStatus.waitingForPlayers;
-      for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-        this.serverPeers[i] = new Peer(`${gameID}_server_${i}`, {
-          host: PEERJS_SERVER_IP,
-          port: PEERJS_SERVER_PORT,
-          path: PEERJS_SERVER_PATH,
+    this.broadcastedEventsLog = [];
+    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+      this.serverPeers[i] = new Peer(`${gameID}_server_${i}`, {
+        host: PEERJS_SERVER_IP,
+        port: PEERJS_SERVER_PORT,
+        path: PEERJS_SERVER_PATH,
+      });
+      // listen for connections
+      this.serverPeers[i].on("connection", (client: any) => {
+        this.clients[i] = client;
+        client.on("data", (requestData: any) => {
+          let request: Request = JSON.parse(requestData.toString(), reviver);
+          this.observer.notify(
+            ServerNotificationType.receivedRequest,
+            new Map<ServerNotificationInfo, any>([
+              [ServerNotificationInfo.userIndex, i],
+              [ServerNotificationInfo.request, request],
+            ])
+          );
         });
-        // listen for connections
-        this.serverPeers[i].on("connection", (client: any) => {
-          this.clients[i] = client;
-          client.on("data", (requestData: any) => {
-            let request: Request = JSON.parse(requestData.toString(), reviver);
-            this.observer.notify(
-              ServerNotificationType.receivedRequest,
-              new Map<ServerNotificationInfo, any>([
-                [ServerNotificationInfo.userIndex, i],
-                [ServerNotificationInfo.request, request],
-              ])
-            );
-          });
-          // when client disconnects
-          client.on("close", () => {
-            this.observer.notify(
-              ServerNotificationType.playerDisconnected,
-              new Map<ServerNotificationInfo, any>([
-                [ServerNotificationInfo.userIndex, i],
-              ])
-            );
-          });
+        // when client disconnects
+        client.on("close", () => {
+          this.observer.notify(
+            ServerNotificationType.playerDisconnected,
+            new Map<ServerNotificationInfo, any>([
+              [ServerNotificationInfo.userIndex, i],
+            ])
+          );
         });
-      }
+      });
     }
   }
 
@@ -92,44 +88,32 @@ export class GameServer {
   }
 
   startGame(roleAssignemnts: number[], initialPlayerCooldowns: number[]): void {
-    if (
-      this.gameStatus === GameStatus.waitingForPlayers ||
-      this.gameStatus === GameStatus.betweenRounds
-    ) {
-      this.gameStatus = GameStatus.running;
-      if (this.clients.length >= NUM_OF_PLAYERS) {
-        this.clients = this.clients.slice(0, NUM_OF_PLAYERS);
-        for (let i = 0; i < this.clients.length; i++) {
-          this.sendEvent(
-            {
-              index: null as any,
-              type: EventType.gameStarted,
-              info: new Map<EventInfo, string>([
-                [EventInfo.playerIndex, roleAssignemnts[i].toString()],
-                [
-                  EventInfo.initialCooldown,
-                  initialPlayerCooldowns[i].toString(),
-                ],
-              ]),
-            },
-            i
-          );
-        }
+    if (this.clients.length >= NUM_OF_PLAYERS) {
+      this.clients = this.clients.slice(0, NUM_OF_PLAYERS);
+      for (let i = 0; i < this.clients.length; i++) {
+        this.sendEvent(
+          {
+            index: null as any,
+            type: EventType.gameStarted,
+            info: new Map<EventInfo, string>([
+              [EventInfo.playerIndex, roleAssignemnts[i].toString()],
+              [EventInfo.initialCooldown, initialPlayerCooldowns[i].toString()],
+            ]),
+          },
+          i
+        );
       }
     }
   }
 
   endGame(winningColor: PieceColor) {
-    if (this.gameStatus === GameStatus.running) {
-      this.gameStatus = GameStatus.betweenRounds;
-      this.broadcastEvent({
-        index: null as any,
-        type: EventType.gameEnded,
-        info: new Map<EventInfo, string>([
-          [EventInfo.winningColor, JSON.stringify(winningColor)],
-        ]),
-      });
-    }
+    this.broadcastEvent({
+      index: null as any,
+      type: EventType.gameEnded,
+      info: new Map<EventInfo, string>([
+        [EventInfo.winningColor, JSON.stringify(winningColor)],
+      ]),
+    });
   }
 
   private sendEvent(event: Event, playerIndex: number) {

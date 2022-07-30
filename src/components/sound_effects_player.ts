@@ -133,7 +133,7 @@ export class SoundEffectsPlayer implements ClientFlowEngineObserver {
           this.playerColumn = move.column;
         }
         let sourceSquare = new Square(move.row, move.column);
-        if (move.isCapture) {
+        if (move.isCapture || move.isEnPassant) {
           this.playRandomSound(CAPTURE_SOUNDS, sourceSquare);
         } else {
           this.playRandomSound(MOVE_SOUNDS, sourceSquare);

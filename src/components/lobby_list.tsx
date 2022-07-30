@@ -96,7 +96,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   };
 
   private setSearchQuery = (event: any) => {
-    this.setState({ searchQuery: event.target.value });
+    this.setState({ searchQuery: event.target.value, page: 0 });
   };
 
   private setEnteredPassword = (event: any) => {
@@ -119,18 +119,19 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     }
     lobbies = lobbies.filter(
       (lobby: Lobby) =>
-        lobby.name.includes(searchQuery) ||
-        lobby.creatorName.includes(searchQuery)
+        lobby.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lobby.creatorName.toLowerCase().includes(searchQuery.toLowerCase())
     );
     let displayedLobbies: Lobby[] = lobbies.slice(
       page * LOBBIES_IN_A_PAGE,
       (page + 1) * LOBBIES_IN_A_PAGE
     );
     let tileWidth: number = width * 0.95;
-    let tileHeight: number = (height / LOBBIES_IN_A_PAGE) * 0.75;
+    let tileHeight: number = (height / LOBBIES_IN_A_PAGE) * 0.7;
     let tileMargin: number = (height / LOBBIES_IN_A_PAGE) * 0.08;
     let titleFontSize: number = tileHeight;
-    let fontSize: number = tileHeight * 0.45;
+    let fontSize: number = tileHeight * 0.4;
+    let buttonFontSize: number = tileHeight * 0.45;
     let fontPadding: number = tileHeight * 0.4;
     let buttonHeight: number = tileHeight * 0.7;
     let margin: number = (width - tileWidth) / 2;
@@ -165,8 +166,8 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             <div
               style={{
                 position: "fixed",
-                left: "10%",
-                top: "10%",
+                left: "9%",
+                top: "15%",
                 transform: "translate(-50%, 0%)",
                 fontSize: fontSize,
                 fontWeight: "bold",
@@ -178,7 +179,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               style={{
                 position: "fixed",
                 left: "30%",
-                top: "10%",
+                top: "15%",
                 transform: "translate(-50%, 0%)",
                 fontSize: fontSize,
                 fontWeight: "bold",
@@ -190,7 +191,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               style={{
                 position: "fixed",
                 left: "50%",
-                top: "10%",
+                top: "15%",
                 transform: "translate(-50%, 0%)",
                 fontSize: fontSize,
                 fontWeight: "bold",
@@ -202,7 +203,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               style={{
                 position: "fixed",
                 left: "70%",
-                top: "10%",
+                top: "15%",
                 transform: "translate(-50%, 0%)",
                 fontSize: fontSize,
                 fontWeight: "bold",
@@ -218,7 +219,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
           disabled={isWaitingForResponse}
           style={{
             position: "fixed",
-            right: "25%",
+            right: Math.min(width * 0.25, 250),
             top: margin * 0.5,
             width: height * 0.08,
             height: height * 0.08,
@@ -245,9 +246,9 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             position: "fixed",
             right: "2%",
             top: margin * 0.5,
-            width: width * 0.2,
+            width: Math.min(width * 0.2, 200),
             height: height * 0.08,
-            fontSize: fontSize,
+            fontSize: buttonFontSize,
             zIndex: 1,
           }}
           onClick={onLobbyCreationSelection}
@@ -301,7 +302,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               style={{
                 position: "fixed",
                 left: "24%",
-                top: margin * 1.6,
+                top: margin * 1.5,
                 transform: "translate(0%, -50%)",
                 width: height * 0.2,
                 height: height * 0.06,
@@ -395,18 +396,18 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             </button>
             {/* lobbies */}
             <ul className="no-bullets">
-              {displayedLobbies.map((lobby: Lobby, _: number) => (
+              {displayedLobbies.map((lobby: Lobby, i: number) => (
                 <li
                   key={Math.random()}
                   style={{
-                    position: "relative",
+                    position: "absolute",
                     left: "50%",
+                    top: height * 0.2 + i * (tileHeight + tileMargin),
                     transform: "translate(-50%, 0%)",
                     width: tileWidth,
                     height: tileHeight,
                     borderRadius: "5px",
                     background: "#2d2d2d",
-                    marginTop: tileMargin,
                     fontSize: fontSize,
                     lineHeight: `${tileHeight}px`,
                   }}
