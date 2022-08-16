@@ -65,25 +65,19 @@ class LobbyCreationForm extends React.Component<
       (status: LobbyCreationStatus) => {
         switch (status) {
           case LobbyCreationStatus.success:
-            {
-              this.props.onSuccess();
-            }
+            this.props.onSuccess();
             break;
           case LobbyCreationStatus.nameTaken:
-            {
-              toast("A lobby already exists with this name");
-              this.setState(() => {
-                return { isWaitingForResponse: false };
-              });
-            }
+            toast("A lobby already exists with this name");
+            this.setState(() => {
+              return { isWaitingForResponse: false };
+            });
             break;
           case LobbyCreationStatus.connectionError:
-            {
-              toast("There has been a connection error");
-              this.setState(() => {
-                return { isWaitingForResponse: false };
-              });
-            }
+            toast("There has been a connection error");
+            this.setState(() => {
+              return { isWaitingForResponse: false };
+            });
             break;
         }
       }
@@ -142,6 +136,7 @@ class LobbyCreationForm extends React.Component<
         {/* reveal password icon */}
         {isPassword ? (
           <img
+            alt="reveal password"
             style={{
               position: "absolute",
               left: 440,

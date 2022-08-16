@@ -11,7 +11,6 @@ import {
 import {
   PieceColor,
   Piece,
-  Bishop,
   Position,
 } from "../game_flow_util/game_elements";
 

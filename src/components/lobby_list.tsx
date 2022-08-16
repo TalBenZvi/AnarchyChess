@@ -61,31 +61,25 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     Authentication.joinLobby(lobby, (status: LobbyJoiningStatus) => {
       switch (status) {
         case LobbyJoiningStatus.success:
-          {
-            this.setState(() => {
-              return { targetLobbyID: lobby.id };
-            });
-          }
+          this.setState(() => {
+            return { targetLobbyID: lobby.id };
+          });
           break;
         case LobbyJoiningStatus.failure:
-          {
-            toast("Error joining lobby");
-            this.setState(() => {
-              return {
-                selectedLobby: null as any,
-              };
-            });
-          }
+          toast("Error joining lobby");
+          this.setState(() => {
+            return {
+              selectedLobby: null as any,
+            };
+          });
           break;
         case LobbyJoiningStatus.connectionError:
-          {
-            toast("There has been a connection error");
-            this.setState(() => {
-              return {
-                selectedLobby: null as any,
-              };
-            });
-          }
+          toast("There has been a connection error");
+          this.setState(() => {
+            return {
+              selectedLobby: null as any,
+            };
+          });
           break;
       }
     });
@@ -229,6 +223,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
           onClick={this.loadLobbiesFromDatabase}
         >
           <img
+            alt="refresh"
             src={refreshIcon}
             style={{
               position: "fixed",
@@ -335,12 +330,13 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             {/* left arrow */}
             <button
               className="clear-button"
-              disabled={page == 0}
+              disabled={page === 0}
               onClick={() => {
                 this.setState({ page: page - 1 });
               }}
             >
               <img
+                alt="left"
                 className="image-button"
                 src={rightArrow}
                 style={{
@@ -368,7 +364,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               }}
             >
               {`${
-                lobbies.length == 0 ? 0 : page * LOBBIES_IN_A_PAGE + 1
+                lobbies.length === 0 ? 0 : page * LOBBIES_IN_A_PAGE + 1
               } - ${Math.min(
                 (page + 1) * LOBBIES_IN_A_PAGE,
                 lobbies.length
@@ -383,6 +379,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
               }}
             >
               <img
+                alt="right"
                 className="image-button"
                 src={rightArrow}
                 style={{
@@ -453,6 +450,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                       }}
                     >
                       <img
+                        alt="join"
                         src={checkmarkIcon}
                         style={{
                           position: "absolute",
@@ -468,12 +466,13 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                   )}
 
                   {/* lock icon */}
-                  {lobby.password == null ||
-                  selectedLobby == lobby ||
-                  selectedLobbyForPassword == lobby ? (
+                  {lobby.password === null ||
+                  selectedLobby === lobby ||
+                  selectedLobbyForPassword === lobby ? (
                     <div />
                   ) : (
                     <img
+                      alt="private"
                       src={lockIcon}
                       style={{
                         position: "fixed",
@@ -487,8 +486,8 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                     />
                   )}
                   {/* join button */}
-                  {selectedLobby == lobby ||
-                  selectedLobbyForPassword == lobby ? (
+                  {selectedLobby === lobby ||
+                  selectedLobbyForPassword === lobby ? (
                     <div />
                   ) : (
                     <button
@@ -518,7 +517,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                     </button>
                   )}
                   {/* password input field */}
-                  {selectedLobbyForPassword == lobby ? (
+                  {selectedLobbyForPassword === lobby ? (
                     <div>
                       <input
                         type="password"
@@ -560,6 +559,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                         }}
                       >
                         <img
+                          alt="join"
                           src={checkmarkIcon}
                           style={{
                             position: "fixed",

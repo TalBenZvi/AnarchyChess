@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
-import { RegisterParams, LoginStatus } from "../database/database_util";
+import { LoginStatus } from "../database/database_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 
@@ -45,25 +45,19 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
       (status: LoginStatus) => {
         switch (status) {
           case LoginStatus.success:
-            {
-              this.props.onSuccess();
-            }
+            this.props.onSuccess();
             break;
           case LoginStatus.failure:
-            {
-              toast("Username or password is incorrect");
-              this.setState(() => {
-                return { isWaitingForResponse: false };
-              });
-            }
+            toast("Username or password is incorrect");
+            this.setState(() => {
+              return { isWaitingForResponse: false };
+            });
             break;
           case LoginStatus.connectionError:
-            {
-              toast("There has been a connection error");
-              this.setState(() => {
-                return { isWaitingForResponse: false };
-              });
-            }
+            toast("There has been a connection error");
+            this.setState(() => {
+              return { isWaitingForResponse: false };
+            });
             break;
         }
       }
@@ -99,6 +93,7 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
         {/* reveal password icon */}
         {isPassword ? (
           <img
+            alt="reveal password"
             style={{
               position: "absolute",
               left: 390,

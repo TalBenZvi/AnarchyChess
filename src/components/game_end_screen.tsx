@@ -1,20 +1,14 @@
 import React from "react";
-import { CountdownCircleTimer } from "react-countdown-circle-timer";
 
 import {
   ClientFlowEngine,
   ClientFlowEngineObserver,
   ClientEventType,
   ClientEventInfo,
-  GAME_START_DELAY,
 } from "../client_side/client_flow_engine";
-import { EventInfo } from "../game_flow_util/communication";
 import {
   PieceColor,
-  Piece,
-  Bishop,
   Position,
-  colorToString,
   reverseColor,
 } from "../game_flow_util/game_elements";
 

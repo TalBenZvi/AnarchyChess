@@ -115,6 +115,7 @@ class PlayerListComponent extends React.Component<
                     }}
                   >
                     <img
+                      alt="options"
                       src={menuIcon}
                       style={{
                         position: "fixed",
@@ -193,7 +194,7 @@ class PlayerListComponent extends React.Component<
         openMenuPlayer = rightColumnPlayers[openMenuIndex - NUM_OF_PLAYERS / 2];
       }
       if (openMenuPlayer != null) {
-        if (openMenuPlayer.id != currentUser.id) {
+        if (openMenuPlayer.id !== currentUser.id) {
           menuOptions.push(KICK_MENU_TITLE);
         }
         if (areTeamsPrearranged) {

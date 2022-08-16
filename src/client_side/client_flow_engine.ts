@@ -17,8 +17,6 @@ import {
   Event,
   EventInfo,
   EventType,
-  GameStatus,
-  reviver,
   OptionalConnectionCallbacks,
 } from "../game_flow_util/communication";
 import { Lobby, User } from "../database/database_util";
@@ -108,7 +106,7 @@ export class ClientFlowEngine implements GameClientObserver {
 
   removeObserver(observerToRemove: ClientFlowEngineObserver) {
     this.observers = this.observers.filter(
-      (observer: ClientFlowEngineObserver) => observer != observerToRemove
+      (observer: ClientFlowEngineObserver) => observer !== observerToRemove
     );
   }
 
@@ -130,12 +128,12 @@ export class ClientFlowEngine implements GameClientObserver {
     this._currentLobby = lobby;
     this.gameClient.attemptToConnect(lobby.id, serverIndex, {
       onSuccess: () => {
-        if (optionalConnectionCallbacks.onSuccess != undefined) {
+        if (optionalConnectionCallbacks.onSuccess !== undefined) {
           optionalConnectionCallbacks.onSuccess();
         }
       },
       onFailure: () => {
-        if (optionalConnectionCallbacks.onFailure != undefined) {
+        if (optionalConnectionCallbacks.onFailure !== undefined) {
           optionalConnectionCallbacks.onFailure();
         }
       },

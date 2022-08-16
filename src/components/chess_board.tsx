@@ -1,9 +1,6 @@
 import * as React from "react";
-import Box from "@mui/material/Box";
-import { Dialog } from "@headlessui/react";
 import {
   BOARD_SIZE,
-  NUM_OF_PLAYERS,
   PlayingPiece,
   PieceColor,
   colorToString,
@@ -776,7 +773,7 @@ class ChessBoard
   private kill(dyingPlayerIndex: number) {
     if (this.isGameRunning) {
       this.killPlayer(dyingPlayerIndex);
-      if (dyingPlayerIndex == this.playerIndex) {
+      if (dyingPlayerIndex === this.playerIndex) {
         this.setPlayerSquare(null as any);
         this.startCooldownTimer(null as any);
         this.setSelectedMove(null as any);

@@ -1,5 +1,5 @@
 import { BaseBot } from "./base_bot";
-import { PieceType, Move, Square } from "../game_flow_util/game_elements";
+import { Move, Square } from "../game_flow_util/game_elements";
 
 // in seconds
 const MOVE_INTERVAL: number = 2;
