@@ -1,14 +1,6 @@
 import * as React from "react";
 
-import {
-  PieceColor,
-  reverseColor,
-  Piece,
-  colorToString,
-  typeToString,
-  Position,
-  PieceType,
-} from "../game_flow_util/game_elements";
+import { PieceColor } from "../game_flow_util/game_elements";
 
 import {
   ClientFlowEngine,

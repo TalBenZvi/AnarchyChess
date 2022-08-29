@@ -100,33 +100,25 @@ class RegisterForm extends React.Component<
       (status: RegisterStatus) => {
         switch (status) {
           case RegisterStatus.success:
-            {
-              this.props.onSuccess();
-            }
+            this.props.onSuccess();
             break;
           case RegisterStatus.usernameTaken:
-            {
-              toast("This username is already taken");
-              this.setState(() => {
-                return { isWaitingForResponse: false };
-              });
-            }
+            toast("This username is already taken");
+            this.setState(() => {
+              return { isWaitingForResponse: false };
+            });
             break;
           case RegisterStatus.emailRegistered:
-            {
-              toast("A user is already registered with this email address");
-              this.setState(() => {
-                return { isWaitingForResponse: false };
-              });
-            }
+            toast("A user is already registered with this email address");
+            this.setState(() => {
+              return { isWaitingForResponse: false };
+            });
             break;
           case RegisterStatus.connectionError:
-            {
-              toast("There has been a connection error");
-              this.setState(() => {
-                return { isWaitingForResponse: false };
-              });
-            }
+            toast("There has been a connection error");
+            this.setState(() => {
+              return { isWaitingForResponse: false };
+            });
             break;
         }
       }
@@ -171,6 +163,7 @@ class RegisterForm extends React.Component<
           <div />
         ) : (
           <img
+            alt="validity icon"
             style={{
               position: "absolute",
               left: 5,
@@ -197,6 +190,7 @@ class RegisterForm extends React.Component<
         {/* reveal password icon */}
         {isPassword ? (
           <img
+            alt="reveal password"
             style={{
               position: "absolute",
               left: 390,
@@ -266,16 +260,17 @@ class RegisterForm extends React.Component<
     let isUsernameValid = this.checkUsernameValidity(username);
     let isEmailValid = this.checkEmailValidity(email);
     let isPasswordValid = this.checkPasswordValidity(password);
-    let isConfirmPasswordValid = this.checkConfirmPasswordValidity(
-      confirmPassword
-    );
+    let isConfirmPasswordValid =
+      this.checkConfirmPasswordValidity(confirmPassword);
     // close popup if field becomes valid
     if (
-      ((isUsernameValid || username === "") && shownRulesPopup == "Username") ||
-      ((isEmailValid || email === "") && shownRulesPopup == "Email") ||
-      ((isPasswordValid || password === "") && shownRulesPopup == "Password") ||
+      ((isUsernameValid || username === "") &&
+        shownRulesPopup === "Username") ||
+      ((isEmailValid || email === "") && shownRulesPopup === "Email") ||
+      ((isPasswordValid || password === "") &&
+        shownRulesPopup === "Password") ||
       ((isConfirmPasswordValid || confirmPassword === "") &&
-        shownRulesPopup == "Confirm Password")
+        shownRulesPopup === "Confirm Password")
     ) {
       this.setState(() => {
         return { shownRulesPopup: null as any };

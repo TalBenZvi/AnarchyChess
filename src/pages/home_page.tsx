@@ -40,6 +40,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
       <div className="background">
         {/* title */}
         <img
+          alt="Anarchy Chess"
           style={{
             position: "absolute",
             left: "50%",
@@ -51,6 +52,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
         />
         {/* wallpaper images */}
         <img
+          alt=""
           style={{
             position: "absolute",
             left: -100,
@@ -61,6 +63,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
           src={whiteWallpaperImage}
         />
         <img
+          alt=""
           style={{
             position: "absolute",
             right: -60,

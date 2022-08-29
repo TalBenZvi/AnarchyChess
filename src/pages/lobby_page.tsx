@@ -3,24 +3,19 @@ import { Redirect } from "react-router";
 
 import NavBar from "../components/navbar";
 import PlayerListComponent from "../components/player_list_component";
-import {
-  ClientFlowEngineObserver,
-  ClientEventType,
-  ClientEventInfo,
-  ClientFlowEngine,
-} from "../client_side/client_flow_engine";
+import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { Lobby, User } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { BaseBot } from "../bots/base_bot";
 import { RandomBot } from "../bots/random_bot";
 import { PlayerList } from "../game_flow_util/player_list";
-import { TestBot } from "../bots/test_bot";
+// import { TestBot } from "../bots/test_bot";
 import LobbyCard from "../components/lobby_card";
 
 import appIcon from "../assets/page_design/clean_app_icon.png";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 
-const NUM_OF_RANDOM_BOTS: number = 1;
+const NUM_OF_RANDOM_BOTS: number = 2;
 
 interface LobbyPageProps {
   lobby: Lobby;
@@ -72,8 +67,6 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
           id: `BOT_${i}_${new Date().getTime()}`,
           username: `bot_${i + 1}`,
         };
-        //temp
-        return new TestBot(user);
         if (i < NUM_OF_RANDOM_BOTS) {
           return new RandomBot(user);
         } else {
@@ -111,7 +104,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
     }
     let numOfConnectedPlayers: number =
       playerList == null ? 0 : playerList.getConnectedUsers().length;
-    if (numOfConnectedPlayers == NUM_OF_PLAYERS && this.isGameStarting) {
+    if (numOfConnectedPlayers === NUM_OF_PLAYERS && this.isGameStarting) {
       this.startGame();
     }
     return (
@@ -119,6 +112,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
         <NavBar currentRoute={`/lobby/${lobby == null ? "" : lobby.id}`} />
         <div className="centered">
           <img
+            alt=""
             src={appIcon}
             style={{
               width: 900,
@@ -180,7 +174,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
               fontSize: 30,
             }}
             onClick={() => {
-              if (numOfConnectedPlayers == NUM_OF_PLAYERS) {
+              if (numOfConnectedPlayers === NUM_OF_PLAYERS) {
                 this.startGame();
               } else {
                 this.setState({ isBotDialogOpen: true });
