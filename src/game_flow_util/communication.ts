@@ -1,4 +1,4 @@
-export const PEERJS_SERVER_IP: string = "127.0.0.1";
+export const PEERJS_SERVER_IP: string = "34.204.67.216";
 export const PEERJS_SERVER_PORT: number = 3030;
 export const PEERJS_SERVER_PATH: string = "/anarchy_chess";
 
