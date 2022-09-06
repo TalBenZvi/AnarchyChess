@@ -8,6 +8,8 @@ import LoginForm from "../components/login_form";
 import RegisterForm from "../components/register_form";
 import { Authentication } from "../database/authentication";
 
+import WebSocket from "ws";
+
 enum ViewMode {
   login,
   register,
@@ -31,6 +33,14 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
   };
 
   render() {
+    const ws = new WebSocket("ws://www.anarchychess.xyz/websocket_server");
+    ws.on("open", () => {
+      ws.send("test message");
+    });
+    ws.on("message", (data) => {
+      console.log(data);
+    });
+
     let { viewMode, hoveredMode } = this.state;
     document.body.style.overflow = "hidden";
     return viewMode === ViewMode.authenticated ? (
