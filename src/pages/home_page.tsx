@@ -34,7 +34,9 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
 
   render() {
     const ws = new WebSocket("ws://www.anarchychess.xyz/websocket_server");
+    console.log("socket created");
     ws.on("open", () => {
+      console.log("connection opened");
       ws.send("test message");
     });
     ws.on("message", (data) => {
