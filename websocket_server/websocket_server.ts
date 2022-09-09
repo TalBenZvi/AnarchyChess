@@ -1,6 +1,6 @@
-import { WebSocketServer } from "ws";
+const WebSocketPKG = require("ws");
 
-const wss = new WebSocketServer({ port: 3031 });
+const wss = new WebSocketPKG.Server({ port: "3031" });
 console.log("running");
 
 wss.on("connection", (client) => {
