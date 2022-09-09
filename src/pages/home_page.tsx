@@ -8,8 +8,6 @@ import LoginForm from "../components/login_form";
 import RegisterForm from "../components/register_form";
 import { Authentication } from "../database/authentication";
 
-import WebSocket from "ws";
-
 enum ViewMode {
   login,
   register,
@@ -33,14 +31,18 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
   };
 
   render() {
-    const ws = new WebSocket("ws://www.anarchychess.xyz/websocket_server");
+    const socket = new WebSocket("ws://www.anarchychess.xyz/websocket_server");
     console.log("socket created");
-    ws.on("open", () => {
+
+    // Connection opened
+    socket.addEventListener("open", (event) => {
       console.log("connection opened");
-      ws.send("test message");
+      socket.send("test message");
     });
-    ws.on("message", (data) => {
-      console.log(data);
+
+    // Listen for messages
+    socket.addEventListener("message", (event) => {
+      console.log("Message from server ", event.data);
     });
 
     let { viewMode, hoveredMode } = this.state;
