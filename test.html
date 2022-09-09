@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>test</title>
+  </head>
+  <body>
+    <script>
+      const socket = new WebSocket("wss://anarchychess.xyz/websocket_server");
+      console.log("socket created");
+
+      // Connection opened
+      socket.addEventListener("open", (event) => {
+        console.log("connection opened");
+        socket.send("test message");
+      });
+
+      // Listen for messages
+      socket.addEventListener("message", (event) => {
+        console.log("Message from server ", event.data);
+      });
+    </script>
+  </body>
+</html>
+
+
+proxy_ssl_certificate     /etc/nginx/bundle.cer;
+      proxy_ssl_certificate_key /etc/nginx/anarchychess.key;

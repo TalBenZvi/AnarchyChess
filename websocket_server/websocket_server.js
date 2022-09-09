@@ -6,7 +6,8 @@ console.log("running");
 wss.on("connection", (client) => {
   console.log("client connected");
   client.on("message", (data) => {
+    console.log(data.toString());
     console.log("message received");
-    client.send(data);
+    client.send(data.toString());
   });
 });
