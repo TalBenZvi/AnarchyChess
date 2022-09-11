@@ -31,7 +31,12 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
   };
 
   render() {
-    const socket = new WebSocket("wss://anarchychess.xyz/websocket_server");
+    console.log(JSON.stringify(window.location));
+    const socket = new WebSocket(
+      "wss://" + window.location.host + "/websocket_server"
+    );
+    // const socket = new WebSocket("wss://anarchychess.xyz/websocket_server");
+    // const socket = new WebSocket("wss://127.0.0.1:3031/websocket_server");
     console.log("socket created");
 
     // Connection opened
