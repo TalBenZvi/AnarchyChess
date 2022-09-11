@@ -27,3 +27,6 @@ yarn-error.log*
 # deployment
 /deployment
 deploy.sh
+
+# testing
+/testing
