@@ -35,8 +35,6 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
     const socket = new WebSocket(
       "wss://" + window.location.host + "/websocket"
     );
-    // const socket = new WebSocket("wss://anarchychess.xyz/websocket_server");
-    // const socket = new WebSocket("wss://127.0.0.1:3031/websocket_server");
     console.log("socket created");
 
     // Connection opened
@@ -47,7 +45,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
 
     // Listen for messages
     socket.addEventListener("message", (event) => {
-      console.log("Message from server ", event.data);
+      console.log("Message from server (test)", event.data);
     });
 
     let { viewMode, hoveredMode } = this.state;
