@@ -1,11 +1,11 @@
 // server
-import express from "express";
+const express = require("express");
 const app = express();
-import path from "path";
+const path = require("path");
 
 // https
-import fs from "fs";
-import https from "https";
+const fs = require("fs");
+const https = require("https");
 const privateKey = fs.readFileSync(
   path.join(__dirname, "../deployment/private_key.pem"),
   "utf8"
@@ -16,7 +16,7 @@ const certificate = fs.readFileSync(
 );
 
 // ws
-import ws from "ws";
+const ws = require("ws");
 
 app.use(express.static(path.join(__dirname, "../build")));
 
@@ -33,7 +33,7 @@ httpsServer.listen(3000, () => {
   console.log("server listening on port 3000");
 });
 
-const wss = new ws.Server({ httpsServer, path: "/websocket" });
+const wss = new ws.Server({ server: httpsServer, path: "/websocket" });
 wss.on("connection", function connection(ws) {
   console.log("client connected");
   ws.send("Hello");
