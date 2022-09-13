@@ -2,9 +2,10 @@ const express = require("express");
 const app = express();
 const path = require("path");
 
+var fs = require('fs');
 var https = require('https');
-var privateKey  = fs.readFileSync('../deployment/private_key.pem', 'utf8');
-var certificate = fs.readFileSync('../deployment/anarchychess_xyz.crt', 'utf8');
+var privateKey  = fs.readFileSync(path.join(__dirname, "../deployment/private_key.pem"), 'utf8');
+var certificate = fs.readFileSync(path.join(__dirname, "../deployment/anarchychess_xyz.crt"), 'utf8');
 
 app.use(express.static(path.join(__dirname, "../build")));
 
