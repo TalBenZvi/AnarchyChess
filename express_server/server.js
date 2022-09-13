@@ -1,11 +1,11 @@
 // server
-const express = require("express");
+import express from "express";
 const app = express();
-const path = require("path");
+import path from "path";
 
 // https
-const fs = require("fs");
-const https = require("https");
+import fs from "fs";
+import https from "https";
 const privateKey = fs.readFileSync(
   path.join(__dirname, "../deployment/private_key.pem"),
   "utf8"
@@ -16,7 +16,7 @@ const certificate = fs.readFileSync(
 );
 
 // ws
-const ws = require("ws");
+import ws from "ws";
 
 app.use(express.static(path.join(__dirname, "../build")));
 
