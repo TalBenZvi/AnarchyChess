@@ -4,7 +4,7 @@ const path = require("path");
 
 var https = require('https');
 var privateKey  = fs.readFileSync('../deployment/private_key.pem', 'utf8');
-var certificate = fs.readFileSync('../deployment/anarchychess_xyz', 'utf8');
+var certificate = fs.readFileSync('../deployment/anarchychess_xyz.crt', 'utf8');
 
 app.use(express.static(path.join(__dirname, "../build")));
 
