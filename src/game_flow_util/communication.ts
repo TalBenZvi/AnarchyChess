@@ -3,6 +3,44 @@ export const PEERJS_SERVER_IP: string = "34.204.67.216";
 export const PEERJS_SERVER_PORT: number = 3030;
 export const PEERJS_SERVER_PATH: string = "/anarchy_chess";
 
+export const WEBSITE_DOMAIN: string = "anarchychess.xyz";
+const WSS_PATH: string = "websocket";
+
+const DEV_SERVER_PORT: number = 3031;
+
+export enum Environment {
+  development,
+  production,
+}
+
+export enum ValueType {
+  wssAddress,
+}
+
+export class EnvironmentManager {
+  static environment: Environment = Environment.production;
+  private static values: Map<Environment, Map<ValueType, any>> = new Map([
+    [
+      Environment.development,
+      new Map([
+        [
+          ValueType.wssAddress,
+          `ws://localhost:${DEV_SERVER_PORT}/${WSS_PATH}`,
+        ],
+      ]),
+    ],
+    [
+      Environment.production,
+      new Map([[ValueType.wssAddress, `wss://${WEBSITE_DOMAIN}/${WSS_PATH}`]]),
+    ],
+  ]);
+
+  static getValue(valueType: ValueType): any {
+    return EnvironmentManager.values
+      .get(EnvironmentManager.environment)
+      ?.get(valueType);
+  }
+}
 
 export interface Event {
   index: number;

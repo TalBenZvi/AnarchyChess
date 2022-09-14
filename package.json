@@ -53,8 +53,8 @@
     "start-js": "react-scripts start",
     "peer-js-start": "peerjs --port 3030 --key peerjs --path /anarchy_chess",
     "peer-js-start-new": "node peerjs_server/peer_server.js",
-    "start": "node express_server/server.js",
-    "dev": "nodemon server.js",
+    "start": "react-scripts start",
+    "dev": "nodemon express_server/dev_server.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

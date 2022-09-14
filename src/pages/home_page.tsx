@@ -7,6 +7,12 @@ import AuthenticatedHomePage from "./authenticated_home_page";
 import LoginForm from "../components/login_form";
 import RegisterForm from "../components/register_form";
 import { Authentication } from "../database/authentication";
+import {
+  Environment,
+  EnvironmentManager,
+  ValueType,
+  WEBSITE_DOMAIN,
+} from "../game_flow_util/communication";
 
 enum ViewMode {
   login,
@@ -30,11 +36,17 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
     hoveredMode: null as any,
   };
 
+  constructor(props: HomePageProps) {
+    super(props);
+    if (window.location.host === WEBSITE_DOMAIN) {
+      EnvironmentManager.environment = Environment.production;
+    } else {
+      EnvironmentManager.environment = Environment.development;
+    }
+  }
+
   render() {
-    console.log(JSON.stringify(window.location));
-    const socket = new WebSocket(
-      "wss://" + window.location.host + "/websocket"
-    );
+    const socket = new WebSocket(EnvironmentManager.getValue(ValueType.wssAddress));
     console.log("socket created");
 
     // Connection opened
