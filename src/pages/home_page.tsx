@@ -12,7 +12,7 @@ import {
   EnvironmentManager,
   ValueType,
   WEBSITE_DOMAIN,
-} from "../game_flow_util/communication";
+} from "../communication/communication_util";
 
 enum ViewMode {
   login,

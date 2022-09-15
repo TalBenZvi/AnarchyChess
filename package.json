@@ -91,5 +91,6 @@
   "main": "babel.config.js",
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "type": "module"
 }

@@ -1,5 +1,5 @@
 import { User } from "../database/database_util";
-import { shuffle } from "./communication";
+import { shuffle } from "../communication/communication_util";
 import { NUM_OF_PLAYERS, PieceColor, reverseColor } from "./game_elements";
 
 interface Player {

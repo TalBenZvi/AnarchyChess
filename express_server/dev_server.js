@@ -8,7 +8,9 @@ const fs = require("fs");
 const http = require("http");
 
 // ws
-const ws = require("ws");
+// const ws = require("ws");
+
+import { WebsocketServer } from "./websocket_server.ts";
 
 app.use(express.static(path.join(__dirname, "../build")));
 
@@ -23,9 +25,11 @@ httpServer.listen(3031, () => {
   console.log("server listening on port 3031");
 });
 
-const wss = new ws.Server({ server: httpServer, path: "/websocket" });
-wss.on("connection", function connection(ws) {
-  console.log("client connected");
-  ws.send("test Hello");
-  ws.on("message", (data) => ws.send("Receive: " + data));
-});
+const websocketServer = new WebsocketServer(httpServer);
+
+// const wss = new ws.Server({ server: httpServer, path: "/websocket" });
+// wss.on("connection", function connection(ws) {
+//   console.log("client connected");
+//   ws.send("test Hello");
+//   ws.on("message", (data) => ws.send("Receive: " + data));
+// });

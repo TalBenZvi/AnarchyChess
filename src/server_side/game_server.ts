@@ -11,7 +11,7 @@ import {
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
   PEERJS_SERVER_PATH,
-} from "../game_flow_util/communication";
+} from "../communication/communication_util";
 
 export enum ServerNotificationType {
   playerConnected,

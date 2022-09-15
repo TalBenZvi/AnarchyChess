@@ -12,7 +12,7 @@ import {
   PEERJS_SERVER_PORT,
   OptionalConnectionCallbacks,
   PEERJS_SERVER_PATH,
-} from "../game_flow_util/communication";
+} from "../communication/communication_util";
 import { User } from "../database/database_util";
 
 const MAX_CONNECTION_TRIES = 20;

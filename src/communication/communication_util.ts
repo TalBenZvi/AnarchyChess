@@ -4,7 +4,7 @@ export const PEERJS_SERVER_PORT: number = 3030;
 export const PEERJS_SERVER_PATH: string = "/anarchy_chess";
 
 export const WEBSITE_DOMAIN: string = "anarchychess.xyz";
-const WSS_PATH: string = "websocket";
+export const WSS_PATH: string = "websocket";
 
 const DEV_SERVER_PORT: number = 3031;
 

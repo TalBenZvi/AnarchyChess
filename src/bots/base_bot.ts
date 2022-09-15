@@ -12,7 +12,7 @@ import {
   PieceColor,
 } from "../game_flow_util/game_elements";
 import { Lobby, User } from "../database/database_util";
-import { OptionalConnectionCallbacks } from "../game_flow_util/communication";
+import { OptionalConnectionCallbacks } from "../communication/communication_util";
 import { PlayerList } from "../game_flow_util/player_list";
 
 export class BaseBot implements ClientFlowEngineObserver {

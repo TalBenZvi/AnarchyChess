@@ -18,7 +18,7 @@ import {
   EventInfo,
   EventType,
   OptionalConnectionCallbacks,
-} from "../game_flow_util/communication";
+} from "../communication/communication_util";
 import { Lobby, User } from "../database/database_util";
 import { PlayerList } from "../game_flow_util/player_list";
 

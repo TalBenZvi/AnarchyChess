@@ -15,9 +15,6 @@ const certificate = fs.readFileSync(
   "utf8"
 );
 
-// ws
-const ws = require("ws");
-
 app.use(express.static(path.join(__dirname, "../build")));
 
 app.get("/", (req, res) => {
