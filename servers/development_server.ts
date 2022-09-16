@@ -1,21 +1,22 @@
 // server
-const express = require("express");
+import express from "express";
 const app = express();
-const path = require("path");
+import * as path from "path";
 
 // http
-const fs = require("fs");
-const http = require("http");
+import * as fs from "fs";
+import * as http from "http";
 
-// ws
-// const ws = require("ws");
+import { fileURLToPath } from 'url';
+// @ts-ignore
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-import { WebsocketServer } from "./websocket_server.ts";
+import { AppServer } from "./app_server.js";
 
 app.use(express.static(path.join(__dirname, "../build")));
 
-app.get("/", (req, res) => {
-  // let index =
+app.get("/", (req: any, res: any) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
@@ -25,7 +26,10 @@ httpServer.listen(3031, () => {
   console.log("server listening on port 3031");
 });
 
-const websocketServer = new WebsocketServer(httpServer);
+// import { WebSocketServer } from "ws";
+// let wss = new WebSocketServer({ server: httpServer, path: "/websocket" });
+
+const websocketServer = new AppServer(httpServer);
 
 // const wss = new ws.Server({ server: httpServer, path: "/websocket" });
 // wss.on("connection", function connection(ws) {

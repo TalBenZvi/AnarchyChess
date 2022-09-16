@@ -4,7 +4,7 @@ export const PEERJS_SERVER_PORT: number = 3030;
 export const PEERJS_SERVER_PATH: string = "/anarchy_chess";
 
 export const WEBSITE_DOMAIN: string = "anarchychess.xyz";
-export const WSS_PATH: string = "websocket";
+export const WSS_PATH: string = "/websocket";
 
 const DEV_SERVER_PORT: number = 3031;
 
@@ -25,13 +25,13 @@ export class EnvironmentManager {
       new Map([
         [
           ValueType.wssAddress,
-          `ws://localhost:${DEV_SERVER_PORT}/${WSS_PATH}`,
+          `ws://localhost:${DEV_SERVER_PORT}${WSS_PATH}`,
         ],
       ]),
     ],
     [
       Environment.production,
-      new Map([[ValueType.wssAddress, `wss://${WEBSITE_DOMAIN}/${WSS_PATH}`]]),
+      new Map([[ValueType.wssAddress, `wss://${WEBSITE_DOMAIN}${WSS_PATH}`]]),
     ],
   ]);
 
