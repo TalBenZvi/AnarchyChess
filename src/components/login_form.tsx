@@ -4,9 +4,11 @@ import toast, { Toaster } from "react-hot-toast";
 import { Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
-import { LoginStatus } from "../database/database_util";
+import { LoginParams, LoginStatus } from "../database/database_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
+import { ClientActionCenter } from "../client_side/client_action_center";
+import { User } from "../communication/communication_util";
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -20,6 +22,7 @@ interface LoginFormState {
 }
 
 class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
+  private clientActionCenter = ClientActionCenter.getInstance();
   state = {
     usernameOrEmail: "",
     password: "",
@@ -39,10 +42,12 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     this.setState(() => {
       return { isWaitingForResponse: true };
     });
-    Authentication.login(
-      this.state.usernameOrEmail,
-      this.state.password,
-      (status: LoginStatus) => {
+    this.clientActionCenter.login(
+      {
+        usernameOrEmail: this.state.usernameOrEmail,
+        password: this.state.password,
+      } as LoginParams,
+      (status: LoginStatus, user: User) => {
         switch (status) {
           case LoginStatus.success:
             this.props.onSuccess();

@@ -23,10 +23,7 @@ export class EnvironmentManager {
     [
       Environment.development,
       new Map([
-        [
-          ValueType.wssAddress,
-          `ws://localhost:${DEV_SERVER_PORT}${WSS_PATH}`,
-        ],
+        [ValueType.wssAddress, `ws://localhost:${DEV_SERVER_PORT}${WSS_PATH}`],
       ]),
     ],
     [
@@ -41,6 +38,42 @@ export class EnvironmentManager {
       ?.get(valueType);
   }
 }
+
+export interface User {
+  id: string;
+  username: string;
+  email?: string;
+  password?: string;
+}
+
+export enum WSRequestType {
+  login,
+}
+
+export interface WSRequest {
+  type: WSRequestType;
+  params: any;
+}
+
+export enum WSResponseInfo {
+  // login
+  user,
+}
+
+export interface WSResponse {
+  type: WSRequestType;
+  status: any;
+  info: Map<WSResponseInfo, any>;
+}
+
+export enum LoginStatus {
+  success,
+  failure,
+  connectionError,
+}
+
+
+
 
 export interface Event {
   index: number;
