@@ -13,6 +13,7 @@ import {
   ValueType,
   WEBSITE_DOMAIN,
 } from "../communication/communication_util";
+import { ClientActionCenter } from "../client_side/client_action_center";
 
 enum ViewMode {
   login,
@@ -28,9 +29,10 @@ interface HomePageState {
 }
 
 class HomePage extends React.Component<HomePageProps, HomePageState> {
+  clientActionCenter = ClientActionCenter.getInstance();
   state = {
     viewMode:
-      Authentication.currentUser == null
+      this.clientActionCenter.currentUser == null
         ? ViewMode.login
         : ViewMode.authenticated,
     hoveredMode: null as any,

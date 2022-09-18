@@ -2,6 +2,7 @@ import * as React from "react";
 import { Redirect } from "react-router";
 
 import homeTitle from "../assets/page_design/home_title.png";
+import { ClientActionCenter } from "../client_side/client_action_center";
 import { Authentication } from "../database/authentication";
 
 interface NavBarProps {
@@ -13,6 +14,7 @@ interface NavBarState {
 }
 
 class NavBar extends React.Component<NavBarProps, NavBarState> {
+  clientActionCenter = ClientActionCenter.getInstance();
   state = { redirectAddress: null as any };
 
   render() {
@@ -60,10 +62,11 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
         <button
           className="navbar-button"
           style={{
+            verticalAlign: "middle",
             right: "12%",
           }}
           onClick={() => {
-            Authentication.logout();
+            this.clientActionCenter.logout();
             window.location.reload();
           }}
         >

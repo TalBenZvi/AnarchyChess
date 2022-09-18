@@ -20,7 +20,7 @@ const RESPONSE_TIMEOUT: number = 10;
 export class ClientActionCenter {
   private static instance: ClientActionCenter = null as any;
   private wsClient: WebSocket;
-  private currentUser: User = null as any;
+  private _currentUser: User = null as any;
 
   // on-response functions
   private onLoginResponse: (status: LoginStatus, user: User) => void =
@@ -52,7 +52,7 @@ export class ClientActionCenter {
             clearTimeout(this.registerTimeout);
             let user = wsResponse.info.get(WSResponseInfo.user);
             if (wsResponse.status === LoginStatus.success) {
-              this.currentUser = user;
+              this._currentUser = user;
             }
             if (this.onRegisterResponse !== null) {
               this.onRegisterResponse(
@@ -69,7 +69,7 @@ export class ClientActionCenter {
             clearTimeout(this.loginTimeout);
             let user = wsResponse.info.get(WSResponseInfo.user);
             if (wsResponse.status === LoginStatus.success) {
-              this.currentUser = user;
+              this._currentUser = user;
             }
             if (this.onLoginResponse !== null) {
               this.onLoginResponse(wsResponse.status as LoginStatus, user);
@@ -79,6 +79,10 @@ export class ClientActionCenter {
           break;
       }
     });
+  }
+
+  get currentUser(): User {
+    return this._currentUser;
   }
 
   register(
@@ -117,5 +121,10 @@ export class ClientActionCenter {
     this.loginTimeout = setTimeout(() => {
       onResponse(LoginStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
+  }
+
+  logout() {
+    this.wsClient.close();
+    this._currentUser = null as any;
   }
 }
