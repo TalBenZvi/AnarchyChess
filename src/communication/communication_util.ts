@@ -3,11 +3,12 @@ export const PEERJS_SERVER_IP: string = "34.204.67.216";
 export const PEERJS_SERVER_PORT: number = 3030;
 export const PEERJS_SERVER_PATH: string = "/anarchy_chess";
 
+// constants
 export const WEBSITE_DOMAIN: string = "anarchychess.xyz";
 export const WSS_PATH: string = "/websocket";
-
 const DEV_SERVER_PORT: number = 3031;
 
+// environment
 export enum Environment {
   development,
   production,
@@ -39,6 +40,7 @@ export class EnvironmentManager {
   }
 }
 
+// objects
 export interface User {
   id: string;
   username: string;
@@ -46,8 +48,10 @@ export interface User {
   password?: string;
 }
 
+// websocket
 export enum WSRequestType {
   login,
+  register,
 }
 
 export interface WSRequest {
@@ -56,7 +60,7 @@ export interface WSRequest {
 }
 
 export enum WSResponseInfo {
-  // login
+  // register, login
   user,
 }
 
@@ -66,14 +70,31 @@ export interface WSResponse {
   info: Map<WSResponseInfo, any>;
 }
 
+// register
+export interface RegisterParams {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export enum RegisterStatus {
+  success,
+  usernameTaken,
+  emailRegistered,
+  connectionError,
+}
+
+// login
+export interface LoginParams {
+  usernameOrEmail: string;
+  password: string;
+}
+
 export enum LoginStatus {
   success,
   failure,
   connectionError,
 }
-
-
-
 
 export interface Event {
   index: number;
@@ -131,11 +152,6 @@ export enum GameStatus {
   waitingForPlayers,
   running,
   betweenRounds,
-}
-
-export interface OptionalConnectionCallbacks {
-  onSuccess?: () => void;
-  onFailure?: () => void;
 }
 
 export function replacer(key: any, value: any) {

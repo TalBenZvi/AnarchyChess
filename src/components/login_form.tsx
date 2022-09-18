@@ -4,11 +4,14 @@ import toast, { Toaster } from "react-hot-toast";
 import { Redirect } from "react-router";
 
 import { Authentication } from "../database/authentication";
-import { LoginParams, LoginStatus } from "../database/database_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 import { ClientActionCenter } from "../client_side/client_action_center";
-import { User } from "../communication/communication_util";
+import {
+  User,
+  LoginParams,
+  LoginStatus,
+} from "../communication/communication_util";
 
 interface LoginFormProps {
   onSuccess: () => void;

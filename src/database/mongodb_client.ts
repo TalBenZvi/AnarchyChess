@@ -1,11 +1,5 @@
 import {
-  User,
   Lobby,
-  RegisterParams,
-  RegisterStatus,
-  LoginStatus,
-  LoginResponse,
-  RegisterResponse,
   LobbyParams,
   LobbyCreationResponse,
   LobbyCreationStatus,
@@ -15,55 +9,6 @@ import {
 } from "./database_util";
 
 export class MongodbClient {
-  register(
-    user: RegisterParams,
-    callback: (status: RegisterStatus, user: User) => void
-  ): void {
-    const request = new XMLHttpRequest();
-    const url =
-      "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/register";
-    request.open("POST", url);
-    request.send(JSON.stringify(user));
-    request.onreadystatechange = (e) => {
-      if (request.readyState === 4) {
-        if (request.status === 200) {
-          let response: RegisterResponse = JSON.parse(
-            JSON.parse(request.responseText)
-          );
-          callback(response.status, response.user);
-        } else {
-          callback(RegisterStatus.connectionError, null as any);
-        }
-      }
-    };
-  }
-
-  login(
-    usernameOrEmail: string,
-    password: string,
-    callback: (status: LoginStatus, user: User) => void
-  ): void {
-    const request = new XMLHttpRequest();
-    const url =
-      "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/login";
-    request.open("POST", url);
-    request.send(
-      JSON.stringify({ usernameOrEmail: usernameOrEmail, password: password })
-    );
-    request.onreadystatechange = (e) => {
-      if (request.readyState === 4) {
-        if (request.status === 200) {
-          let response: LoginResponse = JSON.parse(
-            JSON.parse(request.responseText)
-          );
-          callback(response.status, response.user);
-        } else {
-          callback(LoginStatus.connectionError, null as any);
-        }
-      }
-    };
-  }
-
   createLobby(
     lobbyParams: LobbyParams,
     callback: (status: LobbyCreationStatus, createdLobby: Lobby) => void

@@ -17,9 +17,10 @@ import {
   Event,
   EventInfo,
   EventType,
-  OptionalConnectionCallbacks,
+  //OptionalConnectionCallbacks,
+  User,
 } from "../communication/communication_util";
-import { Lobby, User } from "../database/database_util";
+import { Lobby } from "../database/database_util";
 import { PlayerList } from "../game_flow_util/player_list";
 
 // in seconds
@@ -123,21 +124,21 @@ export class ClientFlowEngine implements GameClientObserver {
   attemptToConnect(
     lobby: Lobby,
     serverIndex: number,
-    optionalConnectionCallbacks: OptionalConnectionCallbacks
+    optionalConnectionCallbacks: any
   ) {
-    this._currentLobby = lobby;
-    this.gameClient.attemptToConnect(lobby.id, serverIndex, {
-      onSuccess: () => {
-        if (optionalConnectionCallbacks.onSuccess !== undefined) {
-          optionalConnectionCallbacks.onSuccess();
-        }
-      },
-      onFailure: () => {
-        if (optionalConnectionCallbacks.onFailure !== undefined) {
-          optionalConnectionCallbacks.onFailure();
-        }
-      },
-    });
+    // this._currentLobby = lobby;
+    // this.gameClient.attemptToConnect(lobby.id, serverIndex, {
+    //   onSuccess: () => {
+    //     if (optionalConnectionCallbacks.onSuccess !== undefined) {
+    //       optionalConnectionCallbacks.onSuccess();
+    //     }
+    //   },
+    //   onFailure: () => {
+    //     if (optionalConnectionCallbacks.onFailure !== undefined) {
+    //       optionalConnectionCallbacks.onFailure();
+    //     }
+    //   },
+    // });
   }
 
   destroyConnection(): void {

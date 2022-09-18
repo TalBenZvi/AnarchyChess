@@ -1,10 +1,6 @@
 import { WebSocketServer } from "ws";
 
-import {
-  LoginParams,
-  LoginStatus,
-  User,
-} from "../src/database/database_util.js";
+import {} from "./database_util.js";
 import {
   replacer,
   reviver,
@@ -13,6 +9,11 @@ import {
   WSResponse,
   WSResponseInfo,
   WSS_PATH,
+  LoginParams,
+  LoginStatus,
+  User,
+  RegisterParams,
+  RegisterStatus,
 } from "../src/communication/communication_util.js";
 import { MongodbOperations } from "./mongodb_operations.js";
 
@@ -30,27 +31,12 @@ export class AppServer {
           switch (request.type) {
             case WSRequestType.login:
               {
-                let loginParams: LoginParams = request.params;
-                MongodbOperations.login(
-                  loginParams,
-                  (status: LoginStatus, user: User) => {
-                    if (status === LoginStatus.success) {
-                      this.connectedUsers.set(client, user);
-                    }
-                    client.send(
-                      JSON.stringify(
-                        {
-                          type: WSRequestType.login,
-                          status: status,
-                          info: new Map<WSResponseInfo, any>([
-                            [WSResponseInfo.user, user],
-                          ]),
-                        } as WSResponse,
-                        replacer
-                      )
-                    );
-                  }
-                );
+                this.login(client, request.params as LoginParams);
+              }
+              break;
+            case WSRequestType.register:
+              {
+                this.register(client, request.params as RegisterParams);
               }
               break;
           }
@@ -61,20 +47,40 @@ export class AppServer {
 
   private login(client: any, loginParams: LoginParams) {
     MongodbOperations.login(loginParams, (status: LoginStatus, user: User) => {
-      switch (status) {
-        case LoginStatus.success:
-          {
-          }
-          break;
-        case LoginStatus.failure:
-          {
-          }
-          break;
-        case LoginStatus.connectionError:
-          {
-          }
-          break;
+      if (status === LoginStatus.success) {
+        this.connectedUsers.set(client, user);
       }
+      client.send(
+        JSON.stringify(
+          {
+            type: WSRequestType.login,
+            status: status,
+            info: new Map<WSResponseInfo, any>([[WSResponseInfo.user, user]]),
+          } as WSResponse,
+          replacer
+        )
+      );
     });
+  }
+
+  private register(client: any, registerParams: RegisterParams) {
+    MongodbOperations.register(
+      registerParams,
+      (status: RegisterStatus, user: User) => {
+        if (status === RegisterStatus.success) {
+          this.connectedUsers.set(client, user);
+        }
+        client.send(
+          JSON.stringify(
+            {
+              type: WSRequestType.register,
+              status: status,
+              info: new Map<WSResponseInfo, any>([[WSResponseInfo.user, user]]),
+            } as WSResponse,
+            replacer
+          )
+        );
+      }
+    );
   }
 }

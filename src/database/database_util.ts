@@ -1,9 +1,4 @@
-export interface User {
-  id: string;
-  username: string;
-  email?: string;
-  password?: string;
-}
+import { User, RegisterStatus } from "../communication/communication_util.js";
 
 export interface Lobby {
   id: string;
@@ -25,37 +20,8 @@ export function covertDatabaseLobby(databaseLobby: any): Lobby {
   } as Lobby;
 }
 
-export interface RegisterParams {
-  username: string;
-  email: string;
-  password: string;
-}
-
-export enum RegisterStatus {
-  success,
-  usernameTaken,
-  emailRegistered,
-  connectionError,
-}
-
 export interface RegisterResponse {
   status: RegisterStatus;
-  user: User;
-}
-
-export interface LoginParams {
-  usernameOrEmail: string;
-  password: string;
-}
-
-export enum LoginStatus {
-  success,
-  failure,
-  connectionError,
-}
-
-export interface LoginResponse {
-  status: LoginStatus;
   user: User;
 }
 

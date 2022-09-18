@@ -4,13 +4,14 @@ import { Redirect } from "react-router";
 import NavBar from "../components/navbar";
 import PlayerListComponent from "../components/player_list_component";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
-import { Lobby, User } from "../database/database_util";
+import { Lobby } from "../database/database_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { BaseBot } from "../bots/base_bot";
 import { RandomBot } from "../bots/random_bot";
 import { PlayerList } from "../game_flow_util/player_list";
 // import { TestBot } from "../bots/test_bot";
 import LobbyCard from "../components/lobby_card";
+import { User } from "../communication/communication_util";
 
 import appIcon from "../assets/page_design/clean_app_icon.png";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";

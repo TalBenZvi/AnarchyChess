@@ -3,11 +3,12 @@ import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 
 import { Authentication } from "../database/authentication";
-import { RegisterStatus } from "../database/database_util";
 
 import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
+import { ClientActionCenter } from "../client_side/client_action_center";
+import { RegisterParams, User, RegisterStatus } from "../communication/communication_util";
 
 const USERNAME_REGEX: RegExp = new RegExp("^[a-zA-Z0-9_\\-\\*]{3,20}$", "i");
 const EMAIL_REGEX: RegExp = new RegExp(
@@ -34,6 +35,7 @@ class RegisterForm extends React.Component<
   RegisterFormProps,
   RegisterFormState
 > {
+  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state = {
     username: "",
     email: "",
@@ -91,13 +93,13 @@ class RegisterForm extends React.Component<
     this.setState(() => {
       return { isWaitingForResponse: true };
     });
-    Authentication.register(
+    this.clientActionCenter.register(
       {
         username: this.state.username,
         email: this.state.email,
         password: this.state.password,
-      },
-      (status: RegisterStatus) => {
+      } as RegisterParams,
+      (status: RegisterStatus, user: User) => {
         switch (status) {
           case RegisterStatus.success:
             this.props.onSuccess();

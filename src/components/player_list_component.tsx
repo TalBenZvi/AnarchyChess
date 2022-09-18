@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { User } from "../database/database_util";
+import { User } from "../communication/communication_util";
 import { NUM_OF_PLAYERS, PieceColor } from "../game_flow_util/game_elements";
 import { PlayerList } from "../game_flow_util/player_list";
 

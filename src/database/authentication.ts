@@ -1,9 +1,5 @@
 import {
-  User,
   Lobby,
-  RegisterParams,
-  RegisterStatus,
-  LoginStatus,
   LobbyParams,
   LobbyCreationStatus,
   LobbyJoiningStatus,
@@ -11,6 +7,7 @@ import {
 import { MongodbClient } from "../database/mongodb_client";
 import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
+import { User } from "../communication/communication_util";
 
 export class Authentication {
   static currentUser: User = null as any;
@@ -29,38 +26,6 @@ export class Authentication {
     }
     Authentication.serverFlowEngine = null as any;
     Authentication.currentUser = null as any;
-  }
-
-  static register(
-    user: RegisterParams,
-    callback: (status: RegisterStatus) => void
-  ) {
-    Authentication.mongodbClient.register(
-      user,
-      (status: RegisterStatus, user: User) => {
-        if (status === RegisterStatus.success) {
-          Authentication.currentUser = user;
-        }
-        callback(status);
-      }
-    );
-  }
-
-  static login(
-    usernameOrEmail: string,
-    password: string,
-    callback: (status: LoginStatus) => void
-  ) {
-    Authentication.mongodbClient.login(
-      usernameOrEmail,
-      password,
-      (status: LoginStatus, user: User) => {
-        if (status === LoginStatus.success) {
-          Authentication.currentUser = user;
-        }
-        callback(status);
-      }
-    );
   }
 
   static createLobby(

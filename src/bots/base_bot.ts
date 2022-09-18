@@ -11,8 +11,8 @@ import {
   Position,
   PieceColor,
 } from "../game_flow_util/game_elements";
-import { Lobby, User } from "../database/database_util";
-import { OptionalConnectionCallbacks } from "../communication/communication_util";
+import { Lobby } from "../database/database_util";
+import { User } from "../communication/communication_util";
 import { PlayerList } from "../game_flow_util/player_list";
 
 export class BaseBot implements ClientFlowEngineObserver {
@@ -27,7 +27,7 @@ export class BaseBot implements ClientFlowEngineObserver {
   attemptToConnect(
     lobby: Lobby,
     serverIndex: number,
-    optionalConnectionCallbacks: OptionalConnectionCallbacks
+    optionalConnectionCallbacks: any
   ) {
     this.clientFlowEngine.attemptToConnect(
       lobby,

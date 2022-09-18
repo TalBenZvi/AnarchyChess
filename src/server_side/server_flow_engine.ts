@@ -26,8 +26,9 @@ import {
   RequestInfo,
   reviver,
   GameStatus,
+  User,
 } from "../communication/communication_util";
-import { Lobby, User } from "../database/database_util";
+import { Lobby } from "../database/database_util";
 import { Authentication } from "../database/authentication";
 import { PlayerList } from "../game_flow_util/player_list";
 
