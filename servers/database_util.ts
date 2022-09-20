@@ -1,29 +1,22 @@
 import {
   User,
+  Lobby,
   LoginStatus,
   RegisterStatus,
+  LobbyCreationStatus,
 } from "../src/communication/communication_util.js";
 
-export interface Lobby {
-  id: string;
-  name: string;
-  creatorName: string;
-  password: string;
-  areTeamsPrearranged: boolean;
-  memberIDs: string[];
-}
-
 // util
-export function covertDatabaseLobby(databaseLobby: any): Lobby {
-  return {
-    id: databaseLobby["_id"],
-    name: databaseLobby["name"],
-    creatorName: databaseLobby["creatorName"],
-    password: databaseLobby["password"],
-    areTeamsPrearranged: databaseLobby["areTeamsPrearranged"],
-    memberIDs: databaseLobby["memberIDs"],
-  } as Lobby;
-}
+// export function covertDatabaseLobby(databaseLobby: any): Lobby {
+//   return {
+//     id: databaseLobby["_id"],
+//     name: databaseLobby["name"],
+//     creatorName: databaseLobby["creatorName"],
+//     password: databaseLobby["password"],
+//     areTeamsPrearranged: databaseLobby["areTeamsPrearranged"],
+//     memberIDs: databaseLobby["memberIDs"],
+//   } as Lobby;
+// }
 
 // register
 export interface RegisterResponse {
@@ -35,20 +28,6 @@ export interface RegisterResponse {
 export interface LoginResponse {
   status: LoginStatus;
   user: User;
-}
-
-export interface LobbyParams {
-  creatorID: string;
-  creatorName: string;
-  name: string;
-  password: string;
-  areTeamsPrearranged: boolean;
-}
-
-export enum LobbyCreationStatus {
-  success,
-  nameTaken,
-  connectionError,
 }
 
 export interface LobbyCreationResponse {

@@ -70,9 +70,10 @@ class ClientPage
   }
 
   render() {
+    return <div />;
     let { lobbyState, playerList } = this.state;
     if (Authentication.currentUser == null) {
-      return <Redirect push to="/" />;
+      //return <Redirect push to="/" />;
     }
     let isHost: boolean =
       Authentication.serverFlowEngine != null &&

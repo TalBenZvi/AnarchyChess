@@ -48,10 +48,20 @@ export interface User {
   password?: string;
 }
 
+export interface Lobby {
+  creatorID: string;
+  name: string;
+  creatorName: string;
+  password: string;
+  areTeamsPrearranged: boolean;
+  capacity: number;
+}
+
 // websocket
 export enum WSRequestType {
   login,
   register,
+  createLobby,
 }
 
 export interface WSRequest {
@@ -62,6 +72,8 @@ export interface WSRequest {
 export enum WSResponseInfo {
   // register, login
   user,
+  // createLobby
+  newLobby,
 }
 
 export interface WSResponse {
@@ -93,6 +105,19 @@ export interface LoginParams {
 export enum LoginStatus {
   success,
   failure,
+  connectionError,
+}
+
+// lobby creation
+export interface LobbyCreationParams {
+  name: string;
+  password: string;
+  areTeamsPrearranged: boolean;
+}
+
+export enum LobbyCreationStatus {
+  success,
+  nameTaken,
   connectionError,
 }
 

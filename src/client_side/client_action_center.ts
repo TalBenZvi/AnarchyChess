@@ -12,6 +12,9 @@ import {
   LoginParams,
   RegisterParams,
   RegisterStatus,
+  LobbyCreationParams,
+  Lobby,
+  LobbyCreationStatus,
 } from "../communication/communication_util";
 
 // in seconds
@@ -23,14 +26,19 @@ export class ClientActionCenter {
   private _currentUser: User = null as any;
 
   // on-response functions
-  private onLoginResponse: (status: LoginStatus, user: User) => void =
-    null as any;
   private onRegisterResponse: (status: RegisterStatus, user: User) => void =
     null as any;
+  private onLoginResponse: (status: LoginStatus, user: User) => void =
+    null as any;
+  private onLobbyCreationResponse: (
+    status: LobbyCreationStatus,
+    newLobby: Lobby
+  ) => void = null as any;
 
   //timeouts
-  private loginTimeout: any = null;
   private registerTimeout: any = null;
+  private loginTimeout: any = null;
+  private lobbyCreationTimeout: any = null;
 
   static getInstance() {
     if (ClientActionCenter.instance === null) {
@@ -40,7 +48,6 @@ export class ClientActionCenter {
   }
 
   private constructor() {
-    console.log("here");
     this.wsClient = new WebSocket(
       EnvironmentManager.getValue(ValueType.wssAddress)
     );
@@ -78,6 +85,20 @@ export class ClientActionCenter {
             }
           }
           break;
+        // create lobby
+        case WSRequestType.createLobby:
+          {
+            clearTimeout(this.lobbyCreationTimeout);
+            let newLobby = wsResponse.info.get(WSResponseInfo.newLobby);
+            if (this.onLobbyCreationResponse != null) {
+              this.onLobbyCreationResponse(
+                wsResponse.status as LobbyCreationStatus,
+                newLobby
+              );
+              this.onLobbyCreationResponse = null as any;
+            }
+          }
+          break;
       }
     });
   }
@@ -86,20 +107,19 @@ export class ClientActionCenter {
     return this._currentUser;
   }
 
+  private sendRequest(request: WSRequest) {
+    this.wsClient.send(JSON.stringify(request, replacer));
+  }
+
   register(
     registerParams: RegisterParams,
     onResponse: (status: RegisterStatus, user: User) => void
-  ) {
+  ): void {
     this.onRegisterResponse = onResponse;
-    this.wsClient.send(
-      JSON.stringify(
-        {
-          type: WSRequestType.register,
-          params: registerParams,
-        } as WSRequest,
-        replacer
-      )
-    );
+    this.sendRequest({
+      type: WSRequestType.register,
+      params: registerParams,
+    } as WSRequest);
     this.registerTimeout = setTimeout(() => {
       onResponse(RegisterStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
@@ -108,24 +128,33 @@ export class ClientActionCenter {
   login(
     loginParams: LoginParams,
     onResponse: (status: LoginStatus, user: User) => void
-  ) {
+  ): void {
     this.onLoginResponse = onResponse;
-    this.wsClient.send(
-      JSON.stringify(
-        {
-          type: WSRequestType.login,
-          params: loginParams,
-        } as WSRequest,
-        replacer
-      )
-    );
+    this.sendRequest({
+      type: WSRequestType.login,
+      params: loginParams,
+    } as WSRequest);
     this.loginTimeout = setTimeout(() => {
       onResponse(LoginStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
   }
 
-  logout() {
+  logout(): void {
     this.wsClient.close();
     this._currentUser = null as any;
+  }
+
+  createLobby(
+    lobbyCreationParams: LobbyCreationParams,
+    onResponse: (status: LobbyCreationStatus, newLobby: Lobby) => void
+  ): void {
+    this.onLobbyCreationResponse = onResponse;
+    this.sendRequest({
+      type: WSRequestType.createLobby,
+      params: lobbyCreationParams,
+    });
+    this.lobbyCreationTimeout = setTimeout(() => {
+      onResponse(LobbyCreationStatus.connectionError, null as any);
+    }, RESPONSE_TIMEOUT * 1000);
   }
 }

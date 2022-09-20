@@ -6,9 +6,14 @@ import { Authentication } from "../database/authentication";
 import { LobbyCreationStatus } from "../database/database_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
+import { ClientActionCenter } from "../client_side/client_action_center";
+import {
+  Lobby,
+  LobbyCreationParams,
+} from "../communication/communication_util";
 
 interface LobbyCreationFormProps {
-  onSuccess: () => void;
+  onSuccess: (newLobby: Lobby) => void;
 }
 
 interface LobbyCreationFormState {
@@ -24,6 +29,7 @@ class LobbyCreationForm extends React.Component<
   LobbyCreationFormProps,
   LobbyCreationFormState
 > {
+  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state = {
     name: "",
     isPrivate: false,
@@ -54,18 +60,16 @@ class LobbyCreationForm extends React.Component<
     this.setState(() => {
       return { isWaitingForResponse: true };
     });
-    Authentication.createLobby(
+    this.clientActionCenter.createLobby(
       {
-        creatorID: Authentication.currentUser.id,
-        creatorName: Authentication.currentUser.username,
         name: name,
         password: isPrivate ? password : (null as any),
         areTeamsPrearranged: areTeamsPrearranged,
-      },
-      (status: LobbyCreationStatus) => {
+      } as LobbyCreationParams,
+      (status: LobbyCreationStatus, newLobby: Lobby) => {
         switch (status) {
           case LobbyCreationStatus.success:
-            this.props.onSuccess();
+            this.props.onSuccess(newLobby);
             break;
           case LobbyCreationStatus.nameTaken:
             toast("A lobby already exists with this name");

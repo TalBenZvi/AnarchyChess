@@ -1,22 +1,21 @@
 import axios from "axios";
 
 import {
-  Lobby,
   LoginResponse,
   RegisterResponse,
-  LobbyParams,
   LobbyCreationResponse,
-  LobbyCreationStatus,
   LobbyJoiningStatus,
   LobbyJoiningResponse,
-  covertDatabaseLobby,
 } from "./database_util.js";
 import {
   LoginParams,
   LoginStatus,
   User,
+  Lobby,
   RegisterParams,
   RegisterStatus,
+  LobbyCreationParams,
+  LobbyCreationStatus,
 } from "../src/communication/communication_util.js";
 
 export class MongodbOperations {
@@ -94,7 +93,7 @@ export class MongodbOperations {
   }
 
   static createLobby(
-    lobbyParams: LobbyParams,
+    lobbyParams: LobbyCreationParams,
     callback: (status: LobbyCreationStatus, createdLobby: Lobby) => void
   ): void {
     const request = new XMLHttpRequest();
@@ -120,20 +119,20 @@ export class MongodbOperations {
     userID: string,
     callback: (lobbies: Lobby[]) => void
   ): void {
-    const request = new XMLHttpRequest();
-    const url =
-      "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/getLobbies";
-    request.open("POST", url);
-    request.send(JSON.stringify({ userID: userID }));
-    request.onreadystatechange = (e) => {
-      if (request.readyState === 4) {
-        if (request.status === 200) {
-          callback(JSON.parse(request.responseText).map(covertDatabaseLobby));
-        } else {
-          callback([]);
-        }
-      }
-    };
+    // const request = new XMLHttpRequest();
+    // const url =
+    //   "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/getLobbies";
+    // request.open("POST", url);
+    // request.send(JSON.stringify({ userID: userID }));
+    // request.onreadystatechange = (e) => {
+    //   if (request.readyState === 4) {
+    //     if (request.status === 200) {
+    //       callback(JSON.parse(request.responseText).map(covertDatabaseLobby));
+    //     } else {
+    //       callback([]);
+    //     }
+    //   }
+    // };
   }
 
   static joinLobby(

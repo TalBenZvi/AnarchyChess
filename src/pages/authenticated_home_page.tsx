@@ -4,12 +4,13 @@ import LobbyCreationForm from "../components/lobby_creation_form";
 import LobbyList from "../components/lobby_list";
 import { Redirect } from "react-router";
 import { Authentication } from "../database/authentication";
+import { Lobby } from "../communication/communication_util";
 
 interface AuthenticatedHomePageProps {}
 
 interface AuthenticatedHomePageState {
   isLobbyCreationFormOpen: boolean;
-  shouldRedirectToLobby: boolean;
+  lobbyRedirectionID: string;
 }
 
 class AuthenticatedHomePage extends React.Component<
@@ -18,20 +19,15 @@ class AuthenticatedHomePage extends React.Component<
 > {
   state = {
     isLobbyCreationFormOpen: false,
-    shouldRedirectToLobby: false,
+    lobbyRedirectionID: null as any,
   };
 
   createALobby = () => {};
 
   render() {
-    let { isLobbyCreationFormOpen, shouldRedirectToLobby } = this.state;
-    if (shouldRedirectToLobby) {
-      return (
-        <Redirect
-          push
-          to={`/lobby/${Authentication.serverFlowEngine.lobby.id}`}
-        />
-      );
+    let { isLobbyCreationFormOpen, lobbyRedirectionID } = this.state;
+    if (lobbyRedirectionID != null) {
+      return <Redirect push to={`/lobby/${lobbyRedirectionID}`} />;
     }
     return (
       <div className="background">
@@ -69,8 +65,8 @@ class AuthenticatedHomePage extends React.Component<
               >
                 {/* form */}
                 <LobbyCreationForm
-                  onSuccess={() => {
-                    this.setState({ shouldRedirectToLobby: true });
+                  onSuccess={(newLobby: Lobby) => {
+                    this.setState({ lobbyRedirectionID: newLobby.creatorID });
                   }}
                 />
                 {/* cancel button */}
