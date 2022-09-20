@@ -56,7 +56,7 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
             right: "3%",
           }}
         >
-          {"placeholder"}
+          {this.clientActionCenter.currentUser.username}
         </div>
         {/* logout button */}
         <button

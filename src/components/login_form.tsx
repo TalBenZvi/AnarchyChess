@@ -45,7 +45,7 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     this.setState(() => {
       return { isWaitingForResponse: true };
     });
-    this.clientActionCenter.login(
+    ClientActionCenter.getInstance().login(
       {
         usernameOrEmail: this.state.usernameOrEmail,
         password: this.state.password,

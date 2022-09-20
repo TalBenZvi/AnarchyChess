@@ -19,11 +19,9 @@ import { MongodbOperations } from "./mongodb_operations.js";
 
 export class AppServer {
   private wss;
-  private connectedUsers: Map<any, User>;
 
   constructor(server: any) {
     this.wss = new WebSocketServer({ server: server, path: WSS_PATH });
-    this.connectedUsers = new Map();
     this.wss.on("connection", (client) => {
       client.on("message", (data) => {
         let request: WSRequest = JSON.parse(data.toString(), reviver);
@@ -48,7 +46,6 @@ export class AppServer {
   private login(client: any, loginParams: LoginParams) {
     MongodbOperations.login(loginParams, (status: LoginStatus, user: User) => {
       if (status === LoginStatus.success) {
-        this.connectedUsers.set(client, user);
       }
       client.send(
         JSON.stringify(
@@ -68,7 +65,6 @@ export class AppServer {
       registerParams,
       (status: RegisterStatus, user: User) => {
         if (status === RegisterStatus.success) {
-          this.connectedUsers.set(client, user);
         }
         client.send(
           JSON.stringify(

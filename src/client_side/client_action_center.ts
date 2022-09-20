@@ -40,6 +40,7 @@ export class ClientActionCenter {
   }
 
   private constructor() {
+    console.log("here");
     this.wsClient = new WebSocket(
       EnvironmentManager.getValue(ValueType.wssAddress)
     );

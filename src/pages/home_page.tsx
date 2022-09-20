@@ -29,12 +29,8 @@ interface HomePageState {
 }
 
 class HomePage extends React.Component<HomePageProps, HomePageState> {
-  clientActionCenter = ClientActionCenter.getInstance();
   state = {
-    viewMode:
-      this.clientActionCenter.currentUser == null
-        ? ViewMode.login
-        : ViewMode.authenticated,
+    viewMode: ViewMode.login,
     hoveredMode: null as any,
   };
 
@@ -48,20 +44,6 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
   }
 
   render() {
-    // const socket = new WebSocket(EnvironmentManager.getValue(ValueType.wssAddress));
-    // console.log("socket created");
-
-    // // Connection opened
-    // socket.addEventListener("open", (event) => {
-    //   console.log("connection opened");
-    //   socket.send("test message");
-    // });
-
-    // // Listen for messages
-    // socket.addEventListener("message", (event) => {
-    //   console.log("Message from server (test)", event.data);
-    // });
-
     let { viewMode, hoveredMode } = this.state;
     document.body.style.overflow = "hidden";
     return viewMode === ViewMode.authenticated ? (
