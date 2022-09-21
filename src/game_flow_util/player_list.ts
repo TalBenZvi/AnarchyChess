@@ -99,7 +99,8 @@ export class PlayerList {
     }
   }
 
-  generateRoleAssignments(): number[] {
+  // maps user id to the user's player index
+  generateRoleAssignments(): Map<string, number> {
     //temp
     // return [
     //   14, 21, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19,
@@ -120,29 +121,32 @@ export class PlayerList {
         [
           PieceColor.black,
           [...Array(NUM_OF_PLAYERS / 2)].map(
-            (_, i: number) => i + NUM_OF_PLAYERS
+            (_, i: number) => i + NUM_OF_PLAYERS / 2
           ),
         ],
       ]);
       shuffle(playerIndicesByColor.get(PieceColor.white) as number[]);
       shuffle(playerIndicesByColor.get(PieceColor.black) as number[]);
-      let roleAssignments: number[] = [];
+      let roleAssignments: Map<string, number> = new Map();
       for (let player of this.players) {
-        roleAssignments.push(
+        roleAssignments.set(
+          player.user.id,
           (playerIndicesByColor.get(player.assignedColor) as number[])[0]
         );
         (playerIndicesByColor.get(player.assignedColor) as number[]).shift();
       }
-      return [...roleAssignments];
+      return roleAssignments;
     } else if (
       !this._areTeamsPrearranged &&
       this.getConnectedUsers().length === NUM_OF_PLAYERS
     ) {
-      let roleAssignments: number[] = [...Array(NUM_OF_PLAYERS)].map(
-        (_, i: number) => i
-      );
-      shuffle(roleAssignments);
-      return [...roleAssignments];
+      let roleAssignments: Map<string, number> = new Map();
+      let roles: number[] = [...Array(NUM_OF_PLAYERS)].map((_, i: number) => i);
+      shuffle(roles);
+      for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+        roleAssignments.set(this.getUserAt(i).id, roles[i]);
+      }
+      return roleAssignments;
     } else {
       return null as any;
     }

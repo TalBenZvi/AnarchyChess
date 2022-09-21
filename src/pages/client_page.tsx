@@ -54,7 +54,7 @@ class ClientPage
         this.setState({ playerList: info.get(ClientEventInfo.playerList) });
         break;
       }
-      case ClientEventType.disconnection: {
+      case ClientEventType.disconnectedFromLobby: {
         this.setState({ lobbyState: LobbyState.closing });
         break;
       }
@@ -70,14 +70,11 @@ class ClientPage
   }
 
   render() {
-    return <div />;
     let { lobbyState, playerList } = this.state;
     if (Authentication.currentUser == null) {
       //return <Redirect push to="/" />;
     }
-    let isHost: boolean =
-      Authentication.serverFlowEngine != null &&
-      this.props.match.params.id === Authentication.serverFlowEngine.lobby.id;
+    let isHost: boolean = false;
     return (
       <div className="background">
         {(() => {
@@ -94,9 +91,9 @@ class ClientPage
                   isHost={isHost}
                   playerList={playerList}
                   clientFlowEngine={Authentication.clientFlowEngine}
-                  serverFlowEngine={
-                    isHost ? Authentication.serverFlowEngine : (null as any)
-                  }
+                  // serverFlowEngine={
+                  //   isHost ? Authentication.serverFlowEngine : (null as any)
+                  // }
                   onClose={() => {
                     Authentication.leaveLobby();
                     if (isHost) {
@@ -118,9 +115,9 @@ class ClientPage
                   isHost={isHost}
                   playerList={playerList}
                   clientFlowEngine={Authentication.clientFlowEngine}
-                  serverFlowEngine={
-                    isHost ? Authentication.serverFlowEngine : (null as any)
-                  }
+                  // serverFlowEngine={
+                  //   isHost ? Authentication.serverFlowEngine : (null as any)
+                  // }
                 />
               );
             }

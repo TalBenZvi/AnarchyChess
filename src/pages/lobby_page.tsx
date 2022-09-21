@@ -14,7 +14,8 @@ import LobbyCard from "../components/lobby_card";
 import { User } from "../communication/communication_util";
 
 import appIcon from "../assets/page_design/clean_app_icon.png";
-import { ServerFlowEngine } from "../server_side/server_flow_engine";
+// import { ServerFlowEngine } from "../server_side/server_flow_engine";
+import { ClientActionCenter } from "../client_side/client_action_center";
 
 const NUM_OF_RANDOM_BOTS: number = 2;
 
@@ -23,7 +24,7 @@ interface LobbyPageProps {
   isHost: boolean;
   playerList: PlayerList;
   clientFlowEngine: ClientFlowEngine;
-  serverFlowEngine: ServerFlowEngine;
+  // serverFlowEngine: ServerFlowEngine;
   onClose: () => void;
 }
 
@@ -33,6 +34,7 @@ interface LobbyPageState {
 }
 
 class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
+  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state: LobbyPageState = {
     isBotDialogOpen: false,
     shouldRedirectToHome: false,
@@ -49,45 +51,45 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
   }
 
   private async startGame() {
-    if (this.props.serverFlowEngine != null) {
-      this.props.serverFlowEngine.startGame();
-    }
+    // if (this.props.serverFlowEngine != null) {
+    //   this.props.serverFlowEngine.startGame();
+    // }
   }
 
   private fillwithBots = () => {
-    if (this.props.serverFlowEngine != null) {
-      this.setState({ isBotDialogOpen: false });
-      this.props.serverFlowEngine.kickAllBots();
-      this.isGameStarting = true;
-      let playerList = this.props.serverFlowEngine.players;
-      let numOfRequiredBots = playerList.filter(
-        (player: User) => player == null
-      ).length;
-      let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
-        let user: User = {
-          id: `BOT_${i}_${new Date().getTime()}`,
-          username: `bot_${i + 1}`,
-        };
-        if (i < NUM_OF_RANDOM_BOTS) {
-          return new RandomBot(user);
-        } else {
-          return new BaseBot(user);
-        }
-      });
-      let nextAvailableBotIndex: number = 0;
-      for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-        if (playerList[i] == null) {
-          bots[nextAvailableBotIndex].attemptToConnect(this.props.lobby, i, {
-            onFailure: () => {
-              for (let bot of bots) {
-                bot.disconnect();
-              }
-            },
-          });
-          nextAvailableBotIndex++;
-        }
-      }
-    }
+    // if (this.props.serverFlowEngine != null) {
+    //   this.setState({ isBotDialogOpen: false });
+    //   this.props.serverFlowEngine.kickAllBots();
+    //   this.isGameStarting = true;
+    //   let playerList = this.props.serverFlowEngine.players;
+    //   let numOfRequiredBots = playerList.filter(
+    //     (player: User) => player == null
+    //   ).length;
+    //   let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
+    //     let user: User = {
+    //       id: `BOT_${i}_${new Date().getTime()}`,
+    //       username: `bot_${i + 1}`,
+    //     };
+    //     if (i < NUM_OF_RANDOM_BOTS) {
+    //       return new RandomBot(user);
+    //     } else {
+    //       return new BaseBot(user);
+    //     }
+    //   });
+    //   let nextAvailableBotIndex: number = 0;
+    //   for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+    //     if (playerList[i] == null) {
+    //       bots[nextAvailableBotIndex].attemptToConnect(this.props.lobby, i, {
+    //         onFailure: () => {
+    //           for (let bot of bots) {
+    //             bot.disconnect();
+    //           }
+    //         },
+    //       });
+    //       nextAvailableBotIndex++;
+    //     }
+    //   }
+    // }
   };
 
   render() {
@@ -97,7 +99,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
       playerList,
       onClose,
       clientFlowEngine,
-      serverFlowEngine,
+      // serverFlowEngine,
     } = this.props;
     let { isBotDialogOpen, shouldRedirectToHome } = this.state;
     if (shouldRedirectToHome) {
@@ -134,12 +136,9 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
           <PlayerListComponent
             width={600}
             height={700}
-            currentUser={
-              clientFlowEngine == null ? (null as any) : clientFlowEngine.user
-            }
+            currentUser={this.clientActionCenter.currentUser}
             isHost={isHost}
             playerList={playerList}
-            serverFlowEngine={serverFlowEngine}
           />
         </div>
         {/* lobby card */}
@@ -201,7 +200,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
               fontSize: 20,
             }}
             onClick={() => {
-              serverFlowEngine.kickAllBots();
+              // serverFlowEngine.kickAllBots();
             }}
           >
             Disconnect All Bots

@@ -15,15 +15,33 @@ import {
   LobbyCreationParams,
   Lobby,
   LobbyCreationStatus,
+  GameEvent,
+  MoveRequestParams,
 } from "../communication/communication_util";
+import { Move } from "../game_flow_util/game_elements";
+import { ClientFlowEngine } from "./client_flow_engine";
 
 // in seconds
 const RESPONSE_TIMEOUT: number = 10;
 
 export class ClientActionCenter {
   private static instance: ClientActionCenter = null as any;
-  private wsClient: WebSocket;
+
+  private wsClient: WebSocket = new WebSocket(
+    EnvironmentManager.getValue(ValueType.wssAddress)
+  );
   private _currentUser: User = null as any;
+  private _currentLobby: Lobby = null as any;
+  private clientFlowEngine: ClientFlowEngine = new ClientFlowEngine(
+    (move: Move) => {
+      this.sendRequest({
+        type: WSRequestType.inGame,
+        params: {
+          move: move,
+        } as MoveRequestParams,
+      } as WSRequest);
+    }
+  );
 
   // on-response functions
   private onRegisterResponse: (status: RegisterStatus, user: User) => void =
@@ -48,9 +66,6 @@ export class ClientActionCenter {
   }
 
   private constructor() {
-    this.wsClient = new WebSocket(
-      EnvironmentManager.getValue(ValueType.wssAddress)
-    );
     this.wsClient.addEventListener("message", (event) => {
       let wsResponse: WSResponse = JSON.parse(event.data.toString(), reviver);
       switch (wsResponse.type) {
@@ -90,6 +105,9 @@ export class ClientActionCenter {
           {
             clearTimeout(this.lobbyCreationTimeout);
             let newLobby = wsResponse.info.get(WSResponseInfo.newLobby);
+            if (wsResponse.status === LobbyCreationStatus.success) {
+              this._currentLobby = newLobby;
+            }
             if (this.onLobbyCreationResponse != null) {
               this.onLobbyCreationResponse(
                 wsResponse.status as LobbyCreationStatus,
@@ -99,12 +117,24 @@ export class ClientActionCenter {
             }
           }
           break;
+        case WSRequestType.inGame:
+          {
+            let gameEvent: GameEvent = wsResponse.info.get(
+              WSResponseInfo.gameEvent
+            );
+            this.clientFlowEngine.registerEvent(gameEvent);
+          }
+          break;
       }
     });
   }
 
   get currentUser(): User {
     return this._currentUser;
+  }
+
+  get currentLobby(): Lobby {
+    return this._currentLobby;
   }
 
   private sendRequest(request: WSRequest) {

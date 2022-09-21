@@ -5,7 +5,7 @@ import { NUM_OF_PLAYERS, PieceColor } from "../game_flow_util/game_elements";
 import { PlayerList } from "../game_flow_util/player_list";
 
 import menuIcon from "../assets/page_design/menu_icon.png";
-import { ServerFlowEngine } from "../server_side/server_flow_engine";
+// import { ServerFlowEngine } from "../server_side/server_flow_engine";
 
 const TILE_FONT_COLORS: Map<PieceColor, string> = new Map([
   [null as any, "#ccc"],
@@ -22,7 +22,7 @@ interface PlayerListProps {
   currentUser: User;
   isHost: boolean;
   playerList: PlayerList;
-  serverFlowEngine: ServerFlowEngine;
+  // serverFlowEngine: ServerFlowEngine;
 }
 
 interface PlayerListState {
@@ -138,7 +138,7 @@ class PlayerListComponent extends React.Component<
   }
 
   render() {
-    let { width, height, currentUser, playerList, serverFlowEngine } =
+    let { width, height, currentUser, playerList } =
       this.props;
     let { openMenuIndex } = this.state;
 
@@ -268,21 +268,21 @@ class PlayerListComponent extends React.Component<
                       textAlign: "center",
                     }}
                     onClick={() => {
-                      switch (option) {
-                        case KICK_MENU_TITLE: {
-                          if (serverFlowEngine != null) {
-                            serverFlowEngine.kickPlayer(openMenuPlayer);
-                          }
-                          break;
-                        }
-                        case CHANGE_TEAM_MENU_TITLE: {
-                          if (serverFlowEngine != null) {
-                            serverFlowEngine.changePlayerTeam(openMenuPlayer);
-                          }
-                          break;
-                        }
-                      }
-                      this.setState({ openMenuIndex: null as any });
+                      // switch (option) {
+                      //   case KICK_MENU_TITLE: {
+                      //     if (serverFlowEngine != null) {
+                      //       serverFlowEngine.kickPlayer(openMenuPlayer);
+                      //     }
+                      //     break;
+                      //   }
+                      //   case CHANGE_TEAM_MENU_TITLE: {
+                      //     if (serverFlowEngine != null) {
+                      //       serverFlowEngine.changePlayerTeam(openMenuPlayer);
+                      //     }
+                      //     break;
+                      //   }
+                      // }
+                      // this.setState({ openMenuIndex: null as any });
                     }}
                   >
                     <div className="menu-option">{option}</div>

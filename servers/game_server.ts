@@ -1,28 +1,33 @@
 import Peer from "peerjs";
 
 import {
+  Move,
   NUM_OF_PLAYERS,
   PieceColor,
 } from "../src/game_flow_util/game_elements.js";
 import {
-  Event,
-  EventInfo,
-  EventType,
+  GameEvent,
+  GameEventInfo,
+  GameEventType,
   replacer,
   reviver,
-  Request,
   PEERJS_SERVER_IP,
   PEERJS_SERVER_PORT,
   PEERJS_SERVER_PATH,
   Lobby,
 } from "../src/communication/communication_util.js";
-import { GameMechanicsEngine } from "./game_mechanics_engine.js";
+import {
+  GameMechanicsEngine,
+  MechanicsEngineNotificationInfo,
+  MechanicsEngineNotificationType,
+  MechanicsEngineObserver,
+} from "./game_mechanics_engine.js";
 
 const CREATOR_CLIENT_INDEX: number = 0;
 
-export class GameServer {
+export class GameServer implements MechanicsEngineObserver {
   private clients: any[] = [...Array(NUM_OF_PLAYERS).fill(null)];
-  private engine: GameMechanicsEngine = new GameMechanicsEngine();
+  private engine: GameMechanicsEngine = new GameMechanicsEngine(this);
 
   constructor(creatorClient: any, private lobby: Lobby) {
     this.clients[CREATOR_CLIENT_INDEX] = creatorClient;
@@ -40,14 +45,14 @@ export class GameServer {
     return false;
   }
 
-  startGame(
-    roleAssignemnts: number[],
-    initialPlayerCooldowns: number[]
-  ): void {}
+  handleMoveRequest(moveRequest: Move, userID) {
+    this.engine.handleMoveRequest(moveRequest, userID);
+  }
 
-  endGame(winningColor: PieceColor) {}
-
-  private sendEvent(event: Event, playerIndex: number) {}
-
-  broadcastEvent(event: Event): void {}
+  notify(
+    notification: MechanicsEngineNotificationType,
+    notificationInfo: Map<MechanicsEngineNotificationInfo, any>
+  ): void {
+    throw new Error("Method not implemented.");
+  }
 }

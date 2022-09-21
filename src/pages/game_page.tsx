@@ -7,7 +7,7 @@ import PromotionScreen from "../components/promotion_screen";
 import GameStartScreen from "../components/game_start_screen";
 import { PieceColor } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
-import { ServerFlowEngine } from "../server_side/server_flow_engine";
+// import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import ChessBoard from "../components/chess_board";
 import GameEndScreen from "../components/game_end_screen";
 import ScoreBoard from "../components/scoreboard";
@@ -19,13 +19,14 @@ import { SoundEffectsPlayer } from "../components/sound_effects_player";
 import exitIcon from "../assets/page_design/exit_icon.png";
 import mutedIcon from "../assets/page_design/muted_icon.png";
 import unmutedIcon from "../assets/page_design/unmuted_icon.png";
+import { ClientActionCenter } from "../client_side/client_action_center";
 
 interface GamePageProps {
   lobby: Lobby;
   isHost: boolean;
   playerList: PlayerList;
   clientFlowEngine: ClientFlowEngine;
-  serverFlowEngine: ServerFlowEngine;
+  // serverFlowEngine: ServerFlowEngine;
 }
 
 interface GamePageState {
@@ -34,6 +35,7 @@ interface GamePageState {
 }
 
 class GamePage extends React.Component<GamePageProps, GamePageState> {
+  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state = {
     windowWidth: window.innerWidth,
     windowHeight: window.innerHeight,
@@ -60,7 +62,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
   };
 
   render() {
-    let { lobby, playerList, isHost, clientFlowEngine, serverFlowEngine } =
+    let { lobby, playerList, isHost, clientFlowEngine } =
       this.props;
     let { windowWidth, windowHeight } = this.state;
 
@@ -200,11 +202,10 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
             width={playerListWidth}
             height={playerListHeight}
             currentUser={
-              clientFlowEngine == null ? (null as any) : clientFlowEngine.user
+              this.clientActionCenter.currentUser
             }
             playerList={playerList}
             isHost={false}
-            serverFlowEngine={null as any}
           />
         </div>
         {/* exit button */}
@@ -220,9 +221,9 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
               height: buttonSize,
             }}
             onClick={() => {
-              if (serverFlowEngine != null) {
-                serverFlowEngine.returnToLobby();
-              }
+              // if (serverFlowEngine != null) {
+              //   serverFlowEngine.returnToLobby();
+              // }
             }}
           >
             <img

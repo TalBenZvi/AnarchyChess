@@ -1,3 +1,5 @@
+import { Move } from "../game_flow_util/game_elements";
+
 export const PEERJS_SERVER_IP: string = "34.204.67.216";
 // export const PEERJS_SERVER_IP: string = "127.0.0.1";
 export const PEERJS_SERVER_PORT: number = 3030;
@@ -62,6 +64,7 @@ export enum WSRequestType {
   login,
   register,
   createLobby,
+  inGame,
 }
 
 export interface WSRequest {
@@ -74,6 +77,8 @@ export enum WSResponseInfo {
   user,
   // createLobby
   newLobby,
+  // inGame
+  gameEvent,
 }
 
 export interface WSResponse {
@@ -121,13 +126,14 @@ export enum LobbyCreationStatus {
   connectionError,
 }
 
-export interface Event {
-  index: number;
-  type: EventType;
-  info: Map<EventInfo, string>;
+// move request
+export interface MoveRequestParams {
+  move: Move;
 }
 
-export enum EventType {
+// game event
+export enum GameEventType {
+  disconnectedFromLobby,
   playerListUpdate,
   gameStarted,
   gameEnded,
@@ -136,7 +142,7 @@ export enum EventType {
   respawn,
 }
 
-export enum EventInfo {
+export enum GameEventInfo {
   // playerListUpdate
   playerList,
   // gameStarted
@@ -154,23 +160,11 @@ export enum EventInfo {
   respawnSquare,
 }
 
-export enum RequestType {
-  connection,
-  disconnection,
-  move,
+export interface GameEvent {
+  type: GameEventType;
+  info: Map<GameEventInfo, string>;
 }
 
-export enum RequestInfo {
-  // connection
-  user,
-  // move
-  move,
-}
-
-export interface Request {
-  type: RequestType;
-  info: Map<RequestInfo, string>;
-}
 
 export enum GameStatus {
   inactive,

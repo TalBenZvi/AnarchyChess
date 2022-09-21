@@ -1,10 +1,4 @@
 import {
-  GameClient,
-  ClientNotificationType,
-  ClientNotificationInfo,
-  GameClientObserver,
-} from "./game_client";
-import {
   Position,
   Move,
   Square,
@@ -14,9 +8,9 @@ import {
   PieceType,
 } from "../game_flow_util/game_elements";
 import {
-  Event,
-  EventInfo,
-  EventType,
+  GameEvent,
+  GameEventInfo,
+  GameEventType,
   //OptionalConnectionCallbacks,
   User,
 } from "../communication/communication_util";
@@ -27,7 +21,7 @@ import { PlayerList } from "../game_flow_util/player_list";
 export const GAME_START_DELAY: number = 2;
 
 export enum ClientEventType {
-  disconnection,
+  disconnectedFromLobby,
   playerListUpdate,
   roleAssigned,
   gameStarted,
@@ -70,8 +64,8 @@ export interface ClientFlowEngineObserver {
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void;
 }
 
-export class ClientFlowEngine implements GameClientObserver {
-  private gameClient: GameClient;
+export class ClientFlowEngine {
+  //private gameClient: GameClient;
   private _currentLobby: Lobby = null as any;
 
   isGameRunning: boolean = false;
@@ -81,12 +75,8 @@ export class ClientFlowEngine implements GameClientObserver {
 
   private observers: ClientFlowEngineObserver[] = [];
 
-  // debug
-  public shouldStopSimulation: boolean = false;
-  private receivedEventIndices: number[] = [];
-
-  constructor(private _user: User) {
-    this.gameClient = new GameClient(this, _user);
+  constructor(private _sendMove: (move: Move) => void) {
+    //this.gameClient = new GameClient(this);
   }
 
   get playerIndex(): number {
@@ -95,10 +85,6 @@ export class ClientFlowEngine implements GameClientObserver {
 
   get currentLobby(): Lobby {
     return { ...this._currentLobby };
-  }
-
-  get user(): User {
-    return this._user;
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -120,33 +106,6 @@ export class ClientFlowEngine implements GameClientObserver {
     }
   }
 
-  // returns whether or not the connection was successfull
-  attemptToConnect(
-    lobby: Lobby,
-    serverIndex: number,
-    optionalConnectionCallbacks: any
-  ) {
-    // this._currentLobby = lobby;
-    // this.gameClient.attemptToConnect(lobby.id, serverIndex, {
-    //   onSuccess: () => {
-    //     if (optionalConnectionCallbacks.onSuccess !== undefined) {
-    //       optionalConnectionCallbacks.onSuccess();
-    //     }
-    //   },
-    //   onFailure: () => {
-    //     if (optionalConnectionCallbacks.onFailure !== undefined) {
-    //       optionalConnectionCallbacks.onFailure();
-    //     }
-    //   },
-    // });
-  }
-
-  destroyConnection(): void {
-    if (this.gameClient != null) {
-      this.gameClient.destroyConenction();
-    }
-  }
-
   getPosition(): Position {
     return this.position;
   }
@@ -154,7 +113,8 @@ export class ClientFlowEngine implements GameClientObserver {
   sendMove(move: Move): void {
     if (this.isGameRunning) {
       if (move == null || !move.isMissingPromotionType()) {
-        this.gameClient.sendMove(move);
+        // this.gameClient.sendMove(move);
+        this._sendMove(move);
         this.selectedMove =
           move == null ? (null as any) : new Square(move.row, move.column);
       }
@@ -199,7 +159,7 @@ export class ClientFlowEngine implements GameClientObserver {
   private startGame(playerIndex: number, initialCooldown: number): void {
     this.isGameRunning = true;
     this._playerIndex = playerIndex;
-    this.gameClient.playerIndex = playerIndex;
+    //this.gameClient.playerIndex = playerIndex;
     this.position = new Position(`client ${playerIndex}`);
     this.position.setToStartingPosition();
     this.notifyObservers(
@@ -228,7 +188,6 @@ export class ClientFlowEngine implements GameClientObserver {
     this.isGameRunning = false;
     this.selectedMove = null as any;
     this._playerIndex = null as any;
-    this.gameClient.playerIndex = null as any;
   }
 
   private returnToLobby(): void {
@@ -239,7 +198,6 @@ export class ClientFlowEngine implements GameClientObserver {
     this.isGameRunning = false;
     this.selectedMove = null as any;
     this._playerIndex = null as any;
-    this.gameClient.playerIndex = null as any;
   }
 
   private respawnPlayer(
@@ -260,46 +218,45 @@ export class ClientFlowEngine implements GameClientObserver {
     this.reexamineSelectedMove();
   }
 
-  private registerEvent(event: Event) {
-    this.receivedEventIndices.push(event.index);
+  registerEvent(event: GameEvent) {
     switch (event.type) {
       // player list update
-      case EventType.playerListUpdate: {
+      case GameEventType.playerListUpdate: {
         let playerList: PlayerList = new PlayerList(false);
-        playerList.setFromJSON(event.info.get(EventInfo.playerList) as string);
+        playerList.setFromJSON(event.info.get(GameEventInfo.playerList) as string);
         this.updatePlayerList(playerList);
         break;
       }
       // game started
-      case EventType.gameStarted: {
+      case GameEventType.gameStarted: {
         this.startGame(
-          parseInt(event.info.get(EventInfo.playerIndex) as string),
-          parseFloat(event.info.get(EventInfo.initialCooldown) as string)
+          parseInt(event.info.get(GameEventInfo.playerIndex) as string),
+          parseFloat(event.info.get(GameEventInfo.initialCooldown) as string)
         );
         break;
       }
       // game ended
-      case EventType.gameEnded: {
+      case GameEventType.gameEnded: {
         this.endGame(
-          JSON.parse(event.info.get(EventInfo.winningColor) as string)
+          JSON.parse(event.info.get(GameEventInfo.winningColor) as string)
         );
         break;
       }
       // return to lobby
-      case EventType.returnToLobby: {
+      case GameEventType.returnToLobby: {
         this.returnToLobby();
         break;
       }
       // move
-      case EventType.move: {
+      case GameEventType.move: {
         let moveNotification: Move = JSON.parse(
-          event.info.get(EventInfo.move) as string
+          event.info.get(GameEventInfo.move) as string
         );
         let movingPlayerIndex: number = parseInt(
-          event.info.get(EventInfo.playerIndex) as string
+          event.info.get(GameEventInfo.playerIndex) as string
         );
         let move: Move = this.position.locateMoveForPlayer(
-          parseInt(event.info.get(EventInfo.playerIndex) as string),
+          parseInt(event.info.get(GameEventInfo.playerIndex) as string),
           moveNotification
         );
         let movingPlayerLocation: Square =
@@ -313,7 +270,7 @@ export class ClientFlowEngine implements GameClientObserver {
               move.column
             );
             let respawnTimer: number = parseInt(
-              event.info.get(EventInfo.respawnTimer) as string
+              event.info.get(GameEventInfo.respawnTimer) as string
             );
             this.killPlayer(dyingPlayerIndex, respawnTimer);
           }
@@ -324,14 +281,14 @@ export class ClientFlowEngine implements GameClientObserver {
               move.column
             );
             let respawnTimer: number = parseInt(
-              event.info.get(EventInfo.enPassantRespawnTimer) as string
+              event.info.get(GameEventInfo.enPassantRespawnTimer) as string
             );
             this.killPlayer(enPassantedPlayerIndex, respawnTimer);
           }
           // execute move
           this.position.move(movingPlayerIndex, move.row, move.column);
           let cooldownTimer: number = parseFloat(
-            event.info.get(EventInfo.cooldown) as string
+            event.info.get(GameEventInfo.cooldown) as string
           );
           this.notifyObservers(
             ClientEventType.move,
@@ -392,33 +349,33 @@ export class ClientFlowEngine implements GameClientObserver {
         break;
       }
       // respawn
-      case EventType.respawn: {
+      case GameEventType.respawn: {
         this.respawnPlayer(
-          parseInt(event.info.get(EventInfo.playerIndex) as string),
-          JSON.parse(event.info.get(EventInfo.respawnSquare) as string)
+          parseInt(event.info.get(GameEventInfo.playerIndex) as string),
+          JSON.parse(event.info.get(GameEventInfo.respawnSquare) as string)
         );
         break;
       }
     }
   }
 
-  notify(
-    notification: ClientNotificationType,
-    notificationInfo: Map<ClientNotificationInfo, any>
-  ): void {
-    switch (notification) {
-      case ClientNotificationType.disconnectedFromServer: {
-        this.gameClient.destroyConenction();
-        this.notifyObservers(
-          ClientEventType.disconnection,
-          new Map<ClientEventInfo, any>()
-        );
-        break;
-      }
-      case ClientNotificationType.receivedEvent: {
-        this.registerEvent(notificationInfo.get(ClientNotificationInfo.event));
-        break;
-      }
-    }
-  }
+  // notify(
+  //   notification: ClientNotificationType,
+  //   notificationInfo: Map<ClientNotificationInfo, any>
+  // ): void {
+  //   switch (notification) {
+  //     case ClientNotificationType.disconnectedFromServer: {
+  //       this.gameClient.destroyConenction();
+  //       this.notifyObservers(
+  //         ClientEventType.disconnection,
+  //         new Map<ClientEventInfo, any>()
+  //       );
+  //       break;
+  //     }
+  //     case ClientNotificationType.receivedEvent: {
+  //       this.registerEvent(notificationInfo.get(ClientNotificationInfo.event));
+  //       break;
+  //     }
+  //   }
+  // }
 }

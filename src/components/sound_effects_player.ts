@@ -169,7 +169,7 @@ export class SoundEffectsPlayer implements ClientFlowEngineObserver {
         }
         break;
       }
-      case ClientEventType.disconnection: {
+      case ClientEventType.disconnectedFromLobby: {
         this.clientFlowEngine.removeObserver(this);
         break;
       }

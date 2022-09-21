@@ -16,6 +16,7 @@ import {
   RegisterStatus,
   LobbyCreationParams,
   LobbyCreationStatus,
+  MoveRequestParams,
 } from "../src/communication/communication_util.js";
 import { MongodbOperations } from "./mongodb_operations.js";
 import { GameServer } from "./game_server.js";
@@ -55,6 +56,16 @@ export class AppServer {
             case WSRequestType.createLobby:
               {
                 this.createLobby(client, request.params as LobbyCreationParams);
+              }
+              break;
+            case WSRequestType.inGame:
+              {
+                this.serverAssignments
+                  .get(getUser(client).id)
+                  .handleMoveRequest(
+                    (request.params as MoveRequestParams).move,
+                    getUser(client)
+                  );
               }
               break;
           }

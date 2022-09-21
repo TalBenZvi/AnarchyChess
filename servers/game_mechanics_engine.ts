@@ -12,13 +12,7 @@ import {
   BLACK_KING_PLAYER_INDEX,
 } from "../src/game_flow_util/game_elements.js";
 import {
-  Event,
-  EventType,
-  EventInfo,
   replacer,
-  Request,
-  RequestType,
-  RequestInfo,
   reviver,
   GameStatus,
   User,
@@ -34,6 +28,9 @@ const GAME_INTERVAL: number = 3;
 export enum MechanicsEngineNotificationType {
   gameStarted,
   gameEnded,
+  returningToLobby,
+  move,
+  respawn,
 }
 
 export enum MechanicsEngineNotificationInfo {
@@ -42,6 +39,15 @@ export enum MechanicsEngineNotificationInfo {
   initialPlayerCooldowns,
   // gameEnded
   winningColor,
+  // move, respawn
+  playerIndex,
+  // move
+  move,
+  respawnTimer,
+  enPassantRespawnTimer,
+  cooldown,
+  // respawn
+  respawnSquare,
 }
 
 export interface MechanicsEngineObserver {
@@ -57,12 +63,14 @@ export class GameMechanicsEngine {
   private playerList: PlayerList = null as any;
   private position: Position = new Position("server");
   private gameStatus: GameStatus = GameStatus.inactive;
-  private roleAssignemnts: number[] = null as any;
+  private roleAssignemnts: Map<string, number> = null as any;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
   private isAlive: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(true);
   private respawnTimeouts: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private newGameTimeout: NodeJS.Timeout = null as any;
+
+  constructor(private observer: MechanicsEngineObserver) {}
 
   get lobby(): Lobby {
     return this._lobby;
@@ -70,32 +78,6 @@ export class GameMechanicsEngine {
 
   get players(): User[] {
     return this.playerList.getAllUsers();
-  }
-
-  acceptConnections(lobby: Lobby): void {
-    // if (this.gameStatus === GameStatus.inactive) {
-    //   this.gameStatus = GameStatus.waitingForPlayers;
-    //   this._lobby = lobby;
-    //   this.gameServer.acceptConnections(lobby.id);
-    //   this.playerList = new PlayerList(lobby.areTeamsPrearranged);
-    // }
-  }
-
-  private kickPlayer(player: User): void {
-    // let userIndex = this.playerList.indexOf(player);
-    // if (userIndex !== -1) {
-    //   this.playerList.removePlayerAtIndex(userIndex);
-    //   this.gameServer.disconnectFromUser(userIndex);
-    //   this.sendPlayerListUpdates();
-    // }
-  }
-
-  kickAllBots() {
-    for (let player of this.playerList.getAllUsers()) {
-      if (player != null && player.id.includes("BOT")) {
-        this.kickPlayer(player);
-      }
-    }
   }
 
   changePlayerTeam(player: User) {
@@ -125,9 +107,18 @@ export class GameMechanicsEngine {
       let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
         (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
       );
-      this.gameServer.startGame(
-        [...this.roleAssignemnts],
-        initialPlayerCooldowns
+      this.observer.notify(
+        MechanicsEngineNotificationType.gameStarted,
+        new Map([
+          [
+            MechanicsEngineNotificationInfo.roleAssignemnts,
+            this.roleAssignemnts as any,
+          ],
+          [
+            MechanicsEngineNotificationInfo.initialPlayerCooldowns,
+            initialPlayerCooldowns,
+          ],
+        ])
       );
     }
   }
@@ -136,7 +127,10 @@ export class GameMechanicsEngine {
     if (this.gameStatus === GameStatus.running) {
       this.gameStatus = GameStatus.betweenRounds;
       this.resetGameplayElements();
-      this.gameServer.endGame(winningColor);
+      this.observer.notify(
+        MechanicsEngineNotificationType.gameEnded,
+        new Map([[MechanicsEngineNotificationInfo.winningColor, winningColor]])
+      );
       this.newGameTimeout = setTimeout(() => {
         this.startGame();
       }, GAME_INTERVAL * 1000);
@@ -154,11 +148,10 @@ export class GameMechanicsEngine {
       this.gameStatus = GameStatus.waitingForPlayers;
       this.position = new Position();
       this.resetGameplayElements();
-      this.gameServer.broadcastEvent({
-        index: null as any,
-        type: EventType.returnToLobby,
-        info: new Map<EventInfo, string>(),
-      });
+      this.observer.notify(
+        MechanicsEngineNotificationType.returningToLobby,
+        new Map()
+      );
     }
   }
 
@@ -180,14 +173,13 @@ export class GameMechanicsEngine {
       this.position.getRespawnSquareForPlayer(playerIndex);
     this.position.respawnPlayerAt(playerIndex, respawnSquare);
     this.isAlive[playerIndex] = true;
-    this.gameServer.broadcastEvent({
-      index: null as any,
-      type: EventType.respawn,
-      info: new Map<EventInfo, string>([
-        [EventInfo.playerIndex, playerIndex.toString()],
-        [EventInfo.respawnSquare, JSON.stringify(respawnSquare, replacer)],
-      ]),
-    });
+    this.observer.notify(
+      MechanicsEngineNotificationType.respawn,
+      new Map([
+        [MechanicsEngineNotificationInfo.playerIndex, playerIndex as any],
+        [MechanicsEngineNotificationInfo.respawnSquare, respawnSquare as any],
+      ])
+    );
     if (this.moveRequests[playerIndex] != null) {
       this.registerMove(
         playerIndex,
@@ -219,7 +211,7 @@ export class GameMechanicsEngine {
     return cooldown;
   }
 
-  private registerMove(
+  registerMove(
     playerIndex: number,
     moveRequest: Move,
     moveArrivalTime: number
@@ -233,18 +225,17 @@ export class GameMechanicsEngine {
       // move is valid
       if (move != null) {
         let winningColor: PieceColor = null as any;
-        let event: Event = {
-          index: null as any,
-          type: EventType.move,
-          info: new Map<EventInfo, string>([
-            [EventInfo.playerIndex, playerIndex.toString()],
-          ]),
-        };
+        let moveInfo: Map<MechanicsEngineNotificationInfo, any> = new Map([
+          [MechanicsEngineNotificationInfo.playerIndex, playerIndex as any],
+        ]);
         // isCapture
         if (move.isCapture) {
           let dyingPlayerIndex = this.position.playerAt(move.row, move.column);
           let respawnTimer: number = this.killPlayer(dyingPlayerIndex);
-          event.info.set(EventInfo.respawnTimer, respawnTimer.toString());
+          moveInfo.set(
+            MechanicsEngineNotificationInfo.respawnTimer,
+            respawnTimer as any
+          );
           switch (dyingPlayerIndex) {
             case WHITE_KING_PLAYER_INDEX: {
               winningColor = PieceColor.black;
@@ -265,9 +256,9 @@ export class GameMechanicsEngine {
           let enPassantRespawnTimer: number = this.killPlayer(
             enPassantedPlayerIndex
           );
-          event.info.set(
-            EventInfo.enPassantRespawnTimer,
-            enPassantRespawnTimer.toString()
+          moveInfo.set(
+            MechanicsEngineNotificationInfo.enPassantRespawnTimer,
+            enPassantRespawnTimer as any
           );
         }
         // execute move
@@ -279,7 +270,7 @@ export class GameMechanicsEngine {
           move.promotionType = promotionType;
           this.position.promotePieceAt(move.row, move.column, promotionType);
         }
-        event.info.set(EventInfo.move, JSON.stringify(move));
+        moveInfo.set(MechanicsEngineNotificationInfo.move, move as any);
         // isCastle
         if (move.isCastle) {
           let startRow: number = movingPiece.color === PieceColor.white ? 0 : 7;
@@ -294,8 +285,8 @@ export class GameMechanicsEngine {
           playerIndex,
           moveArrivalTime
         );
-        event.info.set(EventInfo.cooldown, cooldown.toString());
-        this.gameServer.broadcastEvent(event);
+        moveInfo.set(MechanicsEngineNotificationInfo.cooldown, cooldown as any);
+        this.observer.notify(MechanicsEngineNotificationType.move, moveInfo);
         if (winningColor != null) {
           this.endGame(winningColor);
         }
@@ -304,13 +295,13 @@ export class GameMechanicsEngine {
   }
 
   private sendPlayerListUpdates() {
-    this.gameServer.broadcastEvent({
-      index: null as any,
-      type: EventType.playerListUpdate,
-      info: new Map<EventInfo, string>([
-        [EventInfo.playerList, JSON.stringify(this.playerList)],
-      ]),
-    });
+    // this.gameServer.broadcastEvent({
+    //   index: null as any,
+    //   type: GameEventType.playerListUpdate,
+    //   info: new Map<GameEventInfo, string>([
+    //     [GameEventInfo.playerList, JSON.stringify(this.playerList)],
+    //   ]),
+    // });
     // Authentication.updateLobbyMembers(
     //   this.lobby.id,
     //   this.playerList
@@ -331,42 +322,14 @@ export class GameMechanicsEngine {
     this.sendPlayerListUpdates();
   }
 
-  private handleRequest(
-    userIndex: number,
-    request: Request,
-    requestArrivalTime: number
-  ) {
-    switch (request.type) {
-      // connection
-      case RequestType.connection: {
-        let user: User = JSON.parse(
-          request.info.get(RequestInfo.user) as string,
-          reviver
-        );
-        this.handleConnection(userIndex, user);
-        break;
-      }
-      // disconnection
-      case RequestType.disconnection: {
-        this.handleDisconnection(userIndex);
-        break;
-      }
-      // move
-      case RequestType.move: {
-        if (this.gameStatus === GameStatus.running) {
-          let moveRequest: Move = JSON.parse(
-            request.info.get(RequestInfo.move) as string,
-            reviver
-          );
-          let playerIndex: number = this.roleAssignemnts[userIndex];
-          if (this.isAlive[playerIndex]) {
-            this.moveRequests[playerIndex] = moveRequest;
-            if (!this.isOnCooldown[playerIndex]) {
-              this.registerMove(playerIndex, moveRequest, requestArrivalTime);
-            }
-          }
+  handleMoveRequest(moveRequest: Move, userID: string) {
+    if (this.gameStatus === GameStatus.running) {
+      let playerIndex: number = this.roleAssignemnts.get(userID);
+      if (this.isAlive[playerIndex]) {
+        this.moveRequests[playerIndex] = moveRequest;
+        if (!this.isOnCooldown[playerIndex]) {
+          this.registerMove(playerIndex, moveRequest, Date.now());
         }
-        break;
       }
     }
   }
