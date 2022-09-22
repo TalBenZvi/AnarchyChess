@@ -150,7 +150,7 @@ export enum GameEventType {
 
 export enum GameEventInfo {
   // playerListUpdate
-  playerList,
+  playerListJSON,
   // gameStarted
   initialCooldown,
   playerIndex,
@@ -168,7 +168,7 @@ export enum GameEventInfo {
 
 export interface GameEvent {
   type: GameEventType;
-  info: Map<GameEventInfo, string>;
+  info: Map<GameEventInfo, any>;
 }
 
 

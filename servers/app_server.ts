@@ -139,7 +139,10 @@ export class AppServer {
         areTeamsPrearranged: lobbyCreationParams.areTeamsPrearranged,
         capacity: 0,
       };
-      this.serverAssignments.set(creator.id, new GameServer(client, newLobby));
+      this.serverAssignments.set(
+        creator.id,
+        new GameServer(getUser(client).id, client, newLobby)
+      );
       this.lobbies.push(newLobby);
     }
     this.sendResponse(client, {

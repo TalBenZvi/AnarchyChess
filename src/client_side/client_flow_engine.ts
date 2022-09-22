@@ -223,25 +223,21 @@ export class ClientFlowEngine {
       // player list update
       case GameEventType.playerListUpdate: {
         let playerList: PlayerList = new PlayerList(false);
-        playerList.setFromJSON(
-          event.info.get(GameEventInfo.playerList) as string
-        );
+        playerList.setFromJSON(event.info.get(GameEventInfo.playerListJSON));
         this.updatePlayerList(playerList);
         break;
       }
       // game started
       case GameEventType.gameStarted: {
         this.startGame(
-          parseInt(event.info.get(GameEventInfo.playerIndex) as string),
-          parseFloat(event.info.get(GameEventInfo.initialCooldown) as string)
+          event.info.get(GameEventInfo.playerIndex),
+          event.info.get(GameEventInfo.initialCooldown)
         );
         break;
       }
       // game ended
       case GameEventType.gameEnded: {
-        this.endGame(
-          JSON.parse(event.info.get(GameEventInfo.winningColor) as string)
-        );
+        this.endGame(event.info.get(GameEventInfo.winningColor));
         break;
       }
       // return to lobby
@@ -251,14 +247,12 @@ export class ClientFlowEngine {
       }
       // move
       case GameEventType.move: {
-        let moveNotification: Move = JSON.parse(
-          event.info.get(GameEventInfo.move) as string
-        );
-        let movingPlayerIndex: number = parseInt(
-          event.info.get(GameEventInfo.playerIndex) as string
+        let moveNotification: Move = event.info.get(GameEventInfo.move);
+        let movingPlayerIndex: number = event.info.get(
+          GameEventInfo.playerIndex
         );
         let move: Move = this.position.locateMoveForPlayer(
-          parseInt(event.info.get(GameEventInfo.playerIndex) as string),
+          event.info.get(GameEventInfo.playerIndex),
           moveNotification
         );
         let movingPlayerLocation: Square =
@@ -271,8 +265,8 @@ export class ClientFlowEngine {
               move.row,
               move.column
             );
-            let respawnTimer: number = parseInt(
-              event.info.get(GameEventInfo.respawnTimer) as string
+            let respawnTimer: number = event.info.get(
+              GameEventInfo.respawnTimer
             );
             this.killPlayer(dyingPlayerIndex, respawnTimer);
           }
@@ -282,16 +276,14 @@ export class ClientFlowEngine {
               movingPlayerLocation.row,
               move.column
             );
-            let respawnTimer: number = parseInt(
-              event.info.get(GameEventInfo.enPassantRespawnTimer) as string
+            let respawnTimer: number = event.info.get(
+              GameEventInfo.enPassantRespawnTimer
             );
             this.killPlayer(enPassantedPlayerIndex, respawnTimer);
           }
           // execute move
           this.position.move(movingPlayerIndex, move.row, move.column);
-          let cooldownTimer: number = parseFloat(
-            event.info.get(GameEventInfo.cooldown) as string
-          );
+          let cooldownTimer: number = event.info.get(GameEventInfo.cooldown);
           this.notifyObservers(
             ClientEventType.move,
             new Map<ClientEventInfo, any>([
@@ -353,8 +345,8 @@ export class ClientFlowEngine {
       // respawn
       case GameEventType.respawn: {
         this.respawnPlayer(
-          parseInt(event.info.get(GameEventInfo.playerIndex) as string),
-          JSON.parse(event.info.get(GameEventInfo.respawnSquare) as string)
+          event.info.get(GameEventInfo.playerIndex),
+          event.info.get(GameEventInfo.respawnSquare)
         );
         break;
       }
