@@ -3,7 +3,6 @@ import { Redirect } from "react-router";
 
 import homeTitle from "../assets/page_design/home_title.png";
 import { ClientActionCenter } from "../client_side/client_action_center";
-import { Authentication } from "../database/authentication";
 
 interface NavBarProps {
   currentRoute: string;
@@ -43,8 +42,8 @@ class NavBar extends React.Component<NavBarProps, NavBarState> {
           }}
           src={homeTitle}
           onClick={() => {
-            Authentication.leaveLobby();
-            Authentication.closeLobby();
+            // Authentication.leaveLobby();
+            // Authentication.closeLobby();
             this.setState({ redirectAddress: "/" });
           }}
           alt="logo"

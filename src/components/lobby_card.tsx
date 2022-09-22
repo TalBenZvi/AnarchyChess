@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Lobby } from "../database/database_util";
+import { Lobby } from "../communication/communication_util";
 
 import lockIcon from "../assets/page_design/lock_icon.png";
 import teamIcon from "../assets/page_design/team_icon.png";

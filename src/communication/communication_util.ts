@@ -126,6 +126,12 @@ export enum LobbyCreationStatus {
   connectionError,
 }
 
+export enum LobbyJoiningStatus {
+  success,
+  failure,
+  connectionError,
+}
+
 // move request
 export interface MoveRequestParams {
   move: Move;

@@ -32,7 +32,7 @@ export class ClientActionCenter {
   );
   private _currentUser: User = null as any;
   private _currentLobby: Lobby = null as any;
-  private clientFlowEngine: ClientFlowEngine = new ClientFlowEngine(
+  private _clientFlowEngine: ClientFlowEngine = new ClientFlowEngine(
     (move: Move) => {
       this.sendRequest({
         type: WSRequestType.inGame,
@@ -122,7 +122,7 @@ export class ClientActionCenter {
             let gameEvent: GameEvent = wsResponse.info.get(
               WSResponseInfo.gameEvent
             );
-            this.clientFlowEngine.registerEvent(gameEvent);
+            this._clientFlowEngine.registerEvent(gameEvent);
           }
           break;
       }
@@ -135,6 +135,10 @@ export class ClientActionCenter {
 
   get currentLobby(): Lobby {
     return this._currentLobby;
+  }
+
+  get clientFlowEngine(): ClientFlowEngine {
+    return this._clientFlowEngine;
   }
 
   private sendRequest(request: WSRequest) {

@@ -17,8 +17,7 @@ import {
   GameStatus,
   User,
 } from "../src/communication/communication_util.js";
-import { Lobby } from "../src/database/database_util.js";
-//import { Authentication } from "../src/database/authentication.js";
+import { Lobby } from "../src/communication/communication_util.js";
 import { PlayerList } from "../src/game_flow_util/player_list.js";
 
 const COOLDOWN_VARIANCE: number = 0.2;
@@ -324,7 +323,7 @@ export class GameMechanicsEngine {
 
   handleMoveRequest(moveRequest: Move, userID: string) {
     if (this.gameStatus === GameStatus.running) {
-      let playerIndex: number = this.roleAssignemnts.get(userID);
+      let playerIndex: number = this.roleAssignemnts.get(userID) as number;
       if (this.isAlive[playerIndex]) {
         this.moveRequests[playerIndex] = moveRequest;
         if (!this.isOnCooldown[playerIndex]) {

@@ -3,7 +3,6 @@ import NavBar from "../components/navbar";
 import LobbyCreationForm from "../components/lobby_creation_form";
 import LobbyList from "../components/lobby_list";
 import { Redirect } from "react-router";
-import { Authentication } from "../database/authentication";
 import { Lobby } from "../communication/communication_util";
 
 interface AuthenticatedHomePageProps {}

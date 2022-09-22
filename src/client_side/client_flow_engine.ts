@@ -14,7 +14,7 @@ import {
   //OptionalConnectionCallbacks,
   User,
 } from "../communication/communication_util";
-import { Lobby } from "../database/database_util";
+import { Lobby } from "../communication/communication_util";
 import { PlayerList } from "../game_flow_util/player_list";
 
 // in seconds
@@ -223,7 +223,9 @@ export class ClientFlowEngine {
       // player list update
       case GameEventType.playerListUpdate: {
         let playerList: PlayerList = new PlayerList(false);
-        playerList.setFromJSON(event.info.get(GameEventInfo.playerList) as string);
+        playerList.setFromJSON(
+          event.info.get(GameEventInfo.playerList) as string
+        );
         this.updatePlayerList(playerList);
         break;
       }

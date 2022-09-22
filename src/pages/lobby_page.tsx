@@ -4,7 +4,7 @@ import { Redirect } from "react-router";
 import NavBar from "../components/navbar";
 import PlayerListComponent from "../components/player_list_component";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
-import { Lobby } from "../database/database_util";
+import { Lobby } from "../communication/communication_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { BaseBot } from "../bots/base_bot";
 import { RandomBot } from "../bots/random_bot";
@@ -112,7 +112,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
     }
     return (
       <div className="background">
-        <NavBar currentRoute={`/lobby/${lobby == null ? "" : lobby.id}`} />
+        <NavBar currentRoute={`/lobby/${lobby == null ? "" : lobby.creatorID}`} />
         <div className="centered">
           <img
             alt=""

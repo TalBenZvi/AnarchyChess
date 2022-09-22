@@ -7,13 +7,12 @@ import PromotionScreen from "../components/promotion_screen";
 import GameStartScreen from "../components/game_start_screen";
 import { PieceColor } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
-// import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import ChessBoard from "../components/chess_board";
 import GameEndScreen from "../components/game_end_screen";
 import ScoreBoard from "../components/scoreboard";
 import PlayerListComponent from "../components/player_list_component";
 import { PlayerList } from "../game_flow_util/player_list";
-import { Lobby } from "../database/database_util";
+import { Lobby } from "../communication/communication_util";
 import { SoundEffectsPlayer } from "../components/sound_effects_player";
 
 import exitIcon from "../assets/page_design/exit_icon.png";
@@ -26,7 +25,6 @@ interface GamePageProps {
   isHost: boolean;
   playerList: PlayerList;
   clientFlowEngine: ClientFlowEngine;
-  // serverFlowEngine: ServerFlowEngine;
 }
 
 interface GamePageState {
@@ -62,8 +60,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
   };
 
   render() {
-    let { lobby, playerList, isHost, clientFlowEngine } =
-      this.props;
+    let { lobby, playerList, isHost, clientFlowEngine } = this.props;
     let { windowWidth, windowHeight } = this.state;
 
     let margin = 50;
@@ -85,11 +82,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
       // background
       <div className="background">
         <NavBar
-          currentRoute={`/lobby/${
-            clientFlowEngine == null || clientFlowEngine.currentLobby == null
-              ? ""
-              : clientFlowEngine.currentLobby.id
-          }`}
+          currentRoute={`/lobby/${this.clientActionCenter.currentLobby.creatorID}`}
         />
         {/* board */}
         <div
@@ -133,7 +126,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
         {/* game end screen */}
         <GameEndScreen clientFlowEngine={clientFlowEngine} />
         {/* scoreboard */}
-        {(lobby != null && lobby.areTeamsPrearranged) ? (
+        {lobby != null && lobby.areTeamsPrearranged ? (
           <div
             style={{
               position: "absolute",
@@ -201,9 +194,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
           <PlayerListComponent
             width={playerListWidth}
             height={playerListHeight}
-            currentUser={
-              this.clientActionCenter.currentUser
-            }
+            currentUser={this.clientActionCenter.currentUser}
             playerList={playerList}
             isHost={false}
           />

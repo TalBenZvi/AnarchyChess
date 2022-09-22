@@ -1,9 +1,6 @@
 import * as React from "react";
 import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
-import { Redirect } from "react-router";
-
-import { Authentication } from "../database/authentication";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 import { ClientActionCenter } from "../client_side/client_action_center";
@@ -145,11 +142,6 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
           padding: 30,
         }}
       >
-        {Authentication.currentUser == null ? (
-          <div />
-        ) : (
-          <Redirect push to="/game" />
-        )}
         {/* title */}
         <p
           style={{

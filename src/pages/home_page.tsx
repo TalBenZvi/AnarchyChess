@@ -6,11 +6,9 @@ import homeTitle from "../assets/page_design/home_title.png";
 import AuthenticatedHomePage from "./authenticated_home_page";
 import LoginForm from "../components/login_form";
 import RegisterForm from "../components/register_form";
-import { Authentication } from "../database/authentication";
 import {
   Environment,
   EnvironmentManager,
-  ValueType,
   WEBSITE_DOMAIN,
 } from "../communication/communication_util";
 import { ClientActionCenter } from "../client_side/client_action_center";
@@ -40,6 +38,12 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
       EnvironmentManager.environment = Environment.production;
     } else {
       EnvironmentManager.environment = Environment.development;
+    }
+  }
+
+  componentDidMount() {
+    if (ClientActionCenter.getInstance().currentUser != null) {
+      this.setState({ viewMode: ViewMode.authenticated });
     }
   }
 

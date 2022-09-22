@@ -45,7 +45,7 @@ export class GameServer implements MechanicsEngineObserver {
     return false;
   }
 
-  handleMoveRequest(moveRequest: Move, userID) {
+  handleMoveRequest(moveRequest: Move, userID: string) {
     this.engine.handleMoveRequest(moveRequest, userID);
   }
 

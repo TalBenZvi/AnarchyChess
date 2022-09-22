@@ -60,12 +60,12 @@ export class AppServer {
               break;
             case WSRequestType.inGame:
               {
-                this.serverAssignments
-                  .get(getUser(client).id)
-                  .handleMoveRequest(
-                    (request.params as MoveRequestParams).move,
-                    getUser(client)
-                  );
+                (
+                  this.serverAssignments.get(getUser(client).id) as GameServer
+                ).handleMoveRequest(
+                  (request.params as MoveRequestParams).move,
+                  getUser(client).id
+                );
               }
               break;
           }

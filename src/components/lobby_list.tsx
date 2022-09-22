@@ -3,9 +3,8 @@ import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 import { Redirect } from "react-router";
 
-import { Lobby, LobbyJoiningStatus } from "../database/database_util";
+import { Lobby, LobbyJoiningStatus } from "../communication/communication_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
-import { Authentication } from "../database/authentication";
 
 import rightArrow from "../assets/page_design/right_arrow.png";
 import refreshIcon from "../assets/page_design/refresh_icon.png";
@@ -47,9 +46,9 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   }
 
   private loadLobbiesFromDatabase = () => {
-    Authentication.getLobbies((lobbies: Lobby[]) => {
-      this.setState({ isWaitingForResponse: false, lobbies: lobbies });
-    });
+    // Authentication.getLobbies((lobbies: Lobby[]) => {
+    //   this.setState({ isWaitingForResponse: false, lobbies: lobbies });
+    // });
     this.setState({
       isWaitingForResponse: true,
       selectedLobby: null as any,
@@ -58,31 +57,31 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   };
 
   private joinLobby = (lobby: Lobby) => {
-    Authentication.joinLobby(lobby, (status: LobbyJoiningStatus) => {
-      switch (status) {
-        case LobbyJoiningStatus.success:
-          this.setState(() => {
-            return { targetLobbyID: lobby.id };
-          });
-          break;
-        case LobbyJoiningStatus.failure:
-          toast("Error joining lobby");
-          this.setState(() => {
-            return {
-              selectedLobby: null as any,
-            };
-          });
-          break;
-        case LobbyJoiningStatus.connectionError:
-          toast("There has been a connection error");
-          this.setState(() => {
-            return {
-              selectedLobby: null as any,
-            };
-          });
-          break;
-      }
-    });
+    // Authentication.joinLobby(lobby, (status: LobbyJoiningStatus) => {
+    //   switch (status) {
+    //     case LobbyJoiningStatus.success:
+    //       this.setState(() => {
+    //         return { targetLobbyID: lobby.id };
+    //       });
+    //       break;
+    //     case LobbyJoiningStatus.failure:
+    //       toast("Error joining lobby");
+    //       this.setState(() => {
+    //         return {
+    //           selectedLobby: null as any,
+    //         };
+    //       });
+    //       break;
+    //     case LobbyJoiningStatus.connectionError:
+    //       toast("There has been a connection error");
+    //       this.setState(() => {
+    //         return {
+    //           selectedLobby: null as any,
+    //         };
+    //       });
+    //       break;
+    //   }
+    // });
     this.setState({
       selectedLobby: lobby,
       selectedLobbyForPassword: null as any,
@@ -436,9 +435,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
                       left: "50%",
                       transform: "translate(-50%, 0%)",
                     }}
-                  >{`${
-                    lobby.memberIDs.filter((id: string) => id !== "").length
-                  } / ${NUM_OF_PLAYERS}`}</div>
+                  >{`${lobby.capacity} / ${NUM_OF_PLAYERS}`}</div>
                   {/* prearranged teams indicator */}
                   {lobby.areTeamsPrearranged ? (
                     <div

@@ -2,8 +2,7 @@ import * as React from "react";
 import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 
-import { Authentication } from "../database/authentication";
-import { LobbyCreationStatus } from "../database/database_util";
+import { LobbyCreationStatus } from "../communication/communication_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 import { ClientActionCenter } from "../client_side/client_action_center";

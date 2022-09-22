@@ -1,7 +1,6 @@
 import * as React from "react";
 import { withRouter, Redirect } from "react-router";
 
-import { Authentication } from "../database/authentication";
 import LobbyPage from "./lobby_page";
 import GamePage from "./game_page";
 import {
@@ -10,6 +9,7 @@ import {
   ClientEventInfo,
 } from "../client_side/client_flow_engine";
 import { PlayerList } from "../game_flow_util/player_list";
+import { ClientActionCenter } from "../client_side/client_action_center";
 
 enum LobbyState {
   open,
@@ -27,21 +27,18 @@ class ClientPage
   extends React.Component<any, any>
   implements ClientFlowEngineObserver
 {
+  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state: ClientPageState = {
     lobbyState: LobbyState.open,
     playerList: null as any,
   };
 
   componentDidMount() {
-    if (Authentication.clientFlowEngine != null) {
-      Authentication.clientFlowEngine.addObserver(this);
-    }
+    this.clientActionCenter.clientFlowEngine.addObserver(this);
   }
 
   componentWillUnmount() {
-    if (Authentication.clientFlowEngine != null) {
-      Authentication.clientFlowEngine.removeObserver(this);
-    }
+    this.clientActionCenter.clientFlowEngine.removeObserver(this);
   }
 
   startGame(): void {
@@ -71,8 +68,8 @@ class ClientPage
 
   render() {
     let { lobbyState, playerList } = this.state;
-    if (Authentication.currentUser == null) {
-      //return <Redirect push to="/" />;
+    if (this.clientActionCenter.currentUser == null) {
+      return <Redirect push to="/" />;
     }
     let isHost: boolean = false;
     return (
@@ -83,22 +80,15 @@ class ClientPage
             case LobbyState.open: {
               return (
                 <LobbyPage
-                  lobby={
-                    Authentication.clientFlowEngine == null
-                      ? (null as any)
-                      : Authentication.clientFlowEngine.currentLobby
-                  }
+                  lobby={this.clientActionCenter.currentLobby}
                   isHost={isHost}
                   playerList={playerList}
-                  clientFlowEngine={Authentication.clientFlowEngine}
-                  // serverFlowEngine={
-                  //   isHost ? Authentication.serverFlowEngine : (null as any)
-                  // }
+                  clientFlowEngine={this.clientActionCenter.clientFlowEngine}
                   onClose={() => {
-                    Authentication.leaveLobby();
-                    if (isHost) {
-                      Authentication.closeLobby();
-                    }
+                    // Authentication.leaveLobby();
+                    // if (isHost) {
+                    //   Authentication.closeLobby();
+                    // }
                   }}
                 />
               );
@@ -107,14 +97,10 @@ class ClientPage
             case LobbyState.running: {
               return (
                 <GamePage
-                  lobby={
-                    Authentication.clientFlowEngine == null
-                      ? (null as any)
-                      : Authentication.clientFlowEngine.currentLobby
-                  }
+                  lobby={this.clientActionCenter.currentLobby}
                   isHost={isHost}
                   playerList={playerList}
-                  clientFlowEngine={Authentication.clientFlowEngine}
+                  clientFlowEngine={this.clientActionCenter.clientFlowEngine}
                   // serverFlowEngine={
                   //   isHost ? Authentication.serverFlowEngine : (null as any)
                   // }

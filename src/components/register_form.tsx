@@ -2,8 +2,6 @@ import * as React from "react";
 import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 
-import { Authentication } from "../database/authentication";
-
 import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
