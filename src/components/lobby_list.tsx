@@ -59,31 +59,34 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   };
 
   private joinLobby = (lobby: Lobby) => {
-    // Authentication.joinLobby(lobby, (status: LobbyJoiningStatus) => {
-    //   switch (status) {
-    //     case LobbyJoiningStatus.success:
-    //       this.setState(() => {
-    //         return { targetLobbyID: lobby.id };
-    //       });
-    //       break;
-    //     case LobbyJoiningStatus.failure:
-    //       toast("Error joining lobby");
-    //       this.setState(() => {
-    //         return {
-    //           selectedLobby: null as any,
-    //         };
-    //       });
-    //       break;
-    //     case LobbyJoiningStatus.connectionError:
-    //       toast("There has been a connection error");
-    //       this.setState(() => {
-    //         return {
-    //           selectedLobby: null as any,
-    //         };
-    //       });
-    //       break;
-    //   }
-    // });
+    this.clientActionCenter.joinLobby(
+      { lobbyCreatorID: lobby.creatorID },
+      (status: WSResponseStatus, newLobby: Lobby) => {
+        switch (status) {
+          case WSResponseStatus.success:
+            this.setState(() => {
+              return { targetLobbyID: newLobby.creatorID };
+            });
+            break;
+          case WSResponseStatus.failure:
+            toast("Error joining lobby");
+            this.setState(() => {
+              return {
+                selectedLobby: null as any,
+              };
+            });
+            break;
+          case WSResponseStatus.connectionError:
+            toast("There has been a connection error");
+            this.setState(() => {
+              return {
+                selectedLobby: null as any,
+              };
+            });
+            break;
+        }
+      }
+    );
     this.setState({
       selectedLobby: lobby,
       selectedLobbyForPassword: null as any,

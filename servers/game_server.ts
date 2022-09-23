@@ -9,6 +9,7 @@ import {
   GameEventInfo,
   GameEventType,
   Lobby,
+  replacer,
   User,
   WSRequestType,
   WSResponse,
@@ -27,12 +28,16 @@ export class GameServer implements MechanicsEngineObserver {
   private clients: Map<string, any> = new Map();
   private mechanicsEngine: GameMechanicsEngine = null as any;
 
-  constructor(creator: User, creatorClient: any, private lobby: Lobby) {
+  constructor(creator: User, creatorClient: any, private _lobby: Lobby) {
     this.mechanicsEngine = new GameMechanicsEngine(
       this,
-      lobby.areTeamsPrearranged
+      _lobby.areTeamsPrearranged
     );
     this.addClient(creator, creatorClient);
+  }
+
+  get lobby(): Lobby {
+    return this._lobby;
   }
 
   private broadcastPlayerListUpdate() {
@@ -50,7 +55,7 @@ export class GameServer implements MechanicsEngineObserver {
   // returns whether or not the client was added successfully
   addClient(user: User, client: any): boolean {
     if (this.clients.size < NUM_OF_PLAYERS) {
-      this.lobby.capacity++;
+      this._lobby.capacity++;
       this.mechanicsEngine.addPlayer(user);
       this.broadcastPlayerListUpdate();
       this.clients.set(user.id, client);
@@ -72,7 +77,7 @@ export class GameServer implements MechanicsEngineObserver {
       JSON.stringify({
         type: WSRequestType.inGame,
         info: new Map([[WSResponseInfo.gameEvent, gameEvent]]),
-      } as WSResponse)
+      } as WSResponse, replacer)
     );
   }
 

@@ -234,8 +234,9 @@ export class ClientFlowEngine {
     switch (event.type) {
       // player list update
       case GameEventType.playerListUpdate: {
-        let playerList: PlayerList = new PlayerList(false);
-        playerList.setFromJSON(event.info.get(GameEventInfo.playerListJSON));
+        this.playerList.setFromJSON(
+          event.info.get(GameEventInfo.playerListJSON)
+        );
         this.notifyPlayerListUpdate();
         break;
       }

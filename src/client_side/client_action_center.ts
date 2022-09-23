@@ -15,6 +15,7 @@ import {
   Lobby,
   GameEvent,
   MoveRequestParams,
+  LobbyJoiningParams,
 } from "../communication/communication_util";
 import { Move } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "./client_flow_engine";
@@ -42,11 +43,16 @@ export class ClientActionCenter {
     status: WSResponseStatus,
     newLobby: Lobby
   ) => void = null as any;
+  private onJoinLobbyResponse: (
+    status: WSResponseStatus,
+    newLobby: Lobby
+  ) => void = null as any;
 
   //timeouts
   private registerTimeout: any = null;
   private loginTimeout: any = null;
   private lobbyCreationTimeout: any = null;
+  private joinLobbyTimeout: any = null;
 
   static getInstance() {
     if (ClientActionCenter.instance === null) {
@@ -119,6 +125,27 @@ export class ClientActionCenter {
                 newLobby
               );
               this.onLobbyCreationResponse = null as any;
+            }
+          }
+          break;
+        // join lobby
+        case WSRequestType.joinLobby:
+          {
+            clearTimeout(this.joinLobbyTimeout);
+            let newLobby = wsResponse.info.get(WSResponseInfo.newLobby);
+            if (wsResponse.status === WSResponseStatus.success) {
+              this._currentLobby = newLobby;
+              this.clientFlowEngine.setLobby(
+                newLobby,
+                wsResponse.info.get(WSResponseInfo.playerListJSON)
+              );
+            }
+            if (this.onJoinLobbyResponse != null) {
+              this.onJoinLobbyResponse(
+                wsResponse.status as WSResponseStatus,
+                newLobby
+              );
+              this.onJoinLobbyResponse = null as any;
             }
           }
           break;
@@ -213,6 +240,20 @@ export class ClientActionCenter {
       params: lobbyCreationParams,
     });
     this.lobbyCreationTimeout = setTimeout(() => {
+      onResponse(WSResponseStatus.connectionError, null as any);
+    }, RESPONSE_TIMEOUT * 1000);
+  }
+
+  joinLobby(
+    lobbyJoiningParams: LobbyJoiningParams,
+    onResponse: (status: WSResponseStatus, newLobby: Lobby) => void
+  ): void {
+    this.onJoinLobbyResponse = onResponse;
+    this.sendRequest({
+      type: WSRequestType.joinLobby,
+      params: lobbyJoiningParams,
+    });
+    this.joinLobbyTimeout = setTimeout(() => {
       onResponse(WSResponseStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
   }

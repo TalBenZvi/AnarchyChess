@@ -138,8 +138,7 @@ class PlayerListComponent extends React.Component<
   }
 
   render() {
-    let { width, height, currentUser, playerList } =
-      this.props;
+    let { width, height, currentUser, playerList } = this.props;
     let { openMenuIndex } = this.state;
 
     let tileAreaHeight: number = height / (NUM_OF_PLAYERS / 2);

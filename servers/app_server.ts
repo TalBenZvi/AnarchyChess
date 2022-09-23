@@ -15,6 +15,7 @@ import {
   RegisterParams,
   LobbyCreationParams,
   MoveRequestParams,
+  LobbyJoiningParams,
 } from "../src/communication/communication_util.js";
 import { MongodbOperations } from "./mongodb_operations.js";
 import { GameServer } from "./game_server.js";
@@ -67,6 +68,11 @@ export class AppServer {
                 this.createLobby(client, request.params as LobbyCreationParams);
               }
               break;
+            case WSRequestType.joinLobby:
+              {
+                this.joinLobby(client, request.params as LobbyJoiningParams);
+              }
+              break;
             case WSRequestType.inGame:
               {
                 (
@@ -93,17 +99,20 @@ export class AppServer {
   }
 
   private login(client: any, loginParams: LoginParams): void {
-    MongodbOperations.login(loginParams, (status: WSResponseStatus, user: User) => {
-      if (status === WSResponseStatus.success) {
-        setUser(client, user);
-        this.serverAssignments.set(user.id, null as any);
+    MongodbOperations.login(
+      loginParams,
+      (status: WSResponseStatus, user: User) => {
+        if (status === WSResponseStatus.success) {
+          setUser(client, user);
+          this.serverAssignments.set(user.id, null as any);
+        }
+        this.sendResponse(client, {
+          type: WSRequestType.login,
+          status: status,
+          info: new Map<WSResponseInfo, any>([[WSResponseInfo.user, user]]),
+        } as WSResponse);
       }
-      this.sendResponse(client, {
-        type: WSRequestType.login,
-        status: status,
-        info: new Map<WSResponseInfo, any>([[WSResponseInfo.user, user]]),
-      } as WSResponse);
-    });
+    );
   }
 
   private register(client: any, registerParams: RegisterParams): void {
@@ -162,5 +171,33 @@ export class AppServer {
         [WSResponseInfo.playerListJSON, playerListJSON],
       ]),
     } as WSResponse);
+  }
+
+  private joinLobby(client: any, lobbyJoiningParams: LobbyJoiningParams) {
+    let gameServer: GameServer = this.serverAssignments.get(
+      lobbyJoiningParams.lobbyCreatorID
+    ) as GameServer;
+    let isSuccessfull: boolean = gameServer.addClient(getUser(client), client);
+    if (isSuccessfull) {
+      this.serverAssignments.set(getUser(client).id, gameServer);
+    }
+    this.sendResponse(client, {
+      type: WSRequestType.joinLobby,
+      status: isSuccessfull
+        ? WSResponseStatus.success
+        : WSResponseStatus.failure,
+      info: new Map([
+        [
+          WSResponseInfo.newLobby,
+          isSuccessfull ? (gameServer.lobby as any) : (null as any),
+        ],
+        [
+          WSResponseInfo.playerListJSON,
+          isSuccessfull
+            ? (gameServer.getPlayerListJSON() as any)
+            : (null as any),
+        ],
+      ]),
+    });
   }
 }

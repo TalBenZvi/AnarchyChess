@@ -76,7 +76,7 @@ export class GameMechanicsEngine {
   }
 
   getPlayerListJSON(): string {
-    return JSON.stringify(this.playerList);
+    return JSON.stringify(this.playerList, replacer);
   }
 
   addPlayer(player: User) {

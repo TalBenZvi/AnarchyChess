@@ -1,4 +1,4 @@
-import { shuffle, User } from "../communication/communication_util";
+import { reviver, shuffle, User } from "../communication/communication_util";
 import { NUM_OF_PLAYERS, PieceColor, reverseColor } from "./game_elements";
 
 interface Player {
@@ -21,7 +21,7 @@ export class PlayerList {
   
   setFromJSON(jsonString: string) {
     if (jsonString !== null) {
-      let playerListFields: PlayerListFields = JSON.parse(jsonString);
+      let playerListFields: PlayerListFields = JSON.parse(jsonString, reviver);
       this._areTeamsPrearranged = playerListFields._areTeamsPrearranged;
       this.players = playerListFields.players;
     }

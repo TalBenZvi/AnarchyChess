@@ -65,6 +65,7 @@ export enum WSRequestType {
   register,
   getLobbies,
   createLobby,
+  joinLobby,
   inGame,
 }
 
@@ -76,7 +77,7 @@ export interface WSRequest {
 export enum WSResponseStatus {
   // general
   success,
-  // login
+  // login, joinLobby
   failure,
   // register
   usernameTaken,
@@ -92,7 +93,7 @@ export enum WSResponseInfo {
   user,
   // getLobbies
   lobbies,
-  // createLobby
+  // createLobby, joinLobby
   newLobby,
   playerListJSON,
   // inGame
@@ -118,11 +119,16 @@ export interface LoginParams {
   password: string;
 }
 
-// lobby creation
+// createLobby
 export interface LobbyCreationParams {
   name: string;
   password: string;
   areTeamsPrearranged: boolean;
+}
+
+// joinLobby
+export interface LobbyJoiningParams {
+  lobbyCreatorID: string;
 }
 
 // move request
