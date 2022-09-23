@@ -63,6 +63,7 @@ export interface Lobby {
 export enum WSRequestType {
   login,
   register,
+  getLobbies,
   createLobby,
   inGame,
 }
@@ -75,6 +76,8 @@ export interface WSRequest {
 export enum WSResponseInfo {
   // register, login
   user,
+  // getLobbies
+  lobbies,
   // createLobby
   newLobby,
   playerListJSON,
@@ -171,7 +174,6 @@ export interface GameEvent {
   type: GameEventType;
   info: Map<GameEventInfo, any>;
 }
-
 
 export enum GameStatus {
   inactive,

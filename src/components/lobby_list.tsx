@@ -10,6 +10,7 @@ import rightArrow from "../assets/page_design/right_arrow.png";
 import refreshIcon from "../assets/page_design/refresh_icon.png";
 import lockIcon from "../assets/page_design/lock_icon.png";
 import checkmarkIcon from "../assets/page_design/checkmark_icon.png";
+import { ClientActionCenter } from "../client_side/client_action_center";
 
 const LOBBIES_IN_A_PAGE: number = 10;
 
@@ -30,6 +31,7 @@ interface LobbyListState {
 }
 
 class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
+  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state = {
     lobbies: [],
     searchQuery: "",
@@ -42,13 +44,13 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
   enteredPassword: string = "";
 
   componentDidMount() {
-    this.loadLobbiesFromDatabase();
+    this.getLobbiesFromServer();
   }
 
-  private loadLobbiesFromDatabase = () => {
-    // Authentication.getLobbies((lobbies: Lobby[]) => {
-    //   this.setState({ isWaitingForResponse: false, lobbies: lobbies });
-    // });
+  private getLobbiesFromServer = () => {
+    this.clientActionCenter.getLobbies((lobbies: Lobby[]) => {
+      this.setState({ isWaitingForResponse: false, lobbies: lobbies });
+    });
     this.setState({
       isWaitingForResponse: true,
       selectedLobby: null as any,
@@ -219,7 +221,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
             fontSize: fontSize,
             zIndex: 1,
           }}
-          onClick={this.loadLobbiesFromDatabase}
+          onClick={this.getLobbiesFromServer}
         >
           <img
             alt="refresh"

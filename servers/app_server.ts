@@ -43,14 +43,25 @@ export class AppServer {
         let request: WSRequest = JSON.parse(data.toString(), reviver);
         if (request !== undefined) {
           switch (request.type) {
+            case WSRequestType.register:
+              {
+                this.register(client, request.params as RegisterParams);
+              }
+              break;
             case WSRequestType.login:
               {
                 this.login(client, request.params as LoginParams);
               }
               break;
-            case WSRequestType.register:
+            case WSRequestType.getLobbies:
               {
-                this.register(client, request.params as RegisterParams);
+                this.sendResponse(client, {
+                  type: WSRequestType.getLobbies,
+                  status: null as any,
+                  info: new Map([
+                    [WSResponseInfo.lobbies, this.lobbies as any],
+                  ]),
+                });
               }
               break;
             case WSRequestType.createLobby:

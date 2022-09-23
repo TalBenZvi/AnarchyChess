@@ -39,6 +39,7 @@ export class ClientActionCenter {
     null as any;
   private onLoginResponse: (status: LoginStatus, user: User) => void =
     null as any;
+  private onGetLobbiesResponse: (lobbies: Lobby[]) => void = null as any;
   private onLobbyCreationResponse: (
     status: LobbyCreationStatus,
     newLobby: Lobby
@@ -88,6 +89,17 @@ export class ClientActionCenter {
             if (this.onLoginResponse !== null) {
               this.onLoginResponse(wsResponse.status as LoginStatus, user);
               this.onLoginResponse = null as any;
+            }
+          }
+          break;
+        // get lobbies
+        case WSRequestType.getLobbies:
+          {
+            if (this.onGetLobbiesResponse != null) {
+              this.onGetLobbiesResponse(
+                wsResponse.info.get(WSResponseInfo.lobbies)
+              );
+              this.onGetLobbiesResponse = null as any;
             }
           }
           break;
@@ -183,6 +195,14 @@ export class ClientActionCenter {
   logout(): void {
     this.wsClient.close();
     this._currentUser = null as any;
+  }
+
+  getLobbies(onResponse: (lobbies: Lobby[]) => void): void {
+    this.onGetLobbiesResponse = onResponse;
+    this.sendRequest({
+      type: WSRequestType.getLobbies,
+      params: null as any,
+    });
   }
 
   createLobby(
