@@ -73,6 +73,20 @@ export interface WSRequest {
   params: any;
 }
 
+export enum WSResponseStatus {
+  // general
+  success,
+  // login
+  failure,
+  // register
+  usernameTaken,
+  emailRegistered,
+  // createLobby
+  nameTaken,
+  // general
+  connectionError,
+}
+
 export enum WSResponseInfo {
   // register, login
   user,
@@ -87,7 +101,7 @@ export enum WSResponseInfo {
 
 export interface WSResponse {
   type: WSRequestType;
-  status: any;
+  status: WSResponseStatus;
   info: Map<WSResponseInfo, any>;
 }
 
@@ -98,23 +112,10 @@ export interface RegisterParams {
   password: string;
 }
 
-export enum RegisterStatus {
-  success,
-  usernameTaken,
-  emailRegistered,
-  connectionError,
-}
-
 // login
 export interface LoginParams {
   usernameOrEmail: string;
   password: string;
-}
-
-export enum LoginStatus {
-  success,
-  failure,
-  connectionError,
 }
 
 // lobby creation
@@ -122,18 +123,6 @@ export interface LobbyCreationParams {
   name: string;
   password: string;
   areTeamsPrearranged: boolean;
-}
-
-export enum LobbyCreationStatus {
-  success,
-  nameTaken,
-  connectionError,
-}
-
-export enum LobbyJoiningStatus {
-  success,
-  failure,
-  connectionError,
 }
 
 // move request

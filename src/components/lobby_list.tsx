@@ -3,7 +3,7 @@ import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 import { Redirect } from "react-router";
 
-import { Lobby, LobbyJoiningStatus } from "../communication/communication_util";
+import { Lobby, WSResponseStatus } from "../communication/communication_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 
 import rightArrow from "../assets/page_design/right_arrow.png";

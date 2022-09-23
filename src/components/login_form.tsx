@@ -7,7 +7,7 @@ import { ClientActionCenter } from "../client_side/client_action_center";
 import {
   User,
   LoginParams,
-  LoginStatus,
+  WSResponseStatus,
 } from "../communication/communication_util";
 
 interface LoginFormProps {
@@ -47,18 +47,18 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
         usernameOrEmail: this.state.usernameOrEmail,
         password: this.state.password,
       } as LoginParams,
-      (status: LoginStatus, user: User) => {
+      (status: WSResponseStatus, user: User) => {
         switch (status) {
-          case LoginStatus.success:
+          case WSResponseStatus.success:
             this.props.onSuccess();
             break;
-          case LoginStatus.failure:
+          case WSResponseStatus.failure:
             toast("Username or password is incorrect");
             this.setState(() => {
               return { isWaitingForResponse: false };
             });
             break;
-          case LoginStatus.connectionError:
+          case WSResponseStatus.connectionError:
             toast("There has been a connection error");
             this.setState(() => {
               return { isWaitingForResponse: false };

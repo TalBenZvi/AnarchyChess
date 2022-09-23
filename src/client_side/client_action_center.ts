@@ -1,7 +1,7 @@
 import {
   EnvironmentManager,
   ValueType,
-  LoginStatus,
+  WSResponseStatus,
   User,
   reviver,
   WSResponse,
@@ -11,10 +11,8 @@ import {
   replacer,
   LoginParams,
   RegisterParams,
-  RegisterStatus,
   LobbyCreationParams,
   Lobby,
-  LobbyCreationStatus,
   GameEvent,
   MoveRequestParams,
 } from "../communication/communication_util";
@@ -35,13 +33,13 @@ export class ClientActionCenter {
   private _clientFlowEngine: ClientFlowEngine = null as any;
 
   // on-response functions
-  private onRegisterResponse: (status: RegisterStatus, user: User) => void =
+  private onRegisterResponse: (status: WSResponseStatus, user: User) => void =
     null as any;
-  private onLoginResponse: (status: LoginStatus, user: User) => void =
+  private onLoginResponse: (status: WSResponseStatus, user: User) => void =
     null as any;
   private onGetLobbiesResponse: (lobbies: Lobby[]) => void = null as any;
   private onLobbyCreationResponse: (
-    status: LobbyCreationStatus,
+    status: WSResponseStatus,
     newLobby: Lobby
   ) => void = null as any;
 
@@ -66,12 +64,12 @@ export class ClientActionCenter {
           {
             clearTimeout(this.registerTimeout);
             let user = wsResponse.info.get(WSResponseInfo.user);
-            if (wsResponse.status === LoginStatus.success) {
+            if (wsResponse.status === WSResponseStatus.success) {
               this.onAuthentication(user);
             }
             if (this.onRegisterResponse !== null) {
               this.onRegisterResponse(
-                wsResponse.status as RegisterStatus,
+                wsResponse.status as WSResponseStatus,
                 user
               );
               this.onRegisterResponse = null as any;
@@ -83,11 +81,11 @@ export class ClientActionCenter {
           {
             clearTimeout(this.loginTimeout);
             let user = wsResponse.info.get(WSResponseInfo.user);
-            if (wsResponse.status === LoginStatus.success) {
+            if (wsResponse.status === WSResponseStatus.success) {
               this.onAuthentication(user);
             }
             if (this.onLoginResponse !== null) {
-              this.onLoginResponse(wsResponse.status as LoginStatus, user);
+              this.onLoginResponse(wsResponse.status as WSResponseStatus, user);
               this.onLoginResponse = null as any;
             }
           }
@@ -108,7 +106,7 @@ export class ClientActionCenter {
           {
             clearTimeout(this.lobbyCreationTimeout);
             let newLobby = wsResponse.info.get(WSResponseInfo.newLobby);
-            if (wsResponse.status === LobbyCreationStatus.success) {
+            if (wsResponse.status === WSResponseStatus.success) {
               this._currentLobby = newLobby;
               this.clientFlowEngine.setLobby(
                 newLobby,
@@ -117,7 +115,7 @@ export class ClientActionCenter {
             }
             if (this.onLobbyCreationResponse != null) {
               this.onLobbyCreationResponse(
-                wsResponse.status as LobbyCreationStatus,
+                wsResponse.status as WSResponseStatus,
                 newLobby
               );
               this.onLobbyCreationResponse = null as any;
@@ -166,7 +164,7 @@ export class ClientActionCenter {
 
   register(
     registerParams: RegisterParams,
-    onResponse: (status: RegisterStatus, user: User) => void
+    onResponse: (status: WSResponseStatus, user: User) => void
   ): void {
     this.onRegisterResponse = onResponse;
     this.sendRequest({
@@ -174,13 +172,13 @@ export class ClientActionCenter {
       params: registerParams,
     } as WSRequest);
     this.registerTimeout = setTimeout(() => {
-      onResponse(RegisterStatus.connectionError, null as any);
+      onResponse(WSResponseStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
   }
 
   login(
     loginParams: LoginParams,
-    onResponse: (status: LoginStatus, user: User) => void
+    onResponse: (status: WSResponseStatus, user: User) => void
   ): void {
     this.onLoginResponse = onResponse;
     this.sendRequest({
@@ -188,7 +186,7 @@ export class ClientActionCenter {
       params: loginParams,
     } as WSRequest);
     this.loginTimeout = setTimeout(() => {
-      onResponse(LoginStatus.connectionError, null as any);
+      onResponse(WSResponseStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
   }
 
@@ -207,7 +205,7 @@ export class ClientActionCenter {
 
   createLobby(
     lobbyCreationParams: LobbyCreationParams,
-    onResponse: (status: LobbyCreationStatus, newLobby: Lobby) => void
+    onResponse: (status: WSResponseStatus, newLobby: Lobby) => void
   ): void {
     this.onLobbyCreationResponse = onResponse;
     this.sendRequest({
@@ -215,7 +213,7 @@ export class ClientActionCenter {
       params: lobbyCreationParams,
     });
     this.lobbyCreationTimeout = setTimeout(() => {
-      onResponse(LobbyCreationStatus.connectionError, null as any);
+      onResponse(WSResponseStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
   }
 }

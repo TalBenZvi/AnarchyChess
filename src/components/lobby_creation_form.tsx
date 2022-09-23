@@ -2,7 +2,7 @@ import * as React from "react";
 import LoadingSpin from "react-loading-spin";
 import toast, { Toaster } from "react-hot-toast";
 
-import { LobbyCreationStatus } from "../communication/communication_util";
+import { WSResponseStatus } from "../communication/communication_util";
 
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 import { ClientActionCenter } from "../client_side/client_action_center";
@@ -65,18 +65,18 @@ class LobbyCreationForm extends React.Component<
         password: isPrivate ? password : (null as any),
         areTeamsPrearranged: areTeamsPrearranged,
       } as LobbyCreationParams,
-      (status: LobbyCreationStatus, newLobby: Lobby) => {
+      (status: WSResponseStatus, newLobby: Lobby) => {
         switch (status) {
-          case LobbyCreationStatus.success:
+          case WSResponseStatus.success:
             this.props.onSuccess(newLobby);
             break;
-          case LobbyCreationStatus.nameTaken:
+          case WSResponseStatus.nameTaken:
             toast("A lobby already exists with this name");
             this.setState(() => {
               return { isWaitingForResponse: false };
             });
             break;
-          case LobbyCreationStatus.connectionError:
+          case WSResponseStatus.connectionError:
             toast("There has been a connection error");
             this.setState(() => {
               return { isWaitingForResponse: false };

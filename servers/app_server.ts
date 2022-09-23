@@ -9,13 +9,11 @@ import {
   WSResponseInfo,
   WSS_PATH,
   LoginParams,
-  LoginStatus,
+  WSResponseStatus,
   User,
   Lobby,
   RegisterParams,
-  RegisterStatus,
   LobbyCreationParams,
-  LobbyCreationStatus,
   MoveRequestParams,
 } from "../src/communication/communication_util.js";
 import { MongodbOperations } from "./mongodb_operations.js";
@@ -95,8 +93,8 @@ export class AppServer {
   }
 
   private login(client: any, loginParams: LoginParams): void {
-    MongodbOperations.login(loginParams, (status: LoginStatus, user: User) => {
-      if (status === LoginStatus.success) {
+    MongodbOperations.login(loginParams, (status: WSResponseStatus, user: User) => {
+      if (status === WSResponseStatus.success) {
         setUser(client, user);
         this.serverAssignments.set(user.id, null as any);
       }
@@ -111,8 +109,8 @@ export class AppServer {
   private register(client: any, registerParams: RegisterParams): void {
     MongodbOperations.register(
       registerParams,
-      (status: RegisterStatus, user: User) => {
-        if (status === RegisterStatus.success) {
+      (status: WSResponseStatus, user: User) => {
+        if (status === WSResponseStatus.success) {
           setUser(client, user);
           this.serverAssignments.set(user.id, null as any);
         }
@@ -134,15 +132,15 @@ export class AppServer {
     lobbyCreationParams: LobbyCreationParams
   ): void {
     let creator = getUser(client);
-    let status: LobbyCreationStatus = LobbyCreationStatus.success;
+    let status: WSResponseStatus = WSResponseStatus.success;
     let newLobby: Lobby = null as any;
     let playerListJSON: string = null as any;
     for (let lobby of this.lobbies) {
       if (lobby.name === lobbyCreationParams.name) {
-        status = LobbyCreationStatus.nameTaken;
+        status = WSResponseStatus.nameTaken;
       }
     }
-    if (status === LobbyCreationStatus.success) {
+    if (status === WSResponseStatus.success) {
       newLobby = {
         creatorID: creator.id,
         name: lobbyCreationParams.name,

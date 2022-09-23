@@ -6,7 +6,7 @@ import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 import { ClientActionCenter } from "../client_side/client_action_center";
-import { RegisterParams, User, RegisterStatus } from "../communication/communication_util";
+import { RegisterParams, User, WSResponseStatus } from "../communication/communication_util";
 
 const USERNAME_REGEX: RegExp = new RegExp("^[a-zA-Z0-9_\\-\\*]{3,20}$", "i");
 const EMAIL_REGEX: RegExp = new RegExp(
@@ -97,24 +97,24 @@ class RegisterForm extends React.Component<
         email: this.state.email,
         password: this.state.password,
       } as RegisterParams,
-      (status: RegisterStatus, user: User) => {
+      (status: WSResponseStatus, user: User) => {
         switch (status) {
-          case RegisterStatus.success:
+          case WSResponseStatus.success:
             this.props.onSuccess();
             break;
-          case RegisterStatus.usernameTaken:
+          case WSResponseStatus.usernameTaken:
             toast("This username is already taken");
             this.setState(() => {
               return { isWaitingForResponse: false };
             });
             break;
-          case RegisterStatus.emailRegistered:
+          case WSResponseStatus.emailRegistered:
             toast("A user is already registered with this email address");
             this.setState(() => {
               return { isWaitingForResponse: false };
             });
             break;
-          case RegisterStatus.connectionError:
+          case WSResponseStatus.connectionError:
             toast("There has been a connection error");
             this.setState(() => {
               return { isWaitingForResponse: false };
