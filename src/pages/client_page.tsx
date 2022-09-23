@@ -34,15 +34,18 @@ class ClientPage
   };
 
   componentDidMount() {
-    this.clientActionCenter.clientFlowEngine.addObserver(this);
+    if (this.clientActionCenter.clientFlowEngine !== null) {
+      this.clientActionCenter.clientFlowEngine.addObserver(this);
+      this.setState({
+        playerList: this.clientActionCenter.clientFlowEngine.playerList,
+      });
+    }
   }
 
   componentWillUnmount() {
-    this.clientActionCenter.clientFlowEngine.removeObserver(this);
-  }
-
-  startGame(): void {
-    this.setState({ lobbyState: LobbyState.running });
+    if (this.clientActionCenter.clientFlowEngine !== null) {
+      this.clientActionCenter.clientFlowEngine.removeObserver(this);
+    }
   }
 
   notify(eventType: ClientEventType, info: Map<ClientEventInfo, any>): void {

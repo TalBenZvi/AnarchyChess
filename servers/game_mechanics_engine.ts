@@ -11,14 +11,15 @@ import {
   WHITE_KING_PLAYER_INDEX,
   BLACK_KING_PLAYER_INDEX,
 } from "../src/game_flow_util/game_elements.js";
+
+// import { Lobby } from "../src/communication/communication_util.js";
+import { PlayerList } from "../src/game_flow_util/player_list.js";
 import {
   replacer,
   reviver,
   GameStatus,
   User,
 } from "../src/communication/communication_util.js";
-import { Lobby } from "../src/communication/communication_util.js";
-import { PlayerList } from "../src/game_flow_util/player_list.js";
 
 const COOLDOWN_VARIANCE: number = 0.2;
 // in seconds
@@ -57,8 +58,6 @@ export interface MechanicsEngineObserver {
 }
 
 export class GameMechanicsEngine {
-  private gameServer: GameServer = null as any;
-  private _lobby: Lobby = null as any;
   private playerList: PlayerList = null as any;
   private position: Position = new Position("server");
   private gameStatus: GameStatus = GameStatus.inactive;
@@ -69,20 +68,25 @@ export class GameMechanicsEngine {
   private respawnTimeouts: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private newGameTimeout: NodeJS.Timeout = null as any;
 
-  constructor(private observer: MechanicsEngineObserver) {}
-
-  get lobby(): Lobby {
-    return this._lobby;
+  constructor(
+    private observer: MechanicsEngineObserver,
+    areTeamsPrearranged: boolean,
+  ) {
+    this.playerList = new PlayerList(areTeamsPrearranged);
   }
 
-  get players(): User[] {
-    return this.playerList.getAllUsers();
+  getPlayerListJSON(): string {
+    return JSON.stringify(this.playerList);
   }
 
-  changePlayerTeam(player: User) {
-    this.playerList.changePlayerTeam(player);
-    // this.sendPlayerListUpdates();
+  addPlayer(player: User) {
+    this.playerList.addPlayer(player);
   }
+
+  // changePlayerTeam(player: User) {
+  //   this.playerList.changePlayerTeam(player);
+  //   // this.sendPlayerListUpdates();
+  // }
 
   private resetGameplayElements(): void {
     for (let respawnTimeout of this.respawnTimeouts) {
@@ -122,7 +126,7 @@ export class GameMechanicsEngine {
     }
   }
 
-  endGame(winningColor: PieceColor): void {
+  private endGame(winningColor: PieceColor): void {
     if (this.gameStatus === GameStatus.running) {
       this.gameStatus = GameStatus.betweenRounds;
       this.resetGameplayElements();
@@ -210,7 +214,7 @@ export class GameMechanicsEngine {
     return cooldown;
   }
 
-  registerMove(
+  private registerMove(
     playerIndex: number,
     moveRequest: Move,
     moveArrivalTime: number
@@ -292,18 +296,6 @@ export class GameMechanicsEngine {
       }
     }
   }
-
-  // private handleConnection(userIndex: number, user: User) {
-  //   if (this.gameStatus === GameStatus.waitingForPlayers) {
-  //     this.playerList.setPlayer(userIndex, user);
-  //     this.sendPlayerListUpdates();
-  //   }
-  // }
-
-  // private handleDisconnection(userIndex: number) {
-  //   this.playerList.removePlayerAtIndex(userIndex);
-  //   this.sendPlayerListUpdates();
-  // }
 
   handleMoveRequest(moveRequest: Move, userID: string) {
     if (this.gameStatus === GameStatus.running) {

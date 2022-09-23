@@ -77,6 +77,7 @@ export enum WSResponseInfo {
   user,
   // createLobby
   newLobby,
+  playerListJSON,
   // inGame
   gameEvent,
 }

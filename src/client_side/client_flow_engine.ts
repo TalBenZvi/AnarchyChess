@@ -21,6 +21,7 @@ import { PlayerList } from "../game_flow_util/player_list";
 export const GAME_START_DELAY: number = 2;
 
 export enum ClientEventType {
+  joinedNewLobby,
   disconnectedFromLobby,
   playerListUpdate,
   roleAssigned,
@@ -35,7 +36,7 @@ export enum ClientEventType {
 }
 
 export enum ClientEventInfo {
-  // playerListUpdate
+  // joinedNewLobby, playerListUpdate
   playerList,
   // roleAssigned
   playerIndex,
@@ -67,6 +68,7 @@ export interface ClientFlowEngineObserver {
 export class ClientFlowEngine {
   //private gameClient: GameClient;
   private _currentLobby: Lobby = null as any;
+  playerList: PlayerList = new PlayerList(false);
 
   isGameRunning: boolean = false;
   private position: Position = null as any;
@@ -75,9 +77,7 @@ export class ClientFlowEngine {
 
   private observers: ClientFlowEngineObserver[] = [];
 
-  constructor(private _sendMove: (move: Move) => void) {
-    //this.gameClient = new GameClient(this);
-  }
+  constructor(private _user: User, private _sendMove: (move: Move) => void) {}
 
   get playerIndex(): number {
     return this._playerIndex;
@@ -85,6 +85,10 @@ export class ClientFlowEngine {
 
   get currentLobby(): Lobby {
     return { ...this._currentLobby };
+  }
+
+  get user(): User {
+    return this._user;
   }
 
   addObserver(observer: ClientFlowEngineObserver) {
@@ -104,6 +108,12 @@ export class ClientFlowEngine {
     for (let observer of this.observers) {
       observer.notify(eventType, info);
     }
+  }
+
+  setLobby(lobby: Lobby, playerListJSON: string): void {
+    this._currentLobby = lobby;
+    this.playerList.setFromJSON(playerListJSON);
+    this.notifyPlayerListUpdate();
   }
 
   getPosition(): Position {
@@ -149,10 +159,12 @@ export class ClientFlowEngine {
     this.position.killPlayer(dyingPlayerIndex);
   }
 
-  private updatePlayerList(playerList: PlayerList): void {
+  private notifyPlayerListUpdate(): void {
     this.notifyObservers(
       ClientEventType.playerListUpdate,
-      new Map<ClientEventInfo, any>([[ClientEventInfo.playerList, playerList]])
+      new Map<ClientEventInfo, any>([
+        [ClientEventInfo.playerList, this.playerList],
+      ])
     );
   }
 
@@ -224,7 +236,7 @@ export class ClientFlowEngine {
       case GameEventType.playerListUpdate: {
         let playerList: PlayerList = new PlayerList(false);
         playerList.setFromJSON(event.info.get(GameEventInfo.playerListJSON));
-        this.updatePlayerList(playerList);
+        this.notifyPlayerListUpdate();
         break;
       }
       // game started
@@ -352,24 +364,4 @@ export class ClientFlowEngine {
       }
     }
   }
-
-  // notify(
-  //   notification: ClientNotificationType,
-  //   notificationInfo: Map<ClientNotificationInfo, any>
-  // ): void {
-  //   switch (notification) {
-  //     case ClientNotificationType.disconnectedFromServer: {
-  //       this.gameClient.destroyConenction();
-  //       this.notifyObservers(
-  //         ClientEventType.disconnection,
-  //         new Map<ClientEventInfo, any>()
-  //       );
-  //       break;
-  //     }
-  //     case ClientNotificationType.receivedEvent: {
-  //       this.registerEvent(notificationInfo.get(ClientNotificationInfo.event));
-  //       break;
-  //     }
-  //   }
-  // }
 }

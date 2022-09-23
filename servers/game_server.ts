@@ -20,31 +20,51 @@ import {
   MechanicsEngineNotificationType,
   MechanicsEngineObserver,
 } from "./game_mechanics_engine.js";
-
-const CREATOR_CLIENT_INDEX: number = 0;
+import { PlayerList } from "../src/game_flow_util/player_list.js";
 
 export class GameServer implements MechanicsEngineObserver {
   // maps user id to the user's client
   private clients: Map<string, any> = new Map();
-  private engine: GameMechanicsEngine = new GameMechanicsEngine(this);
+  private mechanicsEngine: GameMechanicsEngine = null as any;
 
-  constructor(creatorID: string, creatorClient: any, private lobby: Lobby) {
-    this.clients.set(creatorID, creatorClient);
+  constructor(creator: User, creatorClient: any, private lobby: Lobby) {
+    this.mechanicsEngine = new GameMechanicsEngine(
+      this,
+      lobby.areTeamsPrearranged
+    );
+    this.addClient(creator, creatorClient);
   }
 
+  private broadcastPlayerListUpdate() {
+    this.broadcastGameEvent({
+      type: GameEventType.playerListUpdate,
+      info: new Map([
+        [
+          GameEventInfo.playerListJSON,
+          this.mechanicsEngine.getPlayerListJSON(),
+        ],
+      ]),
+    });
+  }
 
   // returns whether or not the client was added successfully
-  addClient(userID: string, client: any): boolean {
+  addClient(user: User, client: any): boolean {
     if (this.clients.size < NUM_OF_PLAYERS) {
-      this.clients.set(userID, client);
       this.lobby.capacity++;
+      this.mechanicsEngine.addPlayer(user);
+      this.broadcastPlayerListUpdate();
+      this.clients.set(user.id, client);
       return true;
     }
     return false;
   }
 
   handleMoveRequest(moveRequest: Move, userID: string) {
-    this.engine.handleMoveRequest(moveRequest, userID);
+    this.mechanicsEngine.handleMoveRequest(moveRequest, userID);
+  }
+
+  getPlayerListJSON(): string {
+    return this.mechanicsEngine.getPlayerListJSON();
   }
 
   private sendGameEvent(userID: string, gameEvent: GameEvent) {

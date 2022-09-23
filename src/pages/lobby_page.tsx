@@ -99,7 +99,6 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
       playerList,
       onClose,
       clientFlowEngine,
-      // serverFlowEngine,
     } = this.props;
     let { isBotDialogOpen, shouldRedirectToHome } = this.state;
     if (shouldRedirectToHome) {

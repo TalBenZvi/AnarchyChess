@@ -58,7 +58,7 @@
     "copmile_dev_server": "tsc servers/development_server.ts --outDir server_js_dump --module es2020 --moduleResolution node --allowSyntheticDefaultImports",
     "copmile_prod_server": "tsc servers/production_server.ts --outDir server_js_dump --module es2020 --moduleResolution node --allowSyntheticDefaultImports",
     "start_dev_server": "node server_js_dump/servers/development_server.js",
-    "dev": "ts-node-esm servers/development_server.ts",
+    "dev": "ts-node-esm --experimental-specifier-resolution=node servers/development_server.ts",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

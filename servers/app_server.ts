@@ -125,6 +125,7 @@ export class AppServer {
     let creator = getUser(client);
     let status: LobbyCreationStatus = LobbyCreationStatus.success;
     let newLobby: Lobby = null as any;
+    let playerListJSON: string = null as any;
     for (let lobby of this.lobbies) {
       if (lobby.name === lobbyCreationParams.name) {
         status = LobbyCreationStatus.nameTaken;
@@ -139,16 +140,18 @@ export class AppServer {
         areTeamsPrearranged: lobbyCreationParams.areTeamsPrearranged,
         capacity: 0,
       };
-      this.serverAssignments.set(
-        creator.id,
-        new GameServer(getUser(client).id, client, newLobby)
-      );
+      let gameServer = new GameServer(getUser(client), client, newLobby);
+      this.serverAssignments.set(creator.id, gameServer);
       this.lobbies.push(newLobby);
+      playerListJSON = gameServer.getPlayerListJSON();
     }
     this.sendResponse(client, {
       type: WSRequestType.createLobby,
       status: status,
-      info: new Map<WSResponseInfo, any>([[WSResponseInfo.newLobby, newLobby]]),
+      info: new Map<WSResponseInfo, any>([
+        [WSResponseInfo.newLobby, newLobby],
+        [WSResponseInfo.playerListJSON, playerListJSON],
+      ]),
     } as WSResponse);
   }
 }

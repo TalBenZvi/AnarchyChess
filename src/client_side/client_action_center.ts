@@ -32,16 +32,7 @@ export class ClientActionCenter {
   );
   private _currentUser: User = null as any;
   private _currentLobby: Lobby = null as any;
-  private _clientFlowEngine: ClientFlowEngine = new ClientFlowEngine(
-    (move: Move) => {
-      this.sendRequest({
-        type: WSRequestType.inGame,
-        params: {
-          move: move,
-        } as MoveRequestParams,
-      } as WSRequest);
-    }
-  );
+  private _clientFlowEngine: ClientFlowEngine = null as any;
 
   // on-response functions
   private onRegisterResponse: (status: RegisterStatus, user: User) => void =
@@ -75,7 +66,7 @@ export class ClientActionCenter {
             clearTimeout(this.registerTimeout);
             let user = wsResponse.info.get(WSResponseInfo.user);
             if (wsResponse.status === LoginStatus.success) {
-              this._currentUser = user;
+              this.onAuthentication(user);
             }
             if (this.onRegisterResponse !== null) {
               this.onRegisterResponse(
@@ -92,7 +83,7 @@ export class ClientActionCenter {
             clearTimeout(this.loginTimeout);
             let user = wsResponse.info.get(WSResponseInfo.user);
             if (wsResponse.status === LoginStatus.success) {
-              this._currentUser = user;
+              this.onAuthentication(user);
             }
             if (this.onLoginResponse !== null) {
               this.onLoginResponse(wsResponse.status as LoginStatus, user);
@@ -107,6 +98,10 @@ export class ClientActionCenter {
             let newLobby = wsResponse.info.get(WSResponseInfo.newLobby);
             if (wsResponse.status === LobbyCreationStatus.success) {
               this._currentLobby = newLobby;
+              this.clientFlowEngine.setLobby(
+                newLobby,
+                wsResponse.info.get(WSResponseInfo.playerListJSON)
+              );
             }
             if (this.onLobbyCreationResponse != null) {
               this.onLobbyCreationResponse(
@@ -139,6 +134,18 @@ export class ClientActionCenter {
 
   get clientFlowEngine(): ClientFlowEngine {
     return this._clientFlowEngine;
+  }
+
+  private onAuthentication(user: User): void {
+    this._currentUser = user;
+    this._clientFlowEngine = new ClientFlowEngine(user, (move: Move) => {
+      this.sendRequest({
+        type: WSRequestType.inGame,
+        params: {
+          move: move,
+        } as MoveRequestParams,
+      } as WSRequest);
+    });
   }
 
   private sendRequest(request: WSRequest) {

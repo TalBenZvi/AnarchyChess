@@ -18,18 +18,20 @@ export class PlayerList {
   }));
 
   constructor(private _areTeamsPrearranged: boolean) {}
-
+  
   setFromJSON(jsonString: string) {
-    let playerListFields: PlayerListFields = JSON.parse(jsonString);
-    this._areTeamsPrearranged = playerListFields._areTeamsPrearranged;
-    this.players = playerListFields.players;
+    if (jsonString !== null) {
+      let playerListFields: PlayerListFields = JSON.parse(jsonString);
+      this._areTeamsPrearranged = playerListFields._areTeamsPrearranged;
+      this.players = playerListFields.players;
+    }
   }
 
   get areTeamsPrearranged(): boolean {
     return this._areTeamsPrearranged;
   }
 
-  getUserAt(userIndex: number): User {
+  private getUserAt(userIndex: number): User {
     return this.players[userIndex].user;
   }
 
@@ -47,7 +49,8 @@ export class PlayerList {
       .map((player: Player) => player.user);
   }
 
-  setPlayer(userIndex: number, user: User): void {
+  // returns whether or not the operation wad successfull
+  addPlayer(user: User): boolean {
     let assignedColor = null as any;
     if (this._areTeamsPrearranged) {
       let whiteTeamSize: number = this.getUsersByAssignedColor(
@@ -59,32 +62,41 @@ export class PlayerList {
       assignedColor =
         whiteTeamSize > blackTeamSize ? PieceColor.black : PieceColor.white;
     }
-    this.players[userIndex] = { user: user, assignedColor: assignedColor };
+    for (let i = 0; i < NUM_OF_PLAYERS; i++) {
+      if (this.players[i].user === null) {
+        this.players[i] = {
+          user: user,
+          assignedColor: assignedColor,
+        } as Player;
+        return true;
+      }
+    }
+    return false;
   }
 
-  indexOf(user: User): number {
+  private indexOf(userID: string): number {
     for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].user != null && this.players[i].user.id === user.id) {
+      if (this.players[i].user != null && this.players[i].user.id === userID) {
         return i;
       }
     }
     return -1;
   }
 
-  removePlayerAtIndex(userIndex: number): void {
+  private removePlayerAtIndex(userIndex: number): void {
     this.players[userIndex] = { user: null as any, assignedColor: null as any };
   }
 
-  removePlayer(user: User) {
-    let userIndex: number = this.indexOf(user);
+  removePlayer(userID: string) {
+    let userIndex: number = this.indexOf(userID);
     if (userIndex !== -1) {
       this.removePlayerAtIndex(userIndex);
     }
   }
 
-  changePlayerTeam(player: User): void {
+  changePlayerTeam(playerID: string): void {
     if (this._areTeamsPrearranged) {
-      let userIndex: number = this.indexOf(player);
+      let userIndex: number = this.indexOf(playerID);
       if (
         userIndex !== -1 &&
         this.getUsersByAssignedColor(
