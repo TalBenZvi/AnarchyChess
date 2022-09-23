@@ -1,4 +1,9 @@
-import { Move, NUM_OF_PLAYERS } from "../src/game_flow_util/game_elements.js";
+import {
+  Move,
+  NUM_OF_PLAYERS,
+  PieceColor,
+  Square,
+} from "../src/game_flow_util/game_elements.js";
 import {
   GameEvent,
   GameEventInfo,
@@ -27,6 +32,7 @@ export class GameServer implements MechanicsEngineObserver {
     this.clients.set(creatorID, creatorClient);
   }
 
+
   // returns whether or not the client was added successfully
   addClient(userID: string, client: any): boolean {
     if (this.clients.size < NUM_OF_PLAYERS) {
@@ -51,7 +57,7 @@ export class GameServer implements MechanicsEngineObserver {
   }
 
   private broadcastGameEvent(gameEvent: GameEvent) {
-    this.clients.forEach((client: any, userID: string) => {
+    this.clients.forEach((_: any, userID: string) => {
       this.sendGameEvent(userID, gameEvent);
     });
   }
@@ -60,8 +66,8 @@ export class GameServer implements MechanicsEngineObserver {
     roleAssignemnts: Map<string, number>,
     initialPlayerCooldowns: number[]
   ) {
-    this.clients.forEach((client: any, userID: string) => {
-      let playerIndex = roleAssignemnts.get(userID);
+    this.clients.forEach((_: any, userID: string) => {
+      let playerIndex = roleAssignemnts.get(userID) as number;
       this.sendGameEvent(userID, {
         type: GameEventType.gameStarted,
         info: new Map([
@@ -72,20 +78,107 @@ export class GameServer implements MechanicsEngineObserver {
     });
   }
 
+  private endGame(winningColor: PieceColor) {
+    this.broadcastGameEvent({
+      type: GameEventType.gameEnded,
+      info: new Map([[GameEventInfo.winningColor, winningColor]]),
+    } as GameEvent);
+  }
+
+  private returnToLobby() {
+    this.broadcastGameEvent({
+      type: GameEventType.returnToLobby,
+      info: new Map(),
+    } as GameEvent);
+  }
+
+  private broacastMove(
+    playerIndex: number,
+    move: Move,
+    respawnTimer: number | undefined,
+    enPassantRespawnTimer: number | undefined,
+    cooldown: number
+  ) {
+    let gameEventInfo: Map<GameEventInfo, any> = new Map([
+      [GameEventInfo.playerIndex, playerIndex as any],
+      [GameEventInfo.move, move as any],
+      [GameEventInfo.cooldown, cooldown as any],
+    ]);
+    if (respawnTimer !== undefined) {
+      gameEventInfo.set(GameEventInfo.respawnTimer, respawnTimer as any);
+    }
+    if (enPassantRespawnTimer !== undefined) {
+      gameEventInfo.set(
+        GameEventInfo.enPassantRespawnTimer,
+        enPassantRespawnTimer as any
+      );
+    }
+    this.broadcastGameEvent({
+      type: GameEventType.move,
+      info: gameEventInfo,
+    } as GameEvent);
+  }
+
+  private broadcastRespawn(playerIndex: number, respawnSquare: Square) {
+    this.broadcastGameEvent({
+      type: GameEventType.respawn,
+      info: new Map([
+        [GameEventInfo.playerIndex, playerIndex as any],
+        [GameEventInfo.respawnSquare, respawnSquare as any],
+      ]),
+    } as GameEvent);
+  }
+
   notify(
     notification: MechanicsEngineNotificationType,
     notificationInfo: Map<MechanicsEngineNotificationInfo, any>
   ): void {
     switch (notification) {
-      case MechanicsEngineNotificationType.gameStarted: {
-        let roleAssignemnts: Map<string, number> = notificationInfo.get(
-          MechanicsEngineNotificationInfo.roleAssignemnts
-        );
-        let initialPlayerCooldowns: number[] = notificationInfo.get(
-          MechanicsEngineNotificationInfo.initialPlayerCooldowns
-        );
-        this.startGame(roleAssignemnts, initialPlayerCooldowns);
-      }
+      case MechanicsEngineNotificationType.gameStarted:
+        {
+          this.startGame(
+            notificationInfo.get(
+              MechanicsEngineNotificationInfo.roleAssignemnts
+            ),
+            notificationInfo.get(
+              MechanicsEngineNotificationInfo.initialPlayerCooldowns
+            )
+          );
+        }
+        break;
+      case MechanicsEngineNotificationType.gameEnded:
+        {
+          this.endGame(
+            notificationInfo.get(MechanicsEngineNotificationInfo.winningColor)
+          );
+        }
+        break;
+      case MechanicsEngineNotificationType.returningToLobby:
+        {
+          this.returnToLobby();
+        }
+        break;
+      case MechanicsEngineNotificationType.move:
+        {
+          this.broacastMove(
+            notificationInfo.get(MechanicsEngineNotificationInfo.playerIndex),
+            notificationInfo.get(MechanicsEngineNotificationInfo.move),
+            notificationInfo.get(MechanicsEngineNotificationInfo.respawnTimer),
+            notificationInfo.get(
+              MechanicsEngineNotificationInfo.enPassantRespawnTimer
+            ),
+            notificationInfo.get(MechanicsEngineNotificationInfo.cooldown)
+          );
+        }
+        break;
+      case MechanicsEngineNotificationType.respawn:
+        {
+          this.broadcastRespawn(
+            notificationInfo.get(MechanicsEngineNotificationInfo.playerIndex),
+            notificationInfo.get(MechanicsEngineNotificationInfo.respawnSquare)
+          );
+        }
+        break;
     }
   }
 }

@@ -81,7 +81,7 @@ export class GameMechanicsEngine {
 
   changePlayerTeam(player: User) {
     this.playerList.changePlayerTeam(player);
-    this.sendPlayerListUpdates();
+    // this.sendPlayerListUpdates();
   }
 
   private resetGameplayElements(): void {
@@ -293,33 +293,17 @@ export class GameMechanicsEngine {
     }
   }
 
-  private sendPlayerListUpdates() {
-    // this.gameServer.broadcastEvent({
-    //   index: null as any,
-    //   type: GameEventType.playerListUpdate,
-    //   info: new Map<GameEventInfo, string>([
-    //     [GameEventInfo.playerList, JSON.stringify(this.playerList)],
-    //   ]),
-    // });
-    // Authentication.updateLobbyMembers(
-    //   this.lobby.id,
-    //   this.playerList
-    //     .getAllUsers()
-    //     .map((user: User) => (user == null ? (null as any) : user.id))
-    // );
-  }
+  // private handleConnection(userIndex: number, user: User) {
+  //   if (this.gameStatus === GameStatus.waitingForPlayers) {
+  //     this.playerList.setPlayer(userIndex, user);
+  //     this.sendPlayerListUpdates();
+  //   }
+  // }
 
-  private handleConnection(userIndex: number, user: User) {
-    if (this.gameStatus === GameStatus.waitingForPlayers) {
-      this.playerList.setPlayer(userIndex, user);
-      this.sendPlayerListUpdates();
-    }
-  }
-
-  private handleDisconnection(userIndex: number) {
-    this.playerList.removePlayerAtIndex(userIndex);
-    this.sendPlayerListUpdates();
-  }
+  // private handleDisconnection(userIndex: number) {
+  //   this.playerList.removePlayerAtIndex(userIndex);
+  //   this.sendPlayerListUpdates();
+  // }
 
   handleMoveRequest(moveRequest: Move, userID: string) {
     if (this.gameStatus === GameStatus.running) {
