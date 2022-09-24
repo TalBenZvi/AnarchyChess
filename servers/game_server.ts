@@ -64,6 +64,24 @@ export class GameServer implements MechanicsEngineObserver {
     return false;
   }
 
+  // returns whether or not the lobby was closed
+  removePlayer(userID: string): boolean {
+    if (userID === this._lobby.creatorID) {
+      this.broadcastGameEvent({
+        type: GameEventType.disconnectedFromLobby,
+        info: new Map(),
+      });
+      this.clients.clear();
+      return true;
+    } else {
+      this.mechanicsEngine.removePlayer(userID);
+      this.clients.delete(userID);
+      this._lobby.capacity--;
+      this.broadcastPlayerListUpdate();
+      return false;
+    }
+  }
+
   handleMoveRequest(moveRequest: Move, userID: string) {
     this.mechanicsEngine.handleMoveRequest(moveRequest, userID);
   }
@@ -74,10 +92,13 @@ export class GameServer implements MechanicsEngineObserver {
 
   private sendGameEvent(userID: string, gameEvent: GameEvent) {
     this.clients.get(userID).send(
-      JSON.stringify({
-        type: WSRequestType.inGame,
-        info: new Map([[WSResponseInfo.gameEvent, gameEvent]]),
-      } as WSResponse, replacer)
+      JSON.stringify(
+        {
+          type: WSRequestType.inGame,
+          info: new Map([[WSResponseInfo.gameEvent, gameEvent]]),
+        } as WSResponse,
+        replacer
+      )
     );
   }
 

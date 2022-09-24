@@ -133,7 +133,17 @@ export class AppServer {
   }
 
   private logout(user: User): void {
-    this.serverAssignments.delete(user.id);
+    if (this.serverAssignments.has(user.id)) {
+      let isLobbyClosed: boolean = this.serverAssignments
+        .get(user.id)
+        .removePlayer(user.id);
+      this.serverAssignments.delete(user.id);
+      if (isLobbyClosed) {
+        this.lobbies = this.lobbies.filter(
+          (lobby: Lobby) => lobby.creatorID !== user.id
+        );
+      }
+    }
   }
 
   private createLobby(
@@ -174,10 +184,18 @@ export class AppServer {
   }
 
   private joinLobby(client: any, lobbyJoiningParams: LobbyJoiningParams) {
-    let gameServer: GameServer = this.serverAssignments.get(
-      lobbyJoiningParams.lobbyCreatorID
-    ) as GameServer;
-    let isSuccessfull: boolean = gameServer.addClient(getUser(client), client);
+    let isSuccessfull: boolean = true;
+    let gameServer: GameServer = null as any;
+    if (this.serverAssignments.has(lobbyJoiningParams.lobbyCreatorID)) {
+      gameServer = this.serverAssignments.get(
+        lobbyJoiningParams.lobbyCreatorID
+      ) as GameServer;
+      if (!gameServer.addClient(getUser(client), client)) {
+        isSuccessfull = false;
+      }
+    } else {
+      isSuccessfull = false;
+    }
     if (isSuccessfull) {
       this.serverAssignments.set(getUser(client).id, gameServer);
     }

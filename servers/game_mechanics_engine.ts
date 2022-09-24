@@ -70,7 +70,7 @@ export class GameMechanicsEngine {
 
   constructor(
     private observer: MechanicsEngineObserver,
-    areTeamsPrearranged: boolean,
+    areTeamsPrearranged: boolean
   ) {
     this.playerList = new PlayerList(areTeamsPrearranged);
   }
@@ -81,6 +81,10 @@ export class GameMechanicsEngine {
 
   addPlayer(player: User) {
     this.playerList.addPlayer(player);
+  }
+
+  removePlayer(userID: string) {
+    this.playerList.removePlayer(userID);
   }
 
   // changePlayerTeam(player: User) {
