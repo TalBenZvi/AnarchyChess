@@ -16,6 +16,8 @@ import {
   LobbyCreationParams,
   MoveRequestParams,
   LobbyJoiningParams,
+  LobbyRemovalParams,
+  ChangeTeamParams,
 } from "../src/communication/communication_util.js";
 import { MongodbOperations } from "./mongodb_operations.js";
 import { GameServer } from "./game_server.js";
@@ -52,6 +54,11 @@ export class AppServer {
                 this.login(client, request.params as LoginParams);
               }
               break;
+            case WSRequestType.logout:
+              {
+                this.logout(client);
+              }
+              break;
             case WSRequestType.getLobbies:
               {
                 this.sendResponse(client, {
@@ -73,6 +80,32 @@ export class AppServer {
                 this.joinLobby(client, request.params as LobbyJoiningParams);
               }
               break;
+            case WSRequestType.removeFromLobby:
+              {
+                let requesterID: string = getUser(client).id;
+                let removedPlayerID: string = (
+                  request.params as LobbyRemovalParams
+                ).removedPlayerID;
+                if (
+                  removedPlayerID === requesterID ||
+                  this.isHost(requesterID)
+                ) {
+                  this.removePlayerFromLobby(removedPlayerID);
+                }
+              }
+              break;
+            case WSRequestType.changePlayerTeam:
+              {
+                let requesterID: string = getUser(client).id;
+                let playerID: string = (request.params as ChangeTeamParams)
+                  .playerID;
+                if (this.isHost(requesterID)) {
+                  (
+                    this.serverAssignments.get(requesterID) as GameServer
+                  ).changePlayerTeam(playerID);
+                }
+              }
+              break;
             case WSRequestType.inGame:
               {
                 (
@@ -88,10 +121,18 @@ export class AppServer {
       });
       client.on("close", () => {
         if (getUser(client) != null) {
-          this.logout(getUser(client));
+          this.logout(client);
         }
       });
     });
+  }
+
+  private isHost(userID: string): boolean {
+    return (
+      this.serverAssignments.has(userID) &&
+      (this.serverAssignments.get(userID) as GameServer).lobby.creatorID ===
+        userID
+    );
   }
 
   private sendResponse(client: any, response: WSResponse): void {
@@ -104,7 +145,6 @@ export class AppServer {
       (status: WSResponseStatus, user: User) => {
         if (status === WSResponseStatus.success) {
           setUser(client, user);
-          this.serverAssignments.set(user.id, null as any);
         }
         this.sendResponse(client, {
           type: WSRequestType.login,
@@ -121,7 +161,6 @@ export class AppServer {
       (status: WSResponseStatus, user: User) => {
         if (status === WSResponseStatus.success) {
           setUser(client, user);
-          this.serverAssignments.set(user.id, null as any);
         }
         this.sendResponse(client, {
           type: WSRequestType.register,
@@ -132,18 +171,25 @@ export class AppServer {
     );
   }
 
-  private logout(user: User): void {
-    if (this.serverAssignments.has(user.id)) {
-      let isLobbyClosed: boolean = this.serverAssignments
-        .get(user.id)
-        .removePlayer(user.id);
-      this.serverAssignments.delete(user.id);
+  private removePlayerFromLobby(userID: string) {
+    if (this.serverAssignments.has(userID)) {
+      let gameServer = this.serverAssignments.get(userID) as GameServer;
+      let isLobbyClosed: boolean = userID === gameServer.lobby.creatorID;
+      let removedUserIDs: string[] = gameServer.removePlayer(userID);
+      for (let removedUserID of removedUserIDs) {
+        this.serverAssignments.delete(removedUserID);
+      }
       if (isLobbyClosed) {
         this.lobbies = this.lobbies.filter(
-          (lobby: Lobby) => lobby.creatorID !== user.id
+          (lobby: Lobby) => lobby.creatorID !== userID
         );
       }
     }
+  }
+
+  private logout(client: any): void {
+    this.removePlayerFromLobby(getUser(client).id);
+    setUser(client, null as any);
   }
 
   private createLobby(

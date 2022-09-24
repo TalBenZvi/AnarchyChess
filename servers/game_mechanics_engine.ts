@@ -87,10 +87,9 @@ export class GameMechanicsEngine {
     this.playerList.removePlayer(userID);
   }
 
-  // changePlayerTeam(player: User) {
-  //   this.playerList.changePlayerTeam(player);
-  //   // this.sendPlayerListUpdates();
-  // }
+  changePlayerTeam(playerID: string) {
+    this.playerList.changePlayerTeam(playerID);
+  }
 
   private resetGameplayElements(): void {
     for (let respawnTimeout of this.respawnTimeouts) {

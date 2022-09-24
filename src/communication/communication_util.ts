@@ -63,9 +63,12 @@ export interface Lobby {
 export enum WSRequestType {
   login,
   register,
+  logout,
   getLobbies,
   createLobby,
   joinLobby,
+  removeFromLobby,
+  changePlayerTeam,
   inGame,
 }
 
@@ -131,7 +134,17 @@ export interface LobbyJoiningParams {
   lobbyCreatorID: string;
 }
 
-// move request
+// removeFromLobby
+export interface LobbyRemovalParams {
+  removedPlayerID: string;
+}
+
+// changePlayerTeam
+export interface ChangeTeamParams {
+  playerID: string;
+}
+
+// inGame
 export interface MoveRequestParams {
   move: Move;
 }

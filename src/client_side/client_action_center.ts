@@ -1,3 +1,4 @@
+import { NewLifecycle } from "react";
 import {
   EnvironmentManager,
   ValueType,
@@ -16,6 +17,8 @@ import {
   GameEvent,
   MoveRequestParams,
   LobbyJoiningParams,
+  LobbyRemovalParams,
+  ChangeTeamParams,
 } from "../communication/communication_util";
 import { Move } from "../game_flow_util/game_elements";
 import { ClientFlowEngine } from "./client_flow_engine";
@@ -26,9 +29,7 @@ const RESPONSE_TIMEOUT: number = 10;
 export class ClientActionCenter {
   private static instance: ClientActionCenter = null as any;
 
-  private wsClient: WebSocket = new WebSocket(
-    EnvironmentManager.getValue(ValueType.wssAddress)
-  );
+  private wsClient: WebSocket = null as any;
   private _currentUser: User = null as any;
   private _currentLobby: Lobby = null as any;
   private _clientFlowEngine: ClientFlowEngine = null as any;
@@ -55,13 +56,16 @@ export class ClientActionCenter {
   private joinLobbyTimeout: any = null;
 
   static getInstance() {
-    if (ClientActionCenter.instance === null) {
+    if (ClientActionCenter.instance == null) {
       ClientActionCenter.instance = new ClientActionCenter();
     }
     return ClientActionCenter.instance;
   }
 
   private constructor() {
+    this.wsClient = new WebSocket(
+      EnvironmentManager.getValue(ValueType.wssAddress)
+    );
     this.wsClient.addEventListener("message", (event) => {
       let wsResponse: WSResponse = JSON.parse(event.data.toString(), reviver);
       switch (wsResponse.type) {
@@ -99,7 +103,7 @@ export class ClientActionCenter {
         // get lobbies
         case WSRequestType.getLobbies:
           {
-            if (this.onGetLobbiesResponse != null) {
+            if (this.onGetLobbiesResponse !== null) {
               this.onGetLobbiesResponse(
                 wsResponse.info.get(WSResponseInfo.lobbies)
               );
@@ -218,8 +222,12 @@ export class ClientActionCenter {
   }
 
   logout(): void {
-    this.wsClient.close();
+    this.sendRequest({
+      type: WSRequestType.logout,
+      params: null as any,
+    });
     this._currentUser = null as any;
+    this._currentLobby = null as any;
   }
 
   getLobbies(onResponse: (lobbies: Lobby[]) => void): void {
@@ -256,5 +264,25 @@ export class ClientActionCenter {
     this.joinLobbyTimeout = setTimeout(() => {
       onResponse(WSResponseStatus.connectionError, null as any);
     }, RESPONSE_TIMEOUT * 1000);
+  }
+
+  removeFromLobby(lobbyRemovalParams: LobbyRemovalParams): void {
+    this.sendRequest({
+      type: WSRequestType.removeFromLobby,
+      params: lobbyRemovalParams,
+    });
+  }
+
+  leaveLobby() {
+    this.removeFromLobby({
+      removedPlayerID: this.currentUser.id,
+    });
+  }
+
+  changePlayerTeam(changeTeamParams: ChangeTeamParams): void {
+    this.sendRequest({
+      type: WSRequestType.changePlayerTeam,
+      params: changeTeamParams,
+    });
   }
 }

@@ -26,14 +26,4 @@ httpServer.listen(3031, () => {
   console.log("server listening on port 3031");
 });
 
-// import { WebSocketServer } from "ws";
-// let wss = new WebSocketServer({ server: httpServer, path: "/websocket" });
-
 const websocketServer = new AppServer(httpServer);
-
-// const wss = new ws.Server({ server: httpServer, path: "/websocket" });
-// wss.on("connection", function connection(ws) {
-//   console.log("client connected");
-//   ws.send("test Hello");
-//   ws.on("message", (data) => ws.send("Receive: " + data));
-// });

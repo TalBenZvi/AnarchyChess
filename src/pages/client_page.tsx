@@ -27,24 +27,26 @@ class ClientPage
   extends React.Component<any, any>
   implements ClientFlowEngineObserver
 {
-  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
+  // clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state: ClientPageState = {
     lobbyState: LobbyState.open,
     playerList: null as any,
   };
 
   componentDidMount() {
-    if (this.clientActionCenter.clientFlowEngine !== null) {
-      this.clientActionCenter.clientFlowEngine.addObserver(this);
+    let clientActionCenter = ClientActionCenter.getInstance();
+    if (clientActionCenter.clientFlowEngine !== null) {
+      clientActionCenter.clientFlowEngine.addObserver(this);
       this.setState({
-        playerList: this.clientActionCenter.clientFlowEngine.playerList,
+        playerList: clientActionCenter.clientFlowEngine.playerList,
       });
     }
   }
 
   componentWillUnmount() {
-    if (this.clientActionCenter.clientFlowEngine !== null) {
-      this.clientActionCenter.clientFlowEngine.removeObserver(this);
+    let clientActionCenter = ClientActionCenter.getInstance();
+    if (clientActionCenter.clientFlowEngine !== null) {
+      clientActionCenter.clientFlowEngine.removeObserver(this);
     }
   }
 
@@ -71,10 +73,16 @@ class ClientPage
 
   render() {
     let { lobbyState, playerList } = this.state;
-    if (this.clientActionCenter.currentUser == null) {
+    let clientActionCenter = ClientActionCenter.getInstance();
+    if (
+      clientActionCenter.currentUser == null ||
+      clientActionCenter.currentLobby == null
+    ) {
       return <Redirect push to="/" />;
     }
-    let isHost: boolean = false;
+    let isHost: boolean =
+      clientActionCenter.currentUser.id ===
+      clientActionCenter.currentLobby.creatorID;
     return (
       <div className="background">
         {(() => {
@@ -83,15 +91,12 @@ class ClientPage
             case LobbyState.open: {
               return (
                 <LobbyPage
-                  lobby={this.clientActionCenter.currentLobby}
+                  lobby={clientActionCenter.currentLobby}
                   isHost={isHost}
                   playerList={playerList}
-                  clientFlowEngine={this.clientActionCenter.clientFlowEngine}
+                  clientFlowEngine={clientActionCenter.clientFlowEngine}
                   onClose={() => {
-                    // Authentication.leaveLobby();
-                    // if (isHost) {
-                    //   Authentication.closeLobby();
-                    // }
+                    clientActionCenter.leaveLobby();
                   }}
                 />
               );
@@ -100,13 +105,10 @@ class ClientPage
             case LobbyState.running: {
               return (
                 <GamePage
-                  lobby={this.clientActionCenter.currentLobby}
+                  lobby={clientActionCenter.currentLobby}
                   isHost={isHost}
                   playerList={playerList}
-                  clientFlowEngine={this.clientActionCenter.clientFlowEngine}
-                  // serverFlowEngine={
-                  //   isHost ? Authentication.serverFlowEngine : (null as any)
-                  // }
+                  clientFlowEngine={clientActionCenter.clientFlowEngine}
                 />
               );
             }

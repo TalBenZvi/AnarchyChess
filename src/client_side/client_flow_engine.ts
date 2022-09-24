@@ -232,6 +232,12 @@ export class ClientFlowEngine {
 
   registerEvent(event: GameEvent) {
     switch (event.type) {
+      // disconnected from lobby
+      case GameEventType.disconnectedFromLobby: {
+        this.notifyObservers(ClientEventType.disconnectedFromLobby, new Map());
+        this._currentLobby = null as any;
+        break;
+      }
       // player list update
       case GameEventType.playerListUpdate: {
         this.playerList.setFromJSON(

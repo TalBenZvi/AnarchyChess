@@ -5,6 +5,7 @@ import { NUM_OF_PLAYERS, PieceColor } from "../game_flow_util/game_elements";
 import { PlayerList } from "../game_flow_util/player_list";
 
 import menuIcon from "../assets/page_design/menu_icon.png";
+import { ClientActionCenter } from "../client_side/client_action_center";
 // import { ServerFlowEngine } from "../server_side/server_flow_engine";
 
 const TILE_FONT_COLORS: Map<PieceColor, string> = new Map([
@@ -33,6 +34,7 @@ class PlayerListComponent extends React.Component<
   PlayerListProps,
   PlayerListState
 > {
+  clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state = {
     openMenuIndex: null as any,
   };
@@ -267,21 +269,21 @@ class PlayerListComponent extends React.Component<
                       textAlign: "center",
                     }}
                     onClick={() => {
-                      // switch (option) {
-                      //   case KICK_MENU_TITLE: {
-                      //     if (serverFlowEngine != null) {
-                      //       serverFlowEngine.kickPlayer(openMenuPlayer);
-                      //     }
-                      //     break;
-                      //   }
-                      //   case CHANGE_TEAM_MENU_TITLE: {
-                      //     if (serverFlowEngine != null) {
-                      //       serverFlowEngine.changePlayerTeam(openMenuPlayer);
-                      //     }
-                      //     break;
-                      //   }
-                      // }
-                      // this.setState({ openMenuIndex: null as any });
+                      switch (option) {
+                        case KICK_MENU_TITLE: {
+                          this.clientActionCenter.removeFromLobby({
+                            removedPlayerID: openMenuPlayer.id,
+                          });
+                          break;
+                        }
+                        case CHANGE_TEAM_MENU_TITLE: {
+                          this.clientActionCenter.changePlayerTeam({
+                            playerID: openMenuPlayer.id,
+                          });
+                          break;
+                        }
+                      }
+                      this.setState({ openMenuIndex: null as any });
                     }}
                   >
                     <div className="menu-option">{option}</div>

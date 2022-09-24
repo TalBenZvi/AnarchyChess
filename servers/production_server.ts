@@ -39,10 +39,3 @@ httpsServer.listen(3031, () => {
 });
 
 const websocketServer = new AppServer(httpsServer);
-
-// const wss = new ws.Server({ server: httpsServer, path: "/websocket" });
-// wss.on("connection", function connection(ws) {
-//   console.log("client connected");
-//   ws.send("test Hello");
-//   ws.on("message", (data) => ws.send("Receive: " + data));
-// });

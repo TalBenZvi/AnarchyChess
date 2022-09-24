@@ -1,3 +1,5 @@
+import { WebSocket } from "ws";
+
 import {
   Move,
   NUM_OF_PLAYERS,
@@ -64,22 +66,32 @@ export class GameServer implements MechanicsEngineObserver {
     return false;
   }
 
-  // returns whether or not the lobby was closed
-  removePlayer(userID: string): boolean {
+  // returns a list of every user id that was removed from the lobby
+  removePlayer(userID: string): string[] {
     if (userID === this._lobby.creatorID) {
       this.broadcastGameEvent({
         type: GameEventType.disconnectedFromLobby,
         info: new Map(),
       });
+      let userIDs: string[] = Array.from(this.clients.keys());
       this.clients.clear();
-      return true;
+      return userIDs;
     } else {
+      this.sendGameEvent(userID, {
+        type: GameEventType.disconnectedFromLobby,
+        info: new Map(),
+      });
       this.mechanicsEngine.removePlayer(userID);
       this.clients.delete(userID);
       this._lobby.capacity--;
       this.broadcastPlayerListUpdate();
-      return false;
+      return [userID];
     }
+  }
+
+  changePlayerTeam(userID: string) {
+    this.mechanicsEngine.changePlayerTeam(userID);
+    this.broadcastPlayerListUpdate();
   }
 
   handleMoveRequest(moveRequest: Move, userID: string) {
@@ -91,15 +103,18 @@ export class GameServer implements MechanicsEngineObserver {
   }
 
   private sendGameEvent(userID: string, gameEvent: GameEvent) {
-    this.clients.get(userID).send(
-      JSON.stringify(
-        {
-          type: WSRequestType.inGame,
-          info: new Map([[WSResponseInfo.gameEvent, gameEvent]]),
-        } as WSResponse,
-        replacer
-      )
-    );
+    let client = this.clients.get(userID);
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(
+        JSON.stringify(
+          {
+            type: WSRequestType.inGame,
+            info: new Map([[WSResponseInfo.gameEvent, gameEvent]]),
+          } as WSResponse,
+          replacer
+        )
+      );
+    }
   }
 
   private broadcastGameEvent(gameEvent: GameEvent) {

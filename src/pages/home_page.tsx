@@ -34,11 +34,11 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
 
   constructor(props: HomePageProps) {
     super(props);
-    if (window.location.host === WEBSITE_DOMAIN) {
-      EnvironmentManager.environment = Environment.production;
-    } else {
-      EnvironmentManager.environment = Environment.development;
-    }
+    // if (window.location.host === WEBSITE_DOMAIN) {
+    //   EnvironmentManager.environment = Environment.production;
+    // } else {
+    //   EnvironmentManager.environment = Environment.development;
+    // }
   }
 
   componentDidMount() {
