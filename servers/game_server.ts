@@ -23,7 +23,6 @@ import {
   MechanicsEngineNotificationType,
   MechanicsEngineObserver,
 } from "./game_mechanics_engine.js";
-import { PlayerList } from "../src/game_flow_util/player_list.js";
 
 export class GameServer implements MechanicsEngineObserver {
   // maps user id to the user's client
@@ -56,7 +55,7 @@ export class GameServer implements MechanicsEngineObserver {
 
   // returns whether or not the client was added successfully
   addClient(user: User, client: any): boolean {
-    if (this.clients.size < NUM_OF_PLAYERS) {
+    if (this.lobby.capacity < NUM_OF_PLAYERS) {
       this._lobby.capacity++;
       this.mechanicsEngine.addPlayer(user);
       this.broadcastPlayerListUpdate();
@@ -68,7 +67,14 @@ export class GameServer implements MechanicsEngineObserver {
 
   // returns a list of every user id that was removed from the lobby
   removePlayer(userID: string): string[] {
-    if (userID === this._lobby.creatorID) {
+    if (userID.includes("bot")) {
+      // removing a bot
+      this.mechanicsEngine.removePlayer(userID);
+      this._lobby.capacity--;
+      this.broadcastPlayerListUpdate();
+      return [];
+    } else if (userID === this._lobby.creatorID) {
+      // removing the lobby creator
       this.broadcastGameEvent({
         type: GameEventType.disconnectedFromLobby,
         info: new Map(),
@@ -77,6 +83,7 @@ export class GameServer implements MechanicsEngineObserver {
       this.clients.clear();
       return userIDs;
     } else {
+      // removing a participant
       this.sendGameEvent(userID, {
         type: GameEventType.disconnectedFromLobby,
         info: new Map(),
@@ -91,6 +98,18 @@ export class GameServer implements MechanicsEngineObserver {
 
   changePlayerTeam(userID: string) {
     this.mechanicsEngine.changePlayerTeam(userID);
+    this.broadcastPlayerListUpdate();
+  }
+
+  fillWithBots() {
+    this.mechanicsEngine.fillWithBots();
+    this._lobby.capacity = NUM_OF_PLAYERS;
+    this.broadcastPlayerListUpdate();
+  }
+
+  removeAllBots() {
+    this.mechanicsEngine.removeAllBots();
+    this._lobby.capacity = this.clients.size;
     this.broadcastPlayerListUpdate();
   }
 

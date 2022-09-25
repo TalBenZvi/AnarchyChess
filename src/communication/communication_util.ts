@@ -69,6 +69,8 @@ export enum WSRequestType {
   joinLobby,
   removeFromLobby,
   changePlayerTeam,
+  fillLobbyWithBots,
+  removeBotsFromLobby,
   inGame,
 }
 

@@ -6,25 +6,18 @@ import PlayerListComponent from "../components/player_list_component";
 import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { Lobby } from "../communication/communication_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
-import { BaseBot } from "../bots/base_bot";
-import { RandomBot } from "../bots/random_bot";
 import { PlayerList } from "../game_flow_util/player_list";
-// import { TestBot } from "../bots/test_bot";
 import LobbyCard from "../components/lobby_card";
 import { User } from "../communication/communication_util";
 
 import appIcon from "../assets/page_design/clean_app_icon.png";
-// import { ServerFlowEngine } from "../server_side/server_flow_engine";
 import { ClientActionCenter } from "../client_side/client_action_center";
-
-const NUM_OF_RANDOM_BOTS: number = 2;
 
 interface LobbyPageProps {
   lobby: Lobby;
   isHost: boolean;
   playerList: PlayerList;
   clientFlowEngine: ClientFlowEngine;
-  // serverFlowEngine: ServerFlowEngine;
   onClose: () => void;
 }
 
@@ -56,50 +49,8 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
     // }
   }
 
-  private fillwithBots = () => {
-    // if (this.props.serverFlowEngine != null) {
-    //   this.setState({ isBotDialogOpen: false });
-    //   this.props.serverFlowEngine.kickAllBots();
-    //   this.isGameStarting = true;
-    //   let playerList = this.props.serverFlowEngine.players;
-    //   let numOfRequiredBots = playerList.filter(
-    //     (player: User) => player == null
-    //   ).length;
-    //   let bots: BaseBot[] = [...Array(numOfRequiredBots)].map((_, i) => {
-    //     let user: User = {
-    //       id: `BOT_${i}_${new Date().getTime()}`,
-    //       username: `bot_${i + 1}`,
-    //     };
-    //     if (i < NUM_OF_RANDOM_BOTS) {
-    //       return new RandomBot(user);
-    //     } else {
-    //       return new BaseBot(user);
-    //     }
-    //   });
-    //   let nextAvailableBotIndex: number = 0;
-    //   for (let i = 0; i < NUM_OF_PLAYERS; i++) {
-    //     if (playerList[i] == null) {
-    //       bots[nextAvailableBotIndex].attemptToConnect(this.props.lobby, i, {
-    //         onFailure: () => {
-    //           for (let bot of bots) {
-    //             bot.disconnect();
-    //           }
-    //         },
-    //       });
-    //       nextAvailableBotIndex++;
-    //     }
-    //   }
-    // }
-  };
-
   render() {
-    let {
-      isHost,
-      lobby,
-      playerList,
-      onClose,
-      clientFlowEngine,
-    } = this.props;
+    let { isHost, lobby, playerList, onClose, clientFlowEngine } = this.props;
     let { isBotDialogOpen, shouldRedirectToHome } = this.state;
     if (shouldRedirectToHome) {
       return <Redirect push to="/" />;
@@ -111,7 +62,9 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
     }
     return (
       <div className="background">
-        <NavBar currentRoute={`/lobby/${lobby == null ? "" : lobby.creatorID}`} />
+        <NavBar
+          currentRoute={`/lobby/${lobby == null ? "" : lobby.creatorID}`}
+        />
         <div className="centered">
           <img
             alt=""
@@ -199,7 +152,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
               fontSize: 20,
             }}
             onClick={() => {
-              // serverFlowEngine.kickAllBots();
+              this.clientActionCenter.removeBotsFromLobby();
             }}
           >
             Disconnect All Bots
@@ -259,7 +212,10 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
                     height: 50,
                     fontSize: 20,
                   }}
-                  onClick={() => this.fillwithBots()}
+                  onClick={() => {
+                    this.clientActionCenter.fillLobbyWithBots();
+                    this.setState({ isBotDialogOpen: false });
+                  }}
                 >
                   Confirm
                 </button>

@@ -90,7 +90,7 @@ export class AppServer {
                   removedPlayerID === requesterID ||
                   this.isHost(requesterID)
                 ) {
-                  this.removePlayerFromLobby(removedPlayerID);
+                  this.removePlayerFromLobby(requesterID, removedPlayerID);
                 }
               }
               break;
@@ -103,6 +103,26 @@ export class AppServer {
                   (
                     this.serverAssignments.get(requesterID) as GameServer
                   ).changePlayerTeam(playerID);
+                }
+              }
+              break;
+            case WSRequestType.fillLobbyWithBots:
+              {
+                let requesterID: string = getUser(client).id;
+                if (this.isHost(requesterID)) {
+                  (
+                    this.serverAssignments.get(requesterID) as GameServer
+                  ).fillWithBots();
+                }
+              }
+              break;
+            case WSRequestType.removeBotsFromLobby:
+              {
+                let requesterID: string = getUser(client).id;
+                if (this.isHost(requesterID)) {
+                  (
+                    this.serverAssignments.get(requesterID) as GameServer
+                  ).removeAllBots();
                 }
               }
               break;
@@ -171,24 +191,25 @@ export class AppServer {
     );
   }
 
-  private removePlayerFromLobby(userID: string) {
-    if (this.serverAssignments.has(userID)) {
-      let gameServer = this.serverAssignments.get(userID) as GameServer;
-      let isLobbyClosed: boolean = userID === gameServer.lobby.creatorID;
-      let removedUserIDs: string[] = gameServer.removePlayer(userID);
+  private removePlayerFromLobby(requesterID: string, removedPlayerID: string) {
+    if (this.serverAssignments.has(requesterID)) {
+      let gameServer = this.serverAssignments.get(requesterID) as GameServer;
+      let isLobbyClosed: boolean =
+        removedPlayerID === gameServer.lobby.creatorID;
+      let removedUserIDs: string[] = gameServer.removePlayer(removedPlayerID);
       for (let removedUserID of removedUserIDs) {
         this.serverAssignments.delete(removedUserID);
       }
       if (isLobbyClosed) {
         this.lobbies = this.lobbies.filter(
-          (lobby: Lobby) => lobby.creatorID !== userID
+          (lobby: Lobby) => lobby.creatorID !== removedPlayerID
         );
       }
     }
   }
 
   private logout(client: any): void {
-    this.removePlayerFromLobby(getUser(client).id);
+    this.removePlayerFromLobby(getUser(client).id, getUser(client).id);
     setUser(client, null as any);
   }
 

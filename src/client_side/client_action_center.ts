@@ -279,6 +279,20 @@ export class ClientActionCenter {
     });
   }
 
+  fillLobbyWithBots(): void {
+    this.sendRequest({
+      type: WSRequestType.fillLobbyWithBots,
+      params: null as any,
+    });
+  }
+
+  removeBotsFromLobby(): void {
+    this.sendRequest({
+      type: WSRequestType.removeBotsFromLobby,
+      params: null as any,
+    });
+  }
+
   changePlayerTeam(changeTeamParams: ChangeTeamParams): void {
     this.sendRequest({
       type: WSRequestType.changePlayerTeam,

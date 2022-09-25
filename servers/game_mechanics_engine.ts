@@ -20,6 +20,7 @@ import {
   GameStatus,
   User,
 } from "../src/communication/communication_util.js";
+import { BaseBot } from "./bots/base_bot.js";
 
 const COOLDOWN_VARIANCE: number = 0.2;
 // in seconds
@@ -68,11 +69,23 @@ export class GameMechanicsEngine {
   private respawnTimeouts: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private newGameTimeout: NodeJS.Timeout = null as any;
 
+  private bots: BaseBot[] = [];
+
   constructor(
     private observer: MechanicsEngineObserver,
     areTeamsPrearranged: boolean
   ) {
     this.playerList = new PlayerList(areTeamsPrearranged);
+  }
+
+  private notifyObservers(
+    type: MechanicsEngineNotificationType,
+    info: Map<MechanicsEngineNotificationInfo, any>
+  ) {
+    this.observer.notify(type, info);
+    for (let bot of this.bots) {
+      bot.notify(type, info);
+    }
   }
 
   getPlayerListJSON(): string {
@@ -85,10 +98,41 @@ export class GameMechanicsEngine {
 
   removePlayer(userID: string) {
     this.playerList.removePlayer(userID);
+    if (userID.includes("bot")) {
+      this.bots = this.bots.filter((bot: BaseBot) => bot.user.id !== userID);
+    }
   }
 
   changePlayerTeam(playerID: string) {
     this.playerList.changePlayerTeam(playerID);
+  }
+
+  fillWithBots() {
+    this.bots = [
+      ...Array(NUM_OF_PLAYERS - this.playerList.getConnectedUsers().length),
+    ].map((_, i: number) => {
+      return new BaseBot(
+        {
+          id: `bot_${i + 1}`,
+          username: `Bot ${i + 1}`,
+        },
+        this
+      );
+    });
+    for (let bot of this.bots) {
+      this.addPlayer(bot.user);
+    }
+  }
+
+  removeAllBots() {
+    for (let bot of this.bots) {
+      this.removePlayer(bot.user.id);
+    }
+    this.bots = [];
+  }
+
+  getPosition(): Position {
+    return this.position;
   }
 
   private resetGameplayElements(): void {
@@ -113,7 +157,7 @@ export class GameMechanicsEngine {
       let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
         (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
       );
-      this.observer.notify(
+      this.notifyObservers(
         MechanicsEngineNotificationType.gameStarted,
         new Map([
           [
@@ -133,7 +177,7 @@ export class GameMechanicsEngine {
     if (this.gameStatus === GameStatus.running) {
       this.gameStatus = GameStatus.betweenRounds;
       this.resetGameplayElements();
-      this.observer.notify(
+      this.notifyObservers(
         MechanicsEngineNotificationType.gameEnded,
         new Map([[MechanicsEngineNotificationInfo.winningColor, winningColor]])
       );
@@ -154,7 +198,7 @@ export class GameMechanicsEngine {
       this.gameStatus = GameStatus.waitingForPlayers;
       this.position = new Position();
       this.resetGameplayElements();
-      this.observer.notify(
+      this.notifyObservers(
         MechanicsEngineNotificationType.returningToLobby,
         new Map()
       );
@@ -179,7 +223,7 @@ export class GameMechanicsEngine {
       this.position.getRespawnSquareForPlayer(playerIndex);
     this.position.respawnPlayerAt(playerIndex, respawnSquare);
     this.isAlive[playerIndex] = true;
-    this.observer.notify(
+    this.notifyObservers(
       MechanicsEngineNotificationType.respawn,
       new Map([
         [MechanicsEngineNotificationInfo.playerIndex, playerIndex as any],
@@ -292,7 +336,7 @@ export class GameMechanicsEngine {
           moveArrivalTime
         );
         moveInfo.set(MechanicsEngineNotificationInfo.cooldown, cooldown as any);
-        this.observer.notify(MechanicsEngineNotificationType.move, moveInfo);
+        this.notifyObservers(MechanicsEngineNotificationType.move, moveInfo);
         if (winningColor != null) {
           this.endGame(winningColor);
         }
