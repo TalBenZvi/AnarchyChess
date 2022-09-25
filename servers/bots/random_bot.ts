@@ -13,29 +13,35 @@ const PROMOTION_TYPES: PieceType[] = [
 ];
 
 // in seconds
-const MOVE_INTERVAL_TIME: number = 1;
+const MOVE_INTERVAL_TIME: number = 8;
 
 export class RandomBot extends BaseBot {
   private playerIndex: number = null as any;
   private moveInterval: any = null;
 
+  private playRandomMove = () => {
+    let position = this.getPosition();
+    let availableMoves: Move[] = position.findAvaillableMovesForPlayer(
+      this.playerIndex
+    );
+    if (availableMoves.length !== 0) {
+      let chosenMove: Move =
+        availableMoves[Math.floor(Math.random() * availableMoves.length)];
+      if (chosenMove.isPromotion) {
+        chosenMove.promotionType =
+          PROMOTION_TYPES[Math.floor(Math.random() * PROMOTION_TYPES.length)];
+      }
+      this.playMove(chosenMove);
+    }
+  };
+
   protected onGameStart(playerIndex: number, initialCooldown: number) {
     this.playerIndex = playerIndex;
-    this.moveInterval = setInterval(() => {
-      let position = this.getPosition();
-      let availableMoves: Move[] = position.findAvaillableMovesForPlayer(
-        this.playerIndex
-      );
-      if (availableMoves.length !== 0) {
-        let chosenMove: Move =
-          availableMoves[Math.floor(Math.random() * availableMoves.length)];
-        if (chosenMove.isPromotion) {
-          chosenMove.promotionType =
-            PROMOTION_TYPES[Math.floor(Math.random() * PROMOTION_TYPES.length)];
-        }
-        this.playMove(chosenMove);
-      }
-    }, MOVE_INTERVAL_TIME * 1000);
+    setTimeout(this.playRandomMove, Math.random() * MOVE_INTERVAL_TIME * 1000);
+    this.moveInterval = setInterval(
+      this.playRandomMove,
+      MOVE_INTERVAL_TIME * 1000
+    );
   }
 
   protected onGameEnd(winningColor: PieceColor): void {

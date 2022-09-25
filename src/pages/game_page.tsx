@@ -212,9 +212,7 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
               height: buttonSize,
             }}
             onClick={() => {
-              // if (serverFlowEngine != null) {
-              //   serverFlowEngine.returnToLobby();
-              // }
+              this.clientActionCenter.returnToLobby();
             }}
           >
             <img

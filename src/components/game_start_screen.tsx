@@ -6,13 +6,9 @@ import {
   ClientFlowEngineObserver,
   ClientEventType,
   ClientEventInfo,
-  GAME_START_DELAY,
 } from "../client_side/client_flow_engine";
-import {
-  PieceColor,
-  Piece,
-  Position,
-} from "../game_flow_util/game_elements";
+import { GAME_START_DELAY } from "../communication/communication_util";
+import { PieceColor, Piece, Position } from "../game_flow_util/game_elements";
 
 const WHITE_TITLE_COLOR: string = "#d2d2d2";
 const BLACK_TITLE_COLOR: string = "#111111";

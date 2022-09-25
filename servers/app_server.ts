@@ -126,6 +126,26 @@ export class AppServer {
                 }
               }
               break;
+            case WSRequestType.startGame:
+              {
+                let requesterID: string = getUser(client).id;
+                if (this.isHost(requesterID)) {
+                  (
+                    this.serverAssignments.get(requesterID) as GameServer
+                  ).startGame();
+                }
+              }
+              break;
+            case WSRequestType.returnToLobby:
+              {
+                let requesterID: string = getUser(client).id;
+                if (this.isHost(requesterID)) {
+                  (
+                    this.serverAssignments.get(requesterID) as GameServer
+                  ).returnToLobby();
+                }
+              }
+              break;
             case WSRequestType.inGame:
               {
                 (

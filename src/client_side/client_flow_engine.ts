@@ -11,14 +11,11 @@ import {
   GameEvent,
   GameEventInfo,
   GameEventType,
-  //OptionalConnectionCallbacks,
+  GAME_START_DELAY,
   User,
 } from "../communication/communication_util";
 import { Lobby } from "../communication/communication_util";
 import { PlayerList } from "../game_flow_util/player_list";
-
-// in seconds
-export const GAME_START_DELAY: number = 2;
 
 export enum ClientEventType {
   joinedNewLobby,
@@ -66,7 +63,6 @@ export interface ClientFlowEngineObserver {
 }
 
 export class ClientFlowEngine {
-  //private gameClient: GameClient;
   private _currentLobby: Lobby = null as any;
   playerList: PlayerList = new PlayerList(false);
 
@@ -171,7 +167,6 @@ export class ClientFlowEngine {
   private startGame(playerIndex: number, initialCooldown: number): void {
     this.isGameRunning = true;
     this._playerIndex = playerIndex;
-    //this.gameClient.playerIndex = playerIndex;
     this.position = new Position(`client ${playerIndex}`);
     this.position.setToStartingPosition();
     this.notifyObservers(

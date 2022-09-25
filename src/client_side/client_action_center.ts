@@ -279,6 +279,13 @@ export class ClientActionCenter {
     });
   }
 
+  changePlayerTeam(changeTeamParams: ChangeTeamParams): void {
+    this.sendRequest({
+      type: WSRequestType.changePlayerTeam,
+      params: changeTeamParams,
+    });
+  }
+
   fillLobbyWithBots(): void {
     this.sendRequest({
       type: WSRequestType.fillLobbyWithBots,
@@ -293,10 +300,17 @@ export class ClientActionCenter {
     });
   }
 
-  changePlayerTeam(changeTeamParams: ChangeTeamParams): void {
+  startGame(): void {
     this.sendRequest({
-      type: WSRequestType.changePlayerTeam,
-      params: changeTeamParams,
+      type: WSRequestType.startGame,
+      params: null as any,
+    });
+  }
+
+  returnToLobby(): void {
+    this.sendRequest({
+      type: WSRequestType.returnToLobby,
+      params: null as any,
     });
   }
 }

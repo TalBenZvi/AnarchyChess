@@ -113,6 +113,14 @@ export class GameServer implements MechanicsEngineObserver {
     this.broadcastPlayerListUpdate();
   }
 
+  startGame() {
+    this.mechanicsEngine.startGame();
+  }
+
+  returnToLobby() {
+    this.mechanicsEngine.returnToLobby();
+  }
+
   handleMoveRequest(moveRequest: Move, userID: string) {
     this.mechanicsEngine.handleMoveRequest(moveRequest, userID);
   }
@@ -142,7 +150,7 @@ export class GameServer implements MechanicsEngineObserver {
     });
   }
 
-  private startGame(
+  private onGameStart(
     roleAssignemnts: Map<string, number>,
     initialPlayerCooldowns: number[]
   ) {
@@ -165,7 +173,7 @@ export class GameServer implements MechanicsEngineObserver {
     } as GameEvent);
   }
 
-  private returnToLobby() {
+  private onReturnToLobby() {
     this.broadcastGameEvent({
       type: GameEventType.returnToLobby,
       info: new Map(),
@@ -216,7 +224,7 @@ export class GameServer implements MechanicsEngineObserver {
     switch (notification) {
       case MechanicsEngineNotificationType.gameStarted:
         {
-          this.startGame(
+          this.onGameStart(
             notificationInfo.get(
               MechanicsEngineNotificationInfo.roleAssignemnts
             ),
@@ -235,7 +243,7 @@ export class GameServer implements MechanicsEngineObserver {
         break;
       case MechanicsEngineNotificationType.returningToLobby:
         {
-          this.returnToLobby();
+          this.onReturnToLobby();
         }
         break;
       case MechanicsEngineNotificationType.move:

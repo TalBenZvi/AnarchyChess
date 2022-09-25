@@ -3,12 +3,10 @@ import { Redirect } from "react-router";
 
 import NavBar from "../components/navbar";
 import PlayerListComponent from "../components/player_list_component";
-import { ClientFlowEngine } from "../client_side/client_flow_engine";
 import { Lobby } from "../communication/communication_util";
 import { NUM_OF_PLAYERS } from "../game_flow_util/game_elements";
 import { PlayerList } from "../game_flow_util/player_list";
 import LobbyCard from "../components/lobby_card";
-import { User } from "../communication/communication_util";
 
 import appIcon from "../assets/page_design/clean_app_icon.png";
 import { ClientActionCenter } from "../client_side/client_action_center";
@@ -17,7 +15,6 @@ interface LobbyPageProps {
   lobby: Lobby;
   isHost: boolean;
   playerList: PlayerList;
-  clientFlowEngine: ClientFlowEngine;
   onClose: () => void;
 }
 
@@ -44,13 +41,11 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
   }
 
   private async startGame() {
-    // if (this.props.serverFlowEngine != null) {
-    //   this.props.serverFlowEngine.startGame();
-    // }
+    this.clientActionCenter.startGame();
   }
 
   render() {
-    let { isHost, lobby, playerList, onClose, clientFlowEngine } = this.props;
+    let { isHost, lobby, playerList, onClose } = this.props;
     let { isBotDialogOpen, shouldRedirectToHome } = this.state;
     if (shouldRedirectToHome) {
       return <Redirect push to="/" />;
@@ -213,6 +208,7 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
                     fontSize: 20,
                   }}
                   onClick={() => {
+                    this.isGameStarting = true;
                     this.clientActionCenter.fillLobbyWithBots();
                     this.setState({ isBotDialogOpen: false });
                   }}

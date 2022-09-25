@@ -94,7 +94,6 @@ class ClientPage
                   lobby={clientActionCenter.currentLobby}
                   isHost={isHost}
                   playerList={playerList}
-                  clientFlowEngine={clientActionCenter.clientFlowEngine}
                   onClose={() => {
                     clientActionCenter.leaveLobby();
                   }}

@@ -1,14 +1,12 @@
 import { Move } from "../game_flow_util/game_elements";
 
-export const PEERJS_SERVER_IP: string = "34.204.67.216";
-// export const PEERJS_SERVER_IP: string = "127.0.0.1";
-export const PEERJS_SERVER_PORT: number = 3030;
-export const PEERJS_SERVER_PATH: string = "/anarchy_chess";
-
 // constants
 export const WEBSITE_DOMAIN: string = "anarchychess.xyz";
 export const WSS_PATH: string = "/websocket";
 const DEV_SERVER_PORT: number = 3031;
+
+// in seconds
+export const GAME_START_DELAY: number = 3;
 
 // environment
 export enum Environment {
@@ -71,6 +69,8 @@ export enum WSRequestType {
   changePlayerTeam,
   fillLobbyWithBots,
   removeBotsFromLobby,
+  startGame,
+  returnToLobby,
   inGame,
 }
 
@@ -185,8 +185,8 @@ export interface GameEvent {
   info: Map<GameEventInfo, any>;
 }
 
+// game status
 export enum GameStatus {
-  inactive,
   waitingForPlayers,
   running,
   betweenRounds,

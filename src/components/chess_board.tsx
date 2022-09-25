@@ -43,7 +43,7 @@ const CAPTURE_ICON: any = new Image();
 CAPTURE_ICON.src = require(`../assets/gameplay_icons/capture_icon.png`);
 
 const MOVE_BUTTON_OPACITY: number = 0.2;
-const PLAYER_SQUARE_BRIGHTNESS: number = 0.4;
+const PLAYER_SQUARE_COLOR: string = "rgba(100, 255, 100, 0.7)";
 const FPS: number = 60;
 // in seconds
 const PIECE_TRAVEL_TIME: number = 0.2;
@@ -462,7 +462,7 @@ class BoardArea {
     }
     // player square highlight
     if (this.playerSquare != null) {
-      this.ctx.fillStyle = `rgba(255, 255, 255, ${PLAYER_SQUARE_BRIGHTNESS})`;
+      this.ctx.fillStyle = PLAYER_SQUARE_COLOR;
       this.ctx.fillRect(
         this.fitColumnIndexToPOV(this.playerSquare.column) * this.squareSize,
         this.fitRowIndexToPOV(this.playerSquare.row) * this.squareSize,
@@ -633,6 +633,7 @@ class ChessBoard
   }
 
   private startCooldownTimer(cooldownCompletionTime: number): void {
+    console.log("here5");
     if (this.cooldownTimeout != null) {
       clearTimeout(this.cooldownTimeout);
     }
@@ -701,7 +702,7 @@ class ChessBoard
 
   private startGame(initialCooldown: number): void {
     if (this.isGameRunning) {
-      this.startCooldownTimer(initialCooldown);
+      this.startCooldownTimer(new Date().getTime() + initialCooldown * 1000);
       this.setSelectedMove(null as any);
       this.updateRespawnPreviewAndAvailableMoves();
     }

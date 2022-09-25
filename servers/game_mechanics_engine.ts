@@ -11,20 +11,21 @@ import {
   WHITE_KING_PLAYER_INDEX,
   BLACK_KING_PLAYER_INDEX,
 } from "../src/game_flow_util/game_elements.js";
-
-// import { Lobby } from "../src/communication/communication_util.js";
 import { PlayerList } from "../src/game_flow_util/player_list.js";
 import {
   replacer,
   reviver,
   GameStatus,
   User,
+  GAME_START_DELAY,
 } from "../src/communication/communication_util.js";
 import { BaseBot } from "./bots/base_bot.js";
+import { RandomBot } from "./bots/random_bot";
 
 const COOLDOWN_VARIANCE: number = 0.2;
 // in seconds
 const GAME_INTERVAL: number = 3;
+const COOLDOWN_FACTOR = 1.5;
 
 export enum MechanicsEngineNotificationType {
   gameStarted,
@@ -61,7 +62,7 @@ export interface MechanicsEngineObserver {
 export class GameMechanicsEngine {
   private playerList: PlayerList = null as any;
   private position: Position = new Position("server");
-  private gameStatus: GameStatus = GameStatus.inactive;
+  private gameStatus: GameStatus = GameStatus.waitingForPlayers;
   private roleAssignemnts: Map<string, number> = null as any;
   private moveRequests: Move[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
@@ -155,7 +156,8 @@ export class GameMechanicsEngine {
       this.position.setToStartingPosition();
       this.roleAssignemnts = this.playerList.generateRoleAssignments();
       let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
-        (_, i: number) => this.putPlayerOnCooldown(i, new Date().getTime())
+        (_, i: number) =>
+          this.putPlayerOnCooldown(i, new Date().getTime(), true)
       );
       this.notifyObservers(
         MechanicsEngineNotificationType.gameStarted,
@@ -242,12 +244,18 @@ export class GameMechanicsEngine {
   // returns the chosen cooldown
   private putPlayerOnCooldown(
     playerIndex: number,
-    updateArrivalTime: number
+    updateArrivalTime: number,
+    addGameStartDelay?: boolean
   ): number {
     this.isOnCooldown[playerIndex] = true;
     let cooldown: number =
       this.position.getPieceByPlayer(playerIndex).cooldown *
-      ((Math.random() * 2 - 1) * COOLDOWN_VARIANCE + 1);
+      ((Math.random() * 2 - 1) * COOLDOWN_VARIANCE + 1) *
+      COOLDOWN_FACTOR;
+    let delay: number = cooldown;
+    if (addGameStartDelay !== undefined && addGameStartDelay) {
+      delay += GAME_START_DELAY;
+    }
     setTimeout(() => {
       this.isOnCooldown[playerIndex] = false;
       if (this.moveRequests[playerIndex] != null && this.isAlive[playerIndex]) {
@@ -257,7 +265,7 @@ export class GameMechanicsEngine {
           new Date().getTime()
         );
       }
-    }, cooldown * 1000 - (new Date().getTime() - updateArrivalTime));
+    }, delay * 1000 - (new Date().getTime() - updateArrivalTime));
     return cooldown;
   }
 
