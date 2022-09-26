@@ -53,10 +53,10 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
           className="app-button"
           style={{
             position: "absolute",
-            width: 150,
-            height: 50,
-            right: 20,
-            bottom: 20,
+            width: width * 0.4,
+            height: height * 0.1,
+            right: "5%",
+            bottom: "4%",
             fontSize: fontSize * 0.85,
           }}
           onClick={onClose}
@@ -71,6 +71,7 @@ class LobbyCard extends React.Component<LobbyCardProps, LobbyCardState> {
             <div
               className="centered-title"
               style={{
+                position: "absolute",
                 fontSize: titleFontSize,
                 fontWeight: "bold",
                 WebkitTextStroke: "1px",

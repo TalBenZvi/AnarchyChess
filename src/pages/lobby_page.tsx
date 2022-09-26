@@ -21,6 +21,8 @@ interface LobbyPageProps {
 interface LobbyPageState {
   isBotDialogOpen: boolean;
   shouldRedirectToHome: boolean;
+  windowWidth: number;
+  windowHeight: number;
 }
 
 class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
@@ -28,17 +30,29 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
   state: LobbyPageState = {
     isBotDialogOpen: false,
     shouldRedirectToHome: false,
+    windowWidth: window.innerWidth,
+    windowHeight: window.innerHeight,
   };
   isGameStarting: boolean = false;
   private _isMounted: boolean = false;
 
   componentDidMount() {
     this._isMounted = true;
+    this.updateWindowDimensions();
+    window.addEventListener("resize", this.updateWindowDimensions);
   }
 
   componentWillUnmount() {
+    window.removeEventListener("resize", this.updateWindowDimensions);
     this._isMounted = false;
   }
+
+  updateWindowDimensions = () => {
+    this.setState({
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+    });
+  };
 
   private async startGame() {
     this.clientActionCenter.startGame();
@@ -46,7 +60,8 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
 
   render() {
     let { isHost, lobby, playerList, onClose } = this.props;
-    let { isBotDialogOpen, shouldRedirectToHome } = this.state;
+    let { isBotDialogOpen, shouldRedirectToHome, windowWidth, windowHeight } =
+      this.state;
     if (shouldRedirectToHome) {
       return <Redirect push to="/" />;
     }
@@ -60,13 +75,14 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
         <NavBar
           currentRoute={`/lobby/${lobby == null ? "" : lobby.creatorID}`}
         />
+        {/* background image */}
         <div className="centered">
           <img
             alt=""
             src={appIcon}
             style={{
-              width: 900,
-              height: 900,
+              width: windowHeight * 0.9,
+              height: windowHeight * 0.9,
               filter: "opacity(0.03)",
             }}
           />
@@ -75,14 +91,14 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
         <div
           style={{
             position: "absolute",
-            left: 50,
-            bottom: 50,
+            left: "2%",
+            bottom: "5%",
             transform: "translate(0%, 0%)",
           }}
         >
           <PlayerListComponent
-            width={600}
-            height={700}
+            width={windowWidth * 0.3}
+            height={windowHeight * 0.8}
             currentUser={this.clientActionCenter.currentUser}
             isHost={isHost}
             playerList={playerList}
@@ -92,14 +108,13 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
         <div
           style={{
             position: "absolute",
-            right: 50,
-            bottom: 180,
-            transform: "translate(0%, 0%)",
+            right: "2%",
+            bottom: "20%",
           }}
         >
           <LobbyCard
-            width={400}
-            height={570}
+            width={windowWidth * 0.218}
+            height={windowHeight * 0.65}
             lobby={lobby}
             isHost={isHost}
             onClose={() => {
@@ -114,11 +129,11 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
             className="app-button"
             style={{
               position: "absolute",
-              width: 190,
-              height: 80,
-              right: 50,
-              bottom: 50,
-              fontSize: 30,
+              width: windowWidth * 0.1,
+              height: windowHeight * 0.1,
+              right: "2%",
+              bottom: "5%",
+              fontSize: "1.4vw",
             }}
             onClick={() => {
               if (numOfConnectedPlayers === NUM_OF_PLAYERS) {
@@ -139,12 +154,11 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
             className="app-button"
             style={{
               position: "absolute",
-              width: 190,
-              height: 80,
-              right: 455,
-              bottom: 50,
-              transform: "translate(100%, 0%)",
-              fontSize: 20,
+              width: windowWidth * 0.1,
+              height: windowHeight * 0.1,
+              right: "14%",
+              bottom: "5%",
+              fontSize: "1.4vw",
             }}
             onClick={() => {
               this.clientActionCenter.removeBotsFromLobby();
@@ -170,13 +184,14 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
               <div
                 className="highlighted-area"
                 style={{
-                  position: "relative",
-                  width: 400,
-                  height: 200,
+                  position: "absolute",
+                  width: windowWidth * 0.2,
+                  height: windowHeight * 0.2,
                   zIndex: 3,
-                  fontSize: 25,
+                  fontSize: "1.2vw",
                   textAlign: "center",
-                  padding: 10,
+                  padding: windowWidth * 0.01,
+                  transform: "translate(-50%, -50%)",
                 }}
                 onClick={() => {}}
               >
@@ -186,11 +201,11 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
                   className="app-button"
                   style={{
                     position: "fixed",
-                    left: 20,
-                    bottom: 20,
-                    width: 100,
-                    height: 50,
-                    fontSize: 20,
+                    left: "5%",
+                    bottom: "10%",
+                    width: windowWidth * 0.065,
+                    height: windowHeight * 0.06,
+                    fontSize: "1.2vw",
                   }}
                   onClick={() => this.setState({ isBotDialogOpen: false })}
                 >
@@ -201,11 +216,11 @@ class LobbyPage extends React.Component<LobbyPageProps, LobbyPageState> {
                   className="app-button"
                   style={{
                     position: "fixed",
-                    right: 20,
-                    bottom: 20,
-                    width: 100,
-                    height: 50,
-                    fontSize: 20,
+                    right: "5%",
+                    bottom: "10%",
+                    width: windowWidth * 0.065,
+                    height: windowHeight * 0.06,
+                    fontSize: "1.2vw",
                   }}
                   onClick={() => {
                     this.isGameStarting = true;

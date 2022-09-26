@@ -27,7 +27,6 @@ class ClientPage
   extends React.Component<any, any>
   implements ClientFlowEngineObserver
 {
-  // clientActionCenter: ClientActionCenter = ClientActionCenter.getInstance();
   state: ClientPageState = {
     lobbyState: LobbyState.open,
     playerList: null as any,
