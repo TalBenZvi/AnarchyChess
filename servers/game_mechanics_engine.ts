@@ -20,12 +20,17 @@ import {
   GAME_START_DELAY,
 } from "../src/communication/communication_util.js";
 import { BaseBot } from "./bots/base_bot.js";
-import { RandomBot } from "./bots/random_bot";
+import { ChanceToPlayBot } from "./bots/chance_to_play_bot";
+import { MoveCountingBot } from "./bots/move_counting_bot.js";
 
+const INITIAL_COOLDOWN_VARIANCE: number = 0.7;
 const COOLDOWN_VARIANCE: number = 0.2;
+const COOLDOWN_FACTOR = 2.5;
+
+const RESPAWN_FACTOR: number = 2;
+
 // in seconds
 const GAME_INTERVAL: number = 3;
-const COOLDOWN_FACTOR = 1.5;
 
 export enum MechanicsEngineNotificationType {
   gameStarted,
@@ -68,6 +73,7 @@ export class GameMechanicsEngine {
   private isOnCooldown: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(false);
   private isAlive: boolean[] = [...Array(NUM_OF_PLAYERS)].fill(true);
   private respawnTimeouts: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
+  private cooldownTimeouts: any[] = [...Array(NUM_OF_PLAYERS)].fill(null);
   private newGameTimeout: NodeJS.Timeout = null as any;
 
   private bots: BaseBot[] = [];
@@ -112,7 +118,7 @@ export class GameMechanicsEngine {
     this.bots = [
       ...Array(NUM_OF_PLAYERS - this.playerList.getConnectedUsers().length),
     ].map((_, i: number) => {
-      return new BaseBot(
+      return new MoveCountingBot(
         {
           id: `bot_${i + 1}`,
           username: `Bot ${i + 1}`,
@@ -139,6 +145,9 @@ export class GameMechanicsEngine {
   private resetGameplayElements(): void {
     for (let respawnTimeout of this.respawnTimeouts) {
       clearTimeout(respawnTimeout);
+    }
+    for (let cooldownTimeout of this.cooldownTimeouts) {
+      clearTimeout(cooldownTimeout);
     }
     this.moveRequests = [...Array(NUM_OF_PLAYERS)].fill(null);
     this.isOnCooldown = [...Array(NUM_OF_PLAYERS)].fill(false);
@@ -212,7 +221,7 @@ export class GameMechanicsEngine {
     this.isOnCooldown[playerIndex] = false;
     this.moveRequests[playerIndex] = null as any;
     let respawnTimer: number =
-      Position.getStartPieceByPlayer(playerIndex).respawnTimer;
+      Position.getStartPieceByPlayer(playerIndex).respawnTimer * RESPAWN_FACTOR;
     this.position.killPlayer(playerIndex);
     this.respawnTimeouts[playerIndex] = setTimeout(() => {
       this.respawnPlayer(playerIndex);
@@ -245,18 +254,20 @@ export class GameMechanicsEngine {
   private putPlayerOnCooldown(
     playerIndex: number,
     updateArrivalTime: number,
-    addGameStartDelay?: boolean
+    isInitial: boolean
   ): number {
     this.isOnCooldown[playerIndex] = true;
     let cooldown: number =
       this.position.getPieceByPlayer(playerIndex).cooldown *
-      ((Math.random() * 2 - 1) * COOLDOWN_VARIANCE + 1) *
+      ((Math.random() * 2 - 1) *
+        (isInitial ? INITIAL_COOLDOWN_VARIANCE : COOLDOWN_VARIANCE) +
+        1) *
       COOLDOWN_FACTOR;
     let delay: number = cooldown;
-    if (addGameStartDelay !== undefined && addGameStartDelay) {
+    if (isInitial) {
       delay += GAME_START_DELAY;
     }
-    setTimeout(() => {
+    this.cooldownTimeouts[playerIndex] = setTimeout(() => {
       this.isOnCooldown[playerIndex] = false;
       if (this.moveRequests[playerIndex] != null && this.isAlive[playerIndex]) {
         this.registerMove(
@@ -265,7 +276,7 @@ export class GameMechanicsEngine {
           new Date().getTime()
         );
       }
-    }, delay * 1000 - (new Date().getTime() - updateArrivalTime));
+    }, delay * 1000);
     return cooldown;
   }
 
@@ -341,7 +352,8 @@ export class GameMechanicsEngine {
         this.moveRequests[playerIndex] = null as any;
         let cooldown: number = this.putPlayerOnCooldown(
           playerIndex,
-          moveArrivalTime
+          moveArrivalTime,
+          false
         );
         moveInfo.set(MechanicsEngineNotificationInfo.cooldown, cooldown as any);
         this.notifyObservers(MechanicsEngineNotificationType.move, moveInfo);

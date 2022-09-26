@@ -633,7 +633,6 @@ class ChessBoard
   }
 
   private startCooldownTimer(cooldownCompletionTime: number): void {
-    console.log("here5");
     if (this.cooldownTimeout != null) {
       clearTimeout(this.cooldownTimeout);
     }

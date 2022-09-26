@@ -14,6 +14,11 @@ import {
 } from "../game_flow_util/game_elements";
 
 const MAX_VOLUME = 0.3;
+const VICTORY_THEME_VOLUME_SCALAR: number = 0.3;
+const DEFEAT_THEME_VOLUME_SCALAR: number = 0.3;
+const MOVE_VOLUME_SCALARS: number[] = [1];
+const CAPTURE_VOLUME_SCALARS: number[] = [1.5, 1.5, 1.5];
+
 
 interface Sound {
   audio: Howl;
@@ -33,35 +38,33 @@ function initializeStaticSounds() {
     audio: new Howl({
       src: require("../assets/gameplay_audio/victory_theme.wav"),
     }),
-    volumeScalar: 0.3,
+    volumeScalar: VICTORY_THEME_VOLUME_SCALAR,
   };
 
   DEFEAT_THEME_SOUND = {
     audio: new Howl({
       src: require("../assets/gameplay_audio/defeat_theme.wav"),
     }),
-    volumeScalar: 0.3,
+    volumeScalar: DEFEAT_THEME_VOLUME_SCALAR,
   };
 
   MOVE_SOUNDS = [];
-  volumeScalars = [1];
   for (let i = 0; i < 1; i++) {
     MOVE_SOUNDS.push({
       audio: new Howl({
         src: require(`../assets/gameplay_audio/move_${i + 1}.wav`),
       }),
-      volumeScalar: volumeScalars[i],
+      volumeScalar: MOVE_VOLUME_SCALARS[i],
     });
   }
 
   CAPTURE_SOUNDS = [];
-  volumeScalars = [1, 1, 1];
   for (let i = 0; i < 3; i++) {
     CAPTURE_SOUNDS.push({
       audio: new Howl({
         src: require(`../assets/gameplay_audio/capture_${i + 1}.wav`),
       }),
-      volumeScalar: volumeScalars[i],
+      volumeScalar: CAPTURE_VOLUME_SCALARS[i],
     });
   }
 }
@@ -104,7 +107,9 @@ export class SoundEffectsPlayer implements ClientFlowEngineObserver {
                 Math.pow(this.playerColumn - sourceSquare.column, 2)
             ) / MAX_DISTANCE;
       let volume: number =
-        MAX_VOLUME * sound.volumeScalar * (1 - relativeDistanceFromSource);
+        MAX_VOLUME *
+        sound.volumeScalar *
+        Math.pow(1 - relativeDistanceFromSource, 5);
       Howler.volume(volume);
       sound.audio.play();
     }

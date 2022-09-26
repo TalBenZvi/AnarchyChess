@@ -38,10 +38,10 @@ export const reverseColor = (color: PieceColor): PieceColor =>
 
 const pieceCooldowns: Map<PieceType, number> = new Map([
   [PieceType.pawn, 1],
-  [PieceType.knight, 2],
-  [PieceType.bishop, 2],
-  [PieceType.rook, 2.5],
-  [PieceType.queen, 3],
+  [PieceType.knight, 1.5],
+  [PieceType.bishop, 1.5],
+  [PieceType.rook, 1.5],
+  [PieceType.queen, 2],
   [PieceType.king, 0.75],
 ]);
 
@@ -49,8 +49,8 @@ const pieceRespawnTimers: Map<PieceType, number> = new Map([
   [PieceType.pawn, 3],
   [PieceType.knight, 4],
   [PieceType.bishop, 4],
-  [PieceType.rook, 5],
-  [PieceType.queen, 7],
+  [PieceType.rook, 4],
+  [PieceType.queen, 5],
   [PieceType.king, 999],
 ]);
 
@@ -444,7 +444,7 @@ export class Bishop extends BlockablePiece {
 
   toString(): string {
     return `${
-      (this.color === PieceColor.white) === (this.startColumn <= 3)
+      (this.color === PieceColor.white) === this.startColumn <= 3
         ? "Dark Squared"
         : "Light Squared"
     } Bishop`;
@@ -764,6 +764,9 @@ export class Position {
 
   static getStartPieceByPlayer(playerIndex: number): Piece {
     let startSquare = Position.startPlayerLocations[playerIndex];
+    if (startSquare == undefined) {
+      console.log(playerIndex);
+    }
     return Position.startBoardArrangement[startSquare.row][startSquare.column];
   }
 

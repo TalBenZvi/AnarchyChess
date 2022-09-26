@@ -12,12 +12,11 @@ const PROMOTION_TYPES: PieceType[] = [
   PieceType.queen,
 ];
 
-// in seconds
-const MOVE_INTERVAL_TIME: number = 8;
+const CHANCE_TO_PLAY_MOVE_ON_START: number = 0.5;
+const CHANCE_TO_PLAY_MOVE: number = 0.05;
 
-export class RandomBot extends BaseBot {
+export class ChanceToPlayBot extends BaseBot {
   private playerIndex: number = null as any;
-  private moveInterval: any = null;
 
   private playRandomMove = () => {
     let position = this.getPosition();
@@ -37,22 +36,20 @@ export class RandomBot extends BaseBot {
 
   protected onGameStart(playerIndex: number, initialCooldown: number) {
     this.playerIndex = playerIndex;
-    setTimeout(this.playRandomMove, Math.random() * MOVE_INTERVAL_TIME * 1000);
-    this.moveInterval = setInterval(
-      this.playRandomMove,
-      MOVE_INTERVAL_TIME * 1000
-    );
-  }
-
-  protected onGameEnd(winningColor: PieceColor): void {
-    if (this.moveInterval != null) {
-      clearInterval(this.moveInterval);
+    if (Math.random() < CHANCE_TO_PLAY_MOVE_ON_START) {
+      this.playRandomMove();
     }
   }
 
-  protected onReturnToLobby(): void {
-    if (this.moveInterval != null) {
-      clearInterval(this.moveInterval);
+  protected onMove(
+    playerIndex: number,
+    move: Move,
+    respawnTimer: number,
+    enPassantRespawnTimer: number,
+    cooldown: number
+  ): void {
+    if (Math.random() < CHANCE_TO_PLAY_MOVE) {
+      this.playRandomMove();
     }
   }
 }
