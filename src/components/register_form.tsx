@@ -6,7 +6,11 @@ import validInputIcon from "../assets/page_design/valid_input_icon.png";
 import invalidInputIcon from "../assets/page_design/invalid_input_icon.png";
 import revealPasswordIcon from "../assets/page_design/reveal_password_icon.png";
 import { ClientActionCenter } from "../client_side/client_action_center";
-import { RegisterParams, User, WSResponseStatus } from "../communication/communication_util";
+import {
+  RegisterParams,
+  User,
+  WSResponseStatus,
+} from "../communication/communication_util";
 
 const USERNAME_REGEX: RegExp = new RegExp("^[a-zA-Z0-9_\\-\\*]{3,20}$", "i");
 const EMAIL_REGEX: RegExp = new RegExp(
@@ -151,9 +155,10 @@ class RegisterForm extends React.Component<
           className="clear-text"
           style={{
             position: "absolute",
-            width: 330,
-            top: top,
-            fontSize: 18,
+            width: "87%",
+            left: "7%",
+            top: `${top * 100}%`,
+            fontSize: "1vw",
             height: 60,
             lineHeight: 20,
           }}
@@ -166,9 +171,10 @@ class RegisterForm extends React.Component<
             alt="validity icon"
             style={{
               position: "absolute",
-              left: 5,
-              top: top + 25,
-              width: 20,
+              left: "1%",
+              top: `${(top + 0.105) * 100}%`,
+              transform: "translate(0%, -200%)",
+              width: "4.5%",
             }}
             src={isValid ? validInputIcon : invalidInputIcon}
             onMouseOver={() => {
@@ -193,9 +199,9 @@ class RegisterForm extends React.Component<
             alt="reveal password"
             style={{
               position: "absolute",
-              left: 390,
-              top: top + 15,
-              width: 30,
+              left: "87%",
+              top: `${(top + 0.025) * 100}%`,
+              width: "7.5%",
               filter: "contrast(70%)",
             }}
             src={revealPasswordIcon}
@@ -218,16 +224,16 @@ class RegisterForm extends React.Component<
           <div
             style={{
               position: "absolute",
-              left: -80,
-              top: top - 75,
-              width: 180,
-              height: 80,
+              left: "-10%",
+              top: `${(top - 0.15) * 100}%`,
+              width: "35%",
+              height: "17%",
               border: "2px solid #888",
               borderRadius: 15,
               background: "#000",
               color: "#ccc",
-              padding: 5,
-              fontSize: 14,
+              padding: "1%",
+              fontSize: "0.7vw",
             }}
           >
             {rulesDescription}
@@ -240,8 +246,8 @@ class RegisterForm extends React.Component<
             position: "absolute",
             left: "50%",
             transform: "translate(-50%, 0%)",
-            top: top + 40,
-            width: 385,
+            top: `${(top + 0.07) * 100}%`,
+            width: "87%",
           }}
         />
       </label>
@@ -286,11 +292,11 @@ class RegisterForm extends React.Component<
         {/* title */}
         <p
           style={{
-            fontSize: 40,
+            fontSize: "2.2vw",
             position: "absolute",
             left: "50%",
             transform: "translate(-50%, 0%)",
-            top: 40,
+            top: "5%",
           }}
         >
           Register
@@ -301,7 +307,7 @@ class RegisterForm extends React.Component<
             "Username",
             username,
             this.setUsername,
-            170,
+            0.28,
             isUsernameValid,
             "Username must be 3-20 characters long and can only contain letters, numbers, '_', '-', and '*'"
           )}
@@ -310,7 +316,7 @@ class RegisterForm extends React.Component<
             "Email",
             email,
             this.setEmail,
-            250,
+            0.42,
             isEmailValid,
             "Must be a valid email address"
           )}
@@ -319,7 +325,7 @@ class RegisterForm extends React.Component<
             "Password",
             password,
             this.setPassword,
-            330,
+            0.56,
             isPasswordValid,
             "Password must be at least 8 characters long and can only contain letters, numbers, '_', '-', and '*'"
           )}
@@ -328,7 +334,7 @@ class RegisterForm extends React.Component<
             "Confirm Password",
             confirmPassword,
             this.setConfirmPassword,
-            410,
+            0.7,
             isConfirmPasswordValid,
             "Must match password"
           )}
@@ -362,13 +368,13 @@ class RegisterForm extends React.Component<
           <div
             style={{
               position: "absolute",
-              bottom: 25,
-              right: 165,
+              bottom: "4%",
+              right: "40%",
             }}
           >
             <LoadingSpin
-              size="25px"
-              width="4px"
+              size="1.2vw"
+              width="0.3vw"
               primaryColor="#ed1b24"
               secondaryColor="ccc"
             />

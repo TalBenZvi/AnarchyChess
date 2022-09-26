@@ -74,7 +74,7 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
     fieldName: string,
     value: string,
     setFunction: (event: any) => void,
-    top: number
+    top: number,
   ): any {
     let isPassword: boolean = fieldName === "Password";
     return (
@@ -88,9 +88,10 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
           className="clear-text"
           style={{
             position: "absolute",
-            width: 330,
-            top: top,
-            fontSize: 18,
+            width: "87%",
+            left: "7%",
+            top: `${top * 100}%`,
+            fontSize: "1vw",
             height: 60,
             lineHeight: 20,
           }}
@@ -101,9 +102,9 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
             alt="reveal password"
             style={{
               position: "absolute",
-              left: 390,
-              top: top + 15,
-              width: 30,
+              left: "87%",
+              top: `${(top + 0.025) * 100}%`,
+              width: "7.5%",
               filter: "contrast(70%)",
             }}
             src={revealPasswordIcon}
@@ -121,13 +122,14 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
         ) : (
           <div />
         )}
+        {/* line */}
         <hr
           style={{
             position: "absolute",
             left: "50%",
             transform: "translate(-50%, 0%)",
-            top: top + 40,
-            width: 385,
+            top: `${(top + 0.07) * 100}%`,
+            width: "87%",
           }}
         />
       </label>
@@ -145,11 +147,11 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
         {/* title */}
         <p
           style={{
-            fontSize: 40,
+            fontSize: "2.2vw",
             position: "absolute",
             left: "50%",
             transform: "translate(-50%, 0%)",
-            top: 40,
+            top: "5%",
           }}
         >
           Login
@@ -160,10 +162,11 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
             "Username or Email",
             usernameOrEmail,
             this.setUsernameOrEmail,
-            170
+            0.28,
+
           )}
           {/* password */}
-          {this.textInputField("Password", password, this.setPassword, 250)}
+          {this.textInputField("Password", password, this.setPassword, 0.42)}
           {/* submit button */}
           <input
             type="submit"
@@ -172,11 +175,12 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
             className="app-button"
             style={{
               position: "absolute",
-              bottom: 25,
-              right: 25,
-              width: 130,
-              height: 40,
-              fontSize: 20,
+              bottom: "4%",
+              right: "5%",
+              width: "30%",
+              height: "7%",
+              fontSize: "1vw",
+              fontWeight: "bold",
             }}
           />
         </form>
@@ -185,13 +189,13 @@ class LoginForm extends React.Component<LoginFormProps, LoginFormState> {
           <div
             style={{
               position: "absolute",
-              bottom: 25,
-              right: 165,
+              bottom: "4%",
+              right: "40%",
             }}
           >
             <LoadingSpin
-              size="25px"
-              width="4px"
+              size="1.2vw"
+              width="0.3vw"
               primaryColor="#ed1b24"
               secondaryColor="ccc"
             />

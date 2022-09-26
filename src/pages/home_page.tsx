@@ -24,31 +24,44 @@ interface HomePageProps {}
 interface HomePageState {
   viewMode: ViewMode;
   hoveredMode: ViewMode;
+  windowWidth: number;
+  windowHeight: number;
 }
 
 class HomePage extends React.Component<HomePageProps, HomePageState> {
   state = {
     viewMode: ViewMode.login,
     hoveredMode: null as any,
+    windowWidth: window.innerWidth,
+    windowHeight: window.innerHeight,
   };
 
   constructor(props: HomePageProps) {
     super(props);
-    // if (window.location.host === WEBSITE_DOMAIN) {
-    //   EnvironmentManager.environment = Environment.production;
-    // } else {
-    //   EnvironmentManager.environment = Environment.development;
-    // }
   }
 
   componentDidMount() {
+    this.updateWindowDimensions();
+    window.addEventListener("resize", this.updateWindowDimensions);
     if (ClientActionCenter.getInstance().currentUser != null) {
       this.setState({ viewMode: ViewMode.authenticated });
     }
   }
 
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.updateWindowDimensions);
+  }
+
+  updateWindowDimensions = () => {
+    this.setState({
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+    });
+  };
+
   render() {
-    let { viewMode, hoveredMode } = this.state;
+    let { viewMode, hoveredMode, windowWidth, windowHeight } = this.state;
+    let fontSize: number = windowHeight * 0.026;
     document.body.style.overflow = "hidden";
     return viewMode === ViewMode.authenticated ? (
       <AuthenticatedHomePage />
@@ -62,8 +75,8 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
             position: "absolute",
             left: "50%",
             transform: "translate(-50%, 0%)",
-            top: 10,
-            height: 240,
+            top: "3%",
+            height: windowHeight * 0.25,
           }}
           src={homeTitle}
         />
@@ -72,9 +85,9 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
           alt=""
           style={{
             position: "absolute",
-            left: -100,
-            bottom: -200,
-            height: 650,
+            left: "-5%",
+            bottom: "-20%",
+            height: windowHeight * 0.7,
             filter: `contrast(90%)`,
           }}
           src={whiteWallpaperImage}
@@ -83,9 +96,9 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
           alt=""
           style={{
             position: "absolute",
-            right: -60,
-            bottom: -200,
-            height: 650,
+            right: "-3%",
+            bottom: "-20%",
+            height: windowHeight * 0.7,
             filter: `contrast(92%)`,
           }}
           src={blackWallpaperImage}
@@ -95,9 +108,9 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
           className="highlighted-area"
           style={{
             position: "fixed",
-            width: 450,
-            height: 580,
-            top: 270,
+            width: windowWidth * 0.23,
+            height: windowHeight * 0.65,
+            top: "30%",
             left: "50%",
             transform: "translate(-50%, 0%)",
           }}
@@ -124,9 +137,9 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
               className="clear-button"
               style={{
                 width: 225,
-                height: 50,
-                fontSize: 20,
-                lineHeight: 3,
+                height: windowHeight * 0.05,
+                fontSize: "1.3vw",
+                lineHeight: 1.95,
                 color:
                   viewMode === ViewMode.login || hoveredMode === ViewMode.login
                     ? "#cccccc"
@@ -155,9 +168,9 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
               className="clear-button"
               style={{
                 width: 225,
-                height: 50,
-                fontSize: 20,
-                lineHeight: 3,
+                height: windowHeight * 0.05,
+                fontSize: "1.3vw",
+                lineHeight: 1.95,
                 color:
                   viewMode === ViewMode.register ||
                   hoveredMode === ViewMode.register
