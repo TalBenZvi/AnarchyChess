@@ -5,7 +5,10 @@ import LobbyList from "../components/lobby_list";
 import { Redirect } from "react-router";
 import { Lobby } from "../communication/communication_util";
 
-interface AuthenticatedHomePageProps {}
+interface AuthenticatedHomePageProps {
+  windowWidth: number;
+  windowHeight: number;
+}
 
 interface AuthenticatedHomePageState {
   isLobbyCreationFormOpen: boolean;
@@ -19,12 +22,13 @@ class AuthenticatedHomePage extends React.Component<
   state = {
     isLobbyCreationFormOpen: false,
     lobbyRedirectionID: null as any,
+    windowWidth: window.innerWidth,
+    windowHeight: window.innerHeight,
   };
-
-  createALobby = () => {};
 
   render() {
     let { isLobbyCreationFormOpen, lobbyRedirectionID } = this.state;
+    let { windowHeight, windowWidth } = this.props;
     if (lobbyRedirectionID != null) {
       return <Redirect push to={`/lobby/${lobbyRedirectionID}`} />;
     }
@@ -97,14 +101,14 @@ class AuthenticatedHomePage extends React.Component<
           className="centered"
           style={{
             position: "absolute",
-            top: 130,
+            top: "15%",
             left: "50%",
             transform: "translate(-50%, 0%)",
           }}
         >
           <LobbyList
-            width={1400}
-            height={750}
+            width={windowWidth * 0.7}
+            height={windowHeight * 0.8}
             onLobbyCreationSelection={() =>
               this.setState({ isLobbyCreationFormOpen: true })
             }

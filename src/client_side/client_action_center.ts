@@ -31,6 +31,10 @@ export class ClientActionCenter {
 
   private wsClient: WebSocket = null as any;
   private _currentUser: User = null as any;
+  // private _currentUser: User = {
+  //   id: "test",
+  //   username: "test",
+  // };
   private _currentLobby: Lobby = null as any;
   private _clientFlowEngine: ClientFlowEngine = null as any;
 

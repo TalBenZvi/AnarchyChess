@@ -36,7 +36,7 @@ class LobbyList extends React.Component<LobbyListProps, LobbyListState> {
     lobbies: [],
     searchQuery: "",
     page: 0,
-    isWaitingForResponse: true,
+    isWaitingForResponse: false,
     selectedLobby: null as any,
     selectedLobbyForPassword: null as any,
     targetLobbyID: null as any,

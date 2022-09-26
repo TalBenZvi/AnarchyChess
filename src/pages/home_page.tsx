@@ -43,7 +43,7 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
   componentDidMount() {
     this.updateWindowDimensions();
     window.addEventListener("resize", this.updateWindowDimensions);
-    if (ClientActionCenter.getInstance().currentUser != null) {
+    if (ClientActionCenter.getInstance().currentUser !== null) {
       this.setState({ viewMode: ViewMode.authenticated });
     }
   }
@@ -64,7 +64,10 @@ class HomePage extends React.Component<HomePageProps, HomePageState> {
     let fontSize: number = windowHeight * 0.026;
     document.body.style.overflow = "hidden";
     return viewMode === ViewMode.authenticated ? (
-      <AuthenticatedHomePage />
+      <AuthenticatedHomePage
+        windowWidth={windowWidth}
+        windowHeight={windowHeight}
+      />
     ) : (
       /* background */
       <div className="background">
