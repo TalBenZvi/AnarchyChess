@@ -124,7 +124,7 @@ class ClientPage
                     style={{
                       top: "30%",
                       zIndex: 2,
-                      fontSize: 50,
+                      fontSize: "3vw",
                     }}
                   >
                     Disconnected From Host
@@ -137,9 +137,9 @@ class ClientPage
                       transform: "translate(-50%, -50%)",
                       left: "50%",
                       zIndex: 2,
-                      width: 250,
-                      height: 70,
-                      fontSize: 25,
+                      width: "12%",
+                      height: "10%",
+                      fontSize: "1.3vw",
                     }}
                     onClick={() => {
                       this.setState({ lobbyState: LobbyState.closed });

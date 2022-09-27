@@ -71,12 +71,12 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
     let graveyardHeight = boardSize * 0.985;
 
     let scoreBoardWidth: number = graveyardWidth;
-    let scoreBoardHeight: number = 220;
+    let scoreBoardHeight: number = windowHeight * 0.25;
 
     let playerListWidth: number = graveyardWidth;
     let playerListHeight: number = boardSize - scoreBoardHeight - margin;
 
-    let buttonSize: number = 50;
+    let buttonSize: number = windowWidth * 0.028;
 
     return (
       // background
@@ -150,8 +150,9 @@ class GamePage extends React.Component<GamePageProps, GamePageState> {
           style={{
             position: "absolute",
             left: margin - 5,
-            bottom: playerListHeight + scoreBoardHeight + 2 * margin - 5,
-            transform: "translate(0%, 100%)",
+            // bottom: playerListHeight + scoreBoardHeight + 2 * margin - 5,
+            top : "10%",
+            // transform: "translate(0%, 100%)",
             width: buttonSize,
             height: buttonSize,
             zIndex: 2,

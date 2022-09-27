@@ -30,20 +30,20 @@ export class ClientActionCenter {
   private static instance: ClientActionCenter = null as any;
 
   private wsClient: WebSocket = null as any;
-  // private _currentUser: User = null as any;
-  private _currentUser: User = {
-    id: "test",
-    username: "test",
-  };
-  // private _currentLobby: Lobby = null as any;
-  private _currentLobby: Lobby = {
-    creatorID: "test",
-    name: "test",
-    creatorName: "test",
-    password: "test",
-    areTeamsPrearranged: true,
-    capacity: 5,
-  };
+  private _currentUser: User = null as any;
+  // private _currentUser: User = {
+  //   id: "test",
+  //   username: "test",
+  // };
+  private _currentLobby: Lobby = null as any;
+  // private _currentLobby: Lobby = {
+  //   creatorID: "test",
+  //   name: "test",
+  //   creatorName: "test",
+  //   password: "test",
+  //   areTeamsPrearranged: true,
+  //   capacity: 5,
+  // };
   private _clientFlowEngine: ClientFlowEngine = null as any;
 
   // on-response functions
