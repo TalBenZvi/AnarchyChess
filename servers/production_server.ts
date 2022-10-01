@@ -29,6 +29,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../../build/index.html"));
 });
 
+app.get('*', function(req, res) {
+  res.redirect('/');
+});
+
+
 const httpsServer = https.createServer(
   { key: privateKey, cert: certificate },
   app
@@ -38,4 +43,4 @@ httpsServer.listen(3031, () => {
   console.log("server listening on port 3031");
 });
 
-const websocketServer = new AppServer(httpsServer);
+const appServer = new AppServer(httpsServer);

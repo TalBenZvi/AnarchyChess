@@ -20,6 +20,10 @@ app.get("/", (req: any, res: any) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
+app.get('*', function(req, res) {
+  res.redirect('/');
+});
+
 const httpServer = http.createServer(app);
 
 httpServer.listen(3031, () => {
