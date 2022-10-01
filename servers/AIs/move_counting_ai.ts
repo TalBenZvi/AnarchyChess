@@ -1,9 +1,5 @@
-import { BaseBot } from "./base_bot";
-import {
-  PieceType,
-  Move,
-  PieceColor,
-} from "../../src/game_flow_util/game_elements";
+import { Move, PieceType } from "../../src/game_flow_util/game_elements";
+import { BaseAI } from "./base_ai";
 
 const PROMOTION_TYPES: PieceType[] = [
   PieceType.knight,
@@ -12,11 +8,11 @@ const PROMOTION_TYPES: PieceType[] = [
   PieceType.queen,
 ];
 
-const CHANCE_TO_PLAY_MOVE_ON_START: number = 0.5;
-const CHANCE_TO_PLAY_MOVE: number = 0.05;
+const MOVES_TO_WAIT: number = 10;
 
-export class ChanceToPlayBot extends BaseBot {
+export class MoveCountingAI extends BaseAI {
   private playerIndex: number = null as any;
+  private moveCount: number = null as any;
 
   private playRandomMove = () => {
     let position = this.getPosition();
@@ -34,22 +30,23 @@ export class ChanceToPlayBot extends BaseBot {
     }
   };
 
-  protected onGameStart(playerIndex: number, initialCooldown: number) {
+  onGameStart(playerIndex: number, initialCooldown: number) {
     this.playerIndex = playerIndex;
-    if (Math.random() < CHANCE_TO_PLAY_MOVE_ON_START) {
-      this.playRandomMove();
-    }
+    this.moveCount = Math.floor(Math.random() * MOVES_TO_WAIT);
+    this.playRandomMove();
   }
 
-  protected onMove(
+  onMove(
     playerIndex: number,
     move: Move,
     respawnTimer: number,
     enPassantRespawnTimer: number,
     cooldown: number
   ): void {
-    if (Math.random() < CHANCE_TO_PLAY_MOVE) {
+    this.moveCount++;
+    if (this.moveCount === MOVES_TO_WAIT) {
       this.playRandomMove();
+      this.moveCount = 0;
     }
   }
 }

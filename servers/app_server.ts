@@ -41,122 +41,129 @@ export class AppServer {
     this.wss.on("connection", (client) => {
       setUser(client, null as any);
       client.on("message", (data) => {
-        let request: WSRequest = JSON.parse(data.toString(), reviver);
-        if (request !== undefined) {
-          switch (request.type) {
-            case WSRequestType.register:
-              {
-                this.register(client, request.params as RegisterParams);
-              }
-              break;
-            case WSRequestType.login:
-              {
-                this.login(client, request.params as LoginParams);
-              }
-              break;
-            case WSRequestType.logout:
-              {
-                this.logout(client);
-              }
-              break;
-            case WSRequestType.getLobbies:
-              {
-                this.sendResponse(client, {
-                  type: WSRequestType.getLobbies,
-                  status: null as any,
-                  info: new Map([
-                    [WSResponseInfo.lobbies, this.lobbies as any],
-                  ]),
-                });
-              }
-              break;
-            case WSRequestType.createLobby:
-              {
-                this.createLobby(client, request.params as LobbyCreationParams);
-              }
-              break;
-            case WSRequestType.joinLobby:
-              {
-                this.joinLobby(client, request.params as LobbyJoiningParams);
-              }
-              break;
-            case WSRequestType.removeFromLobby:
-              {
-                let requesterID: string = getUser(client).id;
-                let removedPlayerID: string = (
-                  request.params as LobbyRemovalParams
-                ).removedPlayerID;
-                if (
-                  removedPlayerID === requesterID ||
-                  this.isHost(requesterID)
-                ) {
-                  this.removePlayerFromLobby(requesterID, removedPlayerID);
+        try {
+          let request: WSRequest = JSON.parse(data.toString(), reviver);
+          if (request !== undefined) {
+            switch (request.type) {
+              case WSRequestType.register:
+                {
+                  this.register(client, request.params as RegisterParams);
                 }
-              }
-              break;
-            case WSRequestType.changePlayerTeam:
-              {
-                let requesterID: string = getUser(client).id;
-                let playerID: string = (request.params as ChangeTeamParams)
-                  .playerID;
-                if (this.isHost(requesterID)) {
+                break;
+              case WSRequestType.login:
+                {
+                  this.login(client, request.params as LoginParams);
+                }
+                break;
+              case WSRequestType.logout:
+                {
+                  this.logout(client);
+                }
+                break;
+              case WSRequestType.getLobbies:
+                {
+                  this.sendResponse(client, {
+                    type: WSRequestType.getLobbies,
+                    status: null as any,
+                    info: new Map([
+                      [WSResponseInfo.lobbies, this.lobbies as any],
+                    ]),
+                  });
+                }
+                break;
+              case WSRequestType.createLobby:
+                {
+                  this.createLobby(
+                    client,
+                    request.params as LobbyCreationParams
+                  );
+                }
+                break;
+              case WSRequestType.joinLobby:
+                {
+                  this.joinLobby(client, request.params as LobbyJoiningParams);
+                }
+                break;
+              case WSRequestType.removeFromLobby:
+                {
+                  let requesterID: string = getUser(client).id;
+                  let removedPlayerID: string = (
+                    request.params as LobbyRemovalParams
+                  ).removedPlayerID;
+                  if (
+                    removedPlayerID === requesterID ||
+                    this.isHost(requesterID)
+                  ) {
+                    this.removePlayerFromLobby(requesterID, removedPlayerID);
+                  }
+                }
+                break;
+              case WSRequestType.changePlayerTeam:
+                {
+                  let requesterID: string = getUser(client).id;
+                  let playerID: string = (request.params as ChangeTeamParams)
+                    .playerID;
+                  if (this.isHost(requesterID)) {
+                    (
+                      this.serverAssignments.get(requesterID) as GameServer
+                    ).changePlayerTeam(playerID);
+                  }
+                }
+                break;
+              case WSRequestType.fillLobbyWithBots:
+                {
+                  let requesterID: string = getUser(client).id;
+                  if (this.isHost(requesterID)) {
+                    (
+                      this.serverAssignments.get(requesterID) as GameServer
+                    ).fillWithBots();
+                  }
+                }
+                break;
+              case WSRequestType.removeBotsFromLobby:
+                {
+                  let requesterID: string = getUser(client).id;
+                  if (this.isHost(requesterID)) {
+                    (
+                      this.serverAssignments.get(requesterID) as GameServer
+                    ).removeAllBots();
+                  }
+                }
+                break;
+              case WSRequestType.startGame:
+                {
+                  let requesterID: string = getUser(client).id;
+                  if (this.isHost(requesterID)) {
+                    (
+                      this.serverAssignments.get(requesterID) as GameServer
+                    ).startGame();
+                  }
+                }
+                break;
+              case WSRequestType.returnToLobby:
+                {
+                  let requesterID: string = getUser(client).id;
+                  if (this.isHost(requesterID)) {
+                    (
+                      this.serverAssignments.get(requesterID) as GameServer
+                    ).returnToLobby();
+                  }
+                }
+                break;
+              case WSRequestType.inGame:
+                {
                   (
-                    this.serverAssignments.get(requesterID) as GameServer
-                  ).changePlayerTeam(playerID);
+                    this.serverAssignments.get(getUser(client).id) as GameServer
+                  ).handleMoveRequest(
+                    (request.params as MoveRequestParams).move,
+                    getUser(client).id
+                  );
                 }
-              }
-              break;
-            case WSRequestType.fillLobbyWithBots:
-              {
-                let requesterID: string = getUser(client).id;
-                if (this.isHost(requesterID)) {
-                  (
-                    this.serverAssignments.get(requesterID) as GameServer
-                  ).fillWithBots();
-                }
-              }
-              break;
-            case WSRequestType.removeBotsFromLobby:
-              {
-                let requesterID: string = getUser(client).id;
-                if (this.isHost(requesterID)) {
-                  (
-                    this.serverAssignments.get(requesterID) as GameServer
-                  ).removeAllBots();
-                }
-              }
-              break;
-            case WSRequestType.startGame:
-              {
-                let requesterID: string = getUser(client).id;
-                if (this.isHost(requesterID)) {
-                  (
-                    this.serverAssignments.get(requesterID) as GameServer
-                  ).startGame();
-                }
-              }
-              break;
-            case WSRequestType.returnToLobby:
-              {
-                let requesterID: string = getUser(client).id;
-                if (this.isHost(requesterID)) {
-                  (
-                    this.serverAssignments.get(requesterID) as GameServer
-                  ).returnToLobby();
-                }
-              }
-              break;
-            case WSRequestType.inGame:
-              {
-                (
-                  this.serverAssignments.get(getUser(client).id) as GameServer
-                ).handleMoveRequest(
-                  (request.params as MoveRequestParams).move,
-                  getUser(client).id
-                );
-              }
-              break;
+                break;
+            }
           }
+        } catch (e) {
+          console.error(e);
         }
       });
       client.on("close", () => {

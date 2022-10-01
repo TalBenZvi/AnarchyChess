@@ -168,7 +168,7 @@ export abstract class Piece {
     }
   }
 
-  static generate(type: PieceType, color: PieceColor) {
+  static generate(type: PieceType, color: PieceColor): Piece {
     switch (type) {
       case PieceType.pawn: {
         return new Pawn(color, null as any);
@@ -192,6 +192,8 @@ export abstract class Piece {
   }
 
   abstract get type(): PieceType;
+
+  abstract get moveOffsets(): MoveOffset[];
 
   private getType() {
     return this.type;
@@ -235,7 +237,7 @@ export abstract class Piece {
 }
 
 abstract class UnblockablePiece extends Piece {
-  protected abstract get moveOffsets(): MoveOffset[];
+  abstract get moveOffsets(): MoveOffset[];
 
   findLegalMoves(position: Position, currentSquare: Square): Move[] {
     let legalMoves: Move[] = [];
@@ -260,7 +262,7 @@ abstract class UnblockablePiece extends Piece {
 }
 
 abstract class BlockablePiece extends Piece {
-  protected abstract get moveOffsets(): MoveOffset[];
+  abstract get moveOffsets(): MoveOffset[];
 
   findLegalMoves(position: Position, currentSquare: Square): Move[] {
     let legalMoves: Move[] = [];
@@ -340,6 +342,14 @@ export class Pawn extends Piece {
     return PieceType.pawn;
   }
 
+  get moveOffsets(): MoveOffset[] {
+    return this._moveOffsets;
+  }
+
+  get captureMoveOffsets(): MoveOffset[] {
+    return this._captureMoveOffsets;
+  }
+
   findLegalMoves(position: Position, currentSquare: Square) {
     let legalMoves: Move[] = [];
     let destSquare: Square = currentSquare.applyMove(this._moveOffsets[0]);
@@ -410,7 +420,7 @@ export class Knight extends UnblockablePiece {
     return PieceType.knight;
   }
 
-  protected get moveOffsets(): MoveOffset[] {
+  get moveOffsets(): MoveOffset[] {
     return [
       new MoveOffset(1, 2),
       new MoveOffset(2, 1),
@@ -433,7 +443,7 @@ export class Bishop extends BlockablePiece {
     return PieceType.bishop;
   }
 
-  protected get moveOffsets(): MoveOffset[] {
+  get moveOffsets(): MoveOffset[] {
     return [
       new MoveOffset(1, 1),
       new MoveOffset(1, -1),
@@ -456,7 +466,7 @@ export class Rook extends BlockablePiece {
     return PieceType.rook;
   }
 
-  protected get moveOffsets(): MoveOffset[] {
+  get moveOffsets(): MoveOffset[] {
     return [
       new MoveOffset(1, 0),
       new MoveOffset(-1, 0),
@@ -475,7 +485,7 @@ export class Queen extends BlockablePiece {
     return PieceType.queen;
   }
 
-  protected get moveOffsets(): MoveOffset[] {
+  get moveOffsets(): MoveOffset[] {
     return [
       new MoveOffset(1, 0),
       new MoveOffset(-1, 0),
@@ -513,7 +523,7 @@ export class King extends UnblockablePiece {
     return PieceType.king;
   }
 
-  protected get moveOffsets(): MoveOffset[] {
+  get moveOffsets(): MoveOffset[] {
     return [
       new MoveOffset(1, 1),
       new MoveOffset(1, 0),
@@ -770,6 +780,42 @@ export class Position {
     return Position.startBoardArrangement[startSquare.row][startSquare.column];
   }
 
+  static getPlayerIndicesByPieceType(type: PieceType): number[] {
+    switch (type) {
+      case PieceType.pawn: {
+        return [...Array(BOARD_SIZE * 2)].map((_, i: number) => i + BOARD_SIZE);
+      }
+      case PieceType.knight: {
+        return [1, 6, 25, 30];
+      }
+      case PieceType.bishop: {
+        return [2, 5, 26, 29];
+      }
+      case PieceType.rook: {
+        return [0, 7, 24, 31];
+      }
+      case PieceType.queen: {
+        return [3, 27];
+      }
+      case PieceType.king: {
+        return [4, 28];
+      }
+    }
+  }
+
+  static getPlayerIndicesByColor(color: PieceColor): number[] {
+    switch (color) {
+      case PieceColor.white: {
+        return [...Array(NUM_OF_PLAYERS / 2)].map((_, i: number) => i);
+      }
+      case PieceColor.black: {
+        return [...Array(NUM_OF_PLAYERS / 2)].map(
+          (_, i: number) => i + NUM_OF_PLAYERS / 2
+        );
+      }
+    }
+  }
+
   static getStartPlayingPieces(): PlayingPiece[] {
     return [...Array(NUM_OF_PLAYERS)].map((i) => {
       return {
@@ -778,6 +824,12 @@ export class Position {
         column: Position.startPlayerLocations[i].column,
       };
     });
+  }
+
+  static getColorByPlayer(playerIndex: number): PieceColor {
+    return playerIndex < NUM_OF_PLAYERS / 2
+      ? PieceColor.white
+      : PieceColor.black;
   }
 
   get playerLocations(): Square[] {
@@ -919,6 +971,95 @@ export class Position {
 
   isPlayerAlive(playerIndex: number) {
     return this.playerLocations[playerIndex] != null;
+  }
+
+  isSquareUnderThreat(
+    row: number,
+    column: number,
+    threateningColor: PieceColor
+  ): boolean {
+    for (let type of [PieceType.bishop, PieceType.rook, PieceType.queen]) {
+      let moveOffsets: MoveOffset[] = Piece.generate(
+        type,
+        PieceColor.white
+      ).moveOffsets;
+      for (let moveOffset of moveOffsets) {
+        let checkedSquare: Square = new Square(row, column);
+        while (true) {
+          checkedSquare = checkedSquare.applyMove(moveOffset);
+          if (!checkedSquare.isOnTheBoard()) {
+            break;
+          }
+          let checkedPiece: Piece = this.pieceAt(
+            checkedSquare.row,
+            checkedSquare.column
+          );
+          if (checkedPiece !== null) {
+            if (
+              checkedPiece.color === threateningColor &&
+              checkedPiece.type === type
+            ) {
+              return true;
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+    for (let type of [PieceType.knight, PieceType.king]) {
+      let moveOffsets: MoveOffset[] = Piece.generate(
+        type,
+        PieceColor.white
+      ).moveOffsets;
+      for (let moveOffset of moveOffsets) {
+        let checkedSquare: Square = new Square(row, column);
+        checkedSquare = checkedSquare.applyMove(moveOffset);
+        if (checkedSquare.isOnTheBoard()) {
+          let checkedPiece: Piece = this.pieceAt(
+            checkedSquare.row,
+            checkedSquare.column
+          );
+          if (
+            checkedPiece !== null &&
+            checkedPiece.color === threateningColor &&
+            checkedPiece.type === type
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+    for (let moveOffset of new Pawn(reverseColor(threateningColor), 0)
+      .captureMoveOffsets) {
+      let checkedSquare: Square = new Square(row, column);
+      checkedSquare = checkedSquare.applyMove(moveOffset);
+      if (checkedSquare.isOnTheBoard()) {
+        let checkedPiece: Piece = this.pieceAt(
+          checkedSquare.row,
+          checkedSquare.column
+        );
+        if (
+          checkedPiece !== null &&
+          checkedPiece.color === threateningColor &&
+          checkedPiece.type === PieceType.pawn
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  isPlayerUnderThreat(playerIndex: number): boolean {
+    let playerSquare: Square = this.getPlayerLocation(playerIndex);
+    return playerSquare === null
+      ? false
+      : this.isSquareUnderThreat(
+          playerSquare.row,
+          playerSquare.column,
+          reverseColor(Position.getColorByPlayer(playerIndex))
+        );
   }
 
   // debug: returns false if there was an error

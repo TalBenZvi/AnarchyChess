@@ -20,8 +20,10 @@ import {
   GAME_START_DELAY,
 } from "../src/communication/communication_util.js";
 import { BaseBot } from "./bots/base_bot.js";
-import { ChanceToPlayBot } from "./bots/chance_to_play_bot";
-import { MoveCountingBot } from "./bots/move_counting_bot.js";
+import { CustomBot } from "./bots/custom_bot.js";
+import { MoveCountingAI } from "./AIs/move_counting_ai.js";
+import { ThreatAvoidingAI } from "./AIs/threat_avoiding_ai.js";
+import { RussianBot } from "./bots/russian_bot.js";
 
 const INITIAL_COOLDOWN_VARIANCE: number = 0.7;
 const COOLDOWN_VARIANCE: number = 0.2;
@@ -85,6 +87,19 @@ export class GameMechanicsEngine {
     this.playerList = new PlayerList(areTeamsPrearranged);
   }
 
+  //debug
+  private setRoleForAdmin(playerIndex: number) {
+    for (let i = 0; i < NUM_OF_PLAYERS - 1; i++) {
+      if (this.roleAssignemnts.get(`bot_${i + 1}`) === playerIndex) {
+        this.roleAssignemnts.set(
+          `bot_${i + 1}`,
+          this.roleAssignemnts.get("6316513d45193eb2fa495db4") as number
+        );
+        this.roleAssignemnts.set("6316513d45193eb2fa495db4", playerIndex);
+      }
+    }
+  }
+
   private notifyObservers(
     type: MechanicsEngineNotificationType,
     info: Map<MechanicsEngineNotificationInfo, any>
@@ -118,7 +133,7 @@ export class GameMechanicsEngine {
     this.bots = [
       ...Array(NUM_OF_PLAYERS - this.playerList.getConnectedUsers().length),
     ].map((_, i: number) => {
-      return new MoveCountingBot(
+      return new RussianBot(
         {
           id: `bot_${i + 1}`,
           username: `Bot ${i + 1}`,
@@ -164,6 +179,7 @@ export class GameMechanicsEngine {
       this.resetGameplayElements();
       this.position.setToStartingPosition();
       this.roleAssignemnts = this.playerList.generateRoleAssignments();
+      // this.setRoleForAdmin(1);
       let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
         (_, i: number) =>
           this.putPlayerOnCooldown(i, new Date().getTime(), true)
