@@ -18,8 +18,8 @@ import {
   LobbyJoiningParams,
   LobbyRemovalParams,
   ChangeTeamParams,
-} from "../src/communication/communication_util.js";
-import { MongodbOperations } from "./mongodb_operations.js";
+} from "../../src/communication/communication_util.js";
+import { MongodbOperations } from "../database_access/mongodb_operations.js";
 import { GameServer } from "./game_server.js";
 
 const getUser = (client: any): User => {

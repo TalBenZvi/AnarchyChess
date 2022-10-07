@@ -5,7 +5,7 @@ import {
   NUM_OF_PLAYERS,
   PieceColor,
   Square,
-} from "../src/game_flow_util/game_elements.js";
+} from "../../src/game_flow_util/game_elements.js";
 import {
   GameEvent,
   GameEventInfo,
@@ -16,7 +16,7 @@ import {
   WSRequestType,
   WSResponse,
   WSResponseInfo,
-} from "../src/communication/communication_util.js";
+} from "../../src/communication/communication_util.js";
 import {
   GameMechanicsEngine,
   MechanicsEngineNotificationInfo,

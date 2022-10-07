@@ -10,21 +10,21 @@ import {
   CastleSide,
   WHITE_KING_PLAYER_INDEX,
   BLACK_KING_PLAYER_INDEX,
-} from "../src/game_flow_util/game_elements.js";
-import { PlayerList } from "../src/game_flow_util/player_list.js";
+} from "../../src/game_flow_util/game_elements.js";
+import { PlayerList } from "../../src/game_flow_util/player_list.js";
 import {
   replacer,
   reviver,
   GameStatus,
   User,
   GAME_START_DELAY,
-} from "../src/communication/communication_util.js";
-import { AI, BaseBot } from "./bots/base_bot.js";
-import { CustomBot } from "./bots/custom_bot.js";
-import { MoveCountingAI } from "./AIs/move_counting_ai.js";
-import { ThreatAvoidingAI } from "./AIs/threat_avoiding_ai.js";
-import { RussianBot } from "./bots/russian_bot.js";
-import { CustomByPieceTypeBot } from "./bots/custom_by_piece_type_bot.js";
+} from "../../src/communication/communication_util.js";
+import { AI, BaseBot } from "../bots/base_bot.js";
+import { CustomBot } from "../bots/custom_bot.js";
+import { MoveCountingAI } from "../AIs/move_counting_ai.js";
+import { ThreatAvoidingAI } from "../AIs/threat_avoiding_ai.js";
+import { RussianBot } from "../bots/russian_bot.js";
+import { CustomByPieceTypeBot } from "../bots/custom_by_piece_type_bot.js";
 
 const INITIAL_COOLDOWN_VARIANCE: number = 0.7;
 const COOLDOWN_VARIANCE: number = 0.2;

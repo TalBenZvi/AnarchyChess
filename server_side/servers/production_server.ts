@@ -9,18 +9,34 @@ import * as https from "https";
 import * as http from "http";
 
 import { fileURLToPath } from "url";
+
+import {
+  Environment,
+  EnvironmentManager,
+  ValueType,
+} from "../../src/communication/communication_util.js";
+
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import { AppServer } from "./app_server.js";
+EnvironmentManager.environment = Environment.production;
+
+const pathToProjectDiectory: string =
+  "../" + EnvironmentManager.getValue(ValueType.projectDirectoryPath);
+
+import { AppServer } from "../flow/app_server.js";
 
 const privateKey = fs.readFileSync(
-  path.join(__dirname, "../../deployment/private_key.pem"),
+  path.join(__dirname, pathToProjectDiectory, "/deployment/private_key.pem"),
   "utf8"
 );
 const certificate = fs.readFileSync(
-  path.join(__dirname, "../../deployment/anarchychess_xyz.crt"),
+  path.join(
+    __dirname,
+    pathToProjectDiectory,
+    "/deployment/anarchychess_xyz.crt"
+  ),
   "utf8"
 );
 
@@ -29,10 +45,12 @@ app.use((req, res, next) => {
   req.secure ? next() : res.redirect("https://" + req.headers.host + req.url);
 });
 
-app.use(express.static(path.join(__dirname, "../../build")));
+app.use(express.static(path.join(__dirname, pathToProjectDiectory, "/build")));
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../../build/index.html"));
+  res.sendFile(
+    path.join(__dirname, pathToProjectDiectory, "/build/index.html")
+  );
 });
 
 app.get("*", function (req, res) {

@@ -1,23 +1,19 @@
 import { User } from "../../src/communication/communication_util";
-import {
-  PieceColor,
-  PieceType,
-  Position,
-} from "../../src/game_flow_util/game_elements";
-import { GameMechanicsEngine } from "../game_mechanics_engine";
+import { PieceType, Position } from "../../src/game_flow_util/game_elements";
+import { GameMechanicsEngine } from "../flow/game_mechanics_engine";
 import { AI } from "./base_bot";
 import { CustomByPlayerIndexBot } from "./custom_by_player_index_bot";
 
-export class CustomByColorBot extends CustomByPlayerIndexBot {
+export class CustomByPieceTypeBot extends CustomByPlayerIndexBot {
   constructor(
     user: User,
     mechanicsEngine: GameMechanicsEngine,
-    aiSelection: Map<PieceColor, AI>
+    aiSelection: Map<PieceType, AI>
   ) {
     let aiSelectionByPlayerIndex: Map<number, AI> = new Map();
-    for (let color of aiSelection.keys()) {
-      let ai: AI = aiSelection.get(color) as AI;
-      for (let playerIndex of Position.getPlayerIndicesByColor(color)) {
+    for (let type of aiSelection.keys()) {
+      let ai: AI = aiSelection.get(type) as AI;
+      for (let playerIndex of Position.getPlayerIndicesByPieceType(type)) {
         aiSelectionByPlayerIndex.set(playerIndex, ai);
       }
     }

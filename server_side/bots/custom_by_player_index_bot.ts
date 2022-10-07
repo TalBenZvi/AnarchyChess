@@ -1,6 +1,6 @@
 import { User } from "../../src/communication/communication_util";
 import { BaseAI } from "../AIs/base_ai";
-import { GameMechanicsEngine } from "../game_mechanics_engine";
+import { GameMechanicsEngine } from "../flow/game_mechanics_engine";
 import { AI, BaseBot } from "./base_bot";
 
 export class CustomByPlayerIndexBot extends BaseBot {

@@ -2,7 +2,7 @@ import {
   User,
   Lobby,
   WSResponseStatus,
-} from "../src/communication/communication_util.js";
+} from "../../src/communication/communication_util.js";
 
 // register
 export interface RegisterResponse {

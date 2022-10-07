@@ -12,7 +12,7 @@ import {
   MechanicsEngineNotificationInfo,
   MechanicsEngineNotificationType,
   MechanicsEngineObserver,
-} from "../game_mechanics_engine";
+} from "../flow/game_mechanics_engine";
 import { BaseAI } from "../AIs/base_ai";
 
 export interface GameChannel {

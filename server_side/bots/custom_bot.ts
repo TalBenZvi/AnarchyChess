@@ -1,5 +1,5 @@
 import { User } from "../../src/communication/communication_util";
-import { GameMechanicsEngine } from "../game_mechanics_engine";
+import { GameMechanicsEngine } from "../flow/game_mechanics_engine";
 import { AI, BaseBot } from "./base_bot";
 
 export class CustomBot extends BaseBot {

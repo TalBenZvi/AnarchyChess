@@ -1,34 +1,36 @@
 import axios from "axios";
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
-import {
-  LoginResponse,
-  RegisterResponse,
-  LobbyJoiningStatus,
-  LobbyJoiningResponse,
-} from "./database_util.js";
+import { LoginResponse, RegisterResponse } from "./database_util.js";
 import {
   LoginParams,
   WSResponseStatus,
   User,
-  Lobby,
   RegisterParams,
-  LobbyCreationParams,
-} from "../src/communication/communication_util.js";
+  EnvironmentManager,
+  ValueType,
+} from "../../src/communication/communication_util.js";
 
 export class MongodbOperations {
   private static sendRequestToDatabase(
-    url: string,
-    body: string,
+    path: string,
+    params: any,
     onSuccess: (responseText: string) => void,
     onFailure: (responseText: string) => void
   ) {
     axios
-      .post(url, body, {
-        headers: {
-          Authorization: "Basic xxxxxxxxxxxxxxxxxxx",
-          "Content-Type": "text/plain",
-        },
-      })
+      .post(
+        `https://data.mongodb-api.com/app/application-0-gqzvo/endpoint${path}`,
+        JSON.stringify(params),
+        {
+          headers: {
+            Authorization: "Basic xxxxxxxxxxxxxxxxxxx",
+            "Content-Type": "text/plain",
+          },
+        }
+      )
       .then((response) => {
         if (response.status === 200) {
           onSuccess(response.data.toString());
@@ -43,8 +45,8 @@ export class MongodbOperations {
     callback: (status: WSResponseStatus, user: User) => void
   ): void {
     this.sendRequestToDatabase(
-      "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/register",
-      JSON.stringify(user),
+      "/register",
+      user,
       (responseText: string) => {
         let response: RegisterResponse = JSON.parse(responseText);
         callback(response.status, response.user);
@@ -60,8 +62,8 @@ export class MongodbOperations {
     callback: (status: WSResponseStatus, user: User) => void
   ): void {
     this.sendRequestToDatabase(
-      "https://data.mongodb-api.com/app/application-0-gqzvo/endpoint/login",
-      JSON.stringify(loginParams),
+      "/login",
+      loginParams,
       (responseText: string) => {
         let response: LoginResponse = JSON.parse(responseText);
         callback(response.status, response.user);

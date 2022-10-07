@@ -16,6 +16,8 @@ export enum Environment {
 
 export enum ValueType {
   wssAddress,
+  // path from 'server_side' directory to project directory
+  projectDirectoryPath,
 }
 
 export class EnvironmentManager {
@@ -25,11 +27,15 @@ export class EnvironmentManager {
       Environment.development,
       new Map([
         [ValueType.wssAddress, `ws://localhost:${DEV_SERVER_PORT}${WSS_PATH}`],
+        [ValueType.projectDirectoryPath, ".."],
       ]),
     ],
     [
       Environment.production,
-      new Map([[ValueType.wssAddress, `wss://${WEBSITE_DOMAIN}${WSS_PATH}`]]),
+      new Map([
+        [ValueType.wssAddress, `wss://${WEBSITE_DOMAIN}${WSS_PATH}`],
+        [ValueType.projectDirectoryPath, "../.."],
+      ]),
     ],
   ]);
 
