@@ -24,6 +24,7 @@ import { CustomBot } from "../bots/custom_bot.js";
 import { MoveCountingAI } from "../AIs/move_counting_ai.js";
 import { ThreatAvoidingAI } from "../AIs/threat_avoiding_ai.js";
 import { RussianBot } from "../bots/russian_bot.js";
+import { AmericanBot } from "../bots/american_bot.js";
 import { CustomByPieceTypeBot } from "../bots/custom_by_piece_type_bot.js";
 
 const INITIAL_COOLDOWN_VARIANCE: number = 0.7;
@@ -89,14 +90,14 @@ export class GameMechanicsEngine {
   }
 
   //debug
-  private setRoleForAdmin(playerIndex: number) {
+  private setRoleForUser(userID: string, playerIndex: number) {
     for (let i = 0; i < NUM_OF_PLAYERS - 1; i++) {
       if (this.roleAssignemnts.get(`bot_${i + 1}`) === playerIndex) {
         this.roleAssignemnts.set(
           `bot_${i + 1}`,
-          this.roleAssignemnts.get("6316513d45193eb2fa495db4") as number
+          this.roleAssignemnts.get(userID) as number
         );
-        this.roleAssignemnts.set("6316513d45193eb2fa495db4", playerIndex);
+        this.roleAssignemnts.set(userID, playerIndex);
       }
     }
   }
@@ -180,7 +181,7 @@ export class GameMechanicsEngine {
       this.resetGameplayElements();
       this.position.setToStartingPosition();
       this.roleAssignemnts = this.playerList.generateRoleAssignments();
-      // this.setRoleForAdmin(1);
+      // this.setRoleForUser("", 0);
       let initialPlayerCooldowns: number[] = [...Array(NUM_OF_PLAYERS)].map(
         (_, i: number) =>
           this.putPlayerOnCooldown(i, new Date().getTime(), true)

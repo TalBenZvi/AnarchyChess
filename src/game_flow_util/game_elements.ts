@@ -46,7 +46,7 @@ const pieceCooldowns: Map<PieceType, number> = new Map([
 ]);
 
 const pieceRespawnTimers: Map<PieceType, number> = new Map([
-  [PieceType.pawn, 3],
+  [PieceType.pawn, 1.5],
   [PieceType.knight, 4],
   [PieceType.bishop, 4],
   [PieceType.rook, 4],

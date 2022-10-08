@@ -70,6 +70,7 @@ export class ClientFlowEngine {
   private position: Position = null as any;
   private _playerIndex: number = null as any;
   private selectedMove: Square = null as any;
+  private gameStartTimeout: any = null;
 
   private observers: ClientFlowEngineObserver[] = [];
 
@@ -175,7 +176,7 @@ export class ClientFlowEngine {
         [ClientEventInfo.playerIndex, playerIndex],
       ])
     );
-    setTimeout(() => {
+    this.gameStartTimeout = setTimeout(() => {
       this.notifyObservers(
         ClientEventType.gameStarted,
         new Map<ClientEventInfo, any>([
@@ -198,6 +199,9 @@ export class ClientFlowEngine {
   }
 
   private returnToLobby(): void {
+    if (this.gameStartTimeout !== null) {
+      clearTimeout(this.gameStartTimeout);
+    }
     this.notifyObservers(
       ClientEventType.returnToLobby,
       new Map<ClientEventInfo, any>()
